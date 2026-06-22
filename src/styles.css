@@ -1,0 +1,209 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap');
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", "Inter", ui-sans-serif, sans-serif;
+  --font-mono: ui-monospace, "JetBrains Mono", monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ink: var(--ink);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --color-intent-hot: var(--intent-hot);
+  --color-intent-warm: var(--intent-warm);
+  --color-intent-cold: var(--intent-cold);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+}
+
+:root {
+  --radius: 0.75rem;
+  --background: oklch(0.992 0.002 250);
+  --foreground: oklch(0.18 0.012 260);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0.012 260);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0.012 260);
+  --ink: oklch(0.22 0.012 260);
+
+  /* rent-insight-app primary colors */
+  --primary: oklch(0.715 0.185 45);            /* Gharpayy Orange #F97316 */
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.965 0.004 250);
+  --secondary-foreground: oklch(0.22 0.012 260);
+  --muted: oklch(0.962 0.005 250);
+  --muted-foreground: oklch(0.52 0.012 260);
+  --accent: oklch(0.965 0.004 250);
+  --accent-foreground: oklch(0.22 0.012 260);
+
+  --destructive: oklch(0.585 0.22 27);
+  --destructive-foreground: oklch(0.99 0 0);
+  --success: oklch(0.62 0.14 155);
+  --success-foreground: oklch(0.99 0 0);
+  --warning: oklch(0.78 0.16 75);
+  --warning-foreground: oklch(0.18 0.012 260);
+  --info: oklch(0.66 0.14 245);
+  --info-foreground: oklch(0.99 0 0);
+
+  --border: oklch(0.92 0.005 250);
+  --input: oklch(0.92 0.005 250);
+  --ring: oklch(0.715 0.185 45);
+
+  --intent-hot: oklch(0.585 0.22 27);
+  --intent-warm: oklch(0.78 0.16 75);
+  --intent-cold: oklch(0.66 0.12 245);
+
+  --sidebar: oklch(0.18 0.012 260);
+  --sidebar-foreground: oklch(0.68 0.01 260);
+  --sidebar-primary: oklch(0.715 0.185 45);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.235 0.012 260);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(0.26 0.012 260);
+  --sidebar-ring: oklch(0.715 0.185 45);
+
+  --chart-1: oklch(0.715 0.185 45);
+  --chart-2: oklch(0.62 0.14 155);
+  --chart-3: oklch(0.66 0.14 245);
+  --chart-4: oklch(0.78 0.16 75);
+  --chart-5: oklch(0.585 0.22 27);
+
+  --gradient-hero: radial-gradient(ellipse 80% 60% at 50% 0%, oklch(0.715 0.185 45 / 0.10), transparent 70%);
+  --gradient-orange: linear-gradient(135deg, oklch(0.74 0.19 45), oklch(0.69 0.18 35));
+  --shadow-card: 0 1px 2px oklch(0.18 0.012 260 / 0.04), 0 4px 16px oklch(0.18 0.012 260 / 0.04);
+  --shadow-pop: 0 12px 40px oklch(0.18 0.012 260 / 0.10);
+  --shadow-glow: 0 8px 28px oklch(0.715 0.185 45 / 0.28);
+}
+
+.dark {
+  --background: oklch(0.16 0.012 260);
+  --foreground: oklch(0.94 0.005 250);
+  --card: oklch(0.2 0.012 260);
+  --card-foreground: oklch(0.94 0.005 250);
+  --popover: oklch(0.2 0.012 260);
+  --popover-foreground: oklch(0.94 0.005 250);
+  --primary: oklch(0.99 0 0);
+  --primary-foreground: oklch(0.18 0.012 260);
+  --secondary: oklch(0.245 0.012 260);
+  --secondary-foreground: oklch(0.92 0.005 250);
+  --muted: oklch(0.245 0.012 260);
+  --muted-foreground: oklch(0.62 0.012 260);
+  --accent: oklch(0.715 0.185 45);
+  --accent-foreground: oklch(0.99 0 0);
+  --destructive: oklch(0.585 0.22 27);
+  --border: oklch(0.28 0.012 260);
+  --input: oklch(0.28 0.012 260);
+  --ring: oklch(0.715 0.185 45);
+}
+
+@layer base {
+  * { border-color: var(--color-border); }
+  html, body, #root { height: 100%; }
+  html, body { max-width: 100%; overflow-x: clip; }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    background-image: radial-gradient(circle at 80% -10%, oklch(0.715 0.185 45 / 0.06), transparent 50%);
+  }
+  h1, h2, h3, h4, h5 { font-family: var(--font-display); letter-spacing: -0.02em; color: var(--ink); }
+  .num, .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  
+  .font-display { font-family: var(--font-display); }
+  .font-mono { font-family: var(--font-mono); }
+  .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+  .scrollbar-thin::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 999px; }
+  .scrollbar-micro::-webkit-scrollbar { width: 2px; height: 2px; }
+  .scrollbar-micro::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 999px; }
+  .scrollbar-none::-webkit-scrollbar { display: none; }
+  .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+}
+
+/* Leaflet light styling */
+.leaflet-container { background: oklch(0.965 0.004 250); font-family: var(--font-sans); }
+.leaflet-tile { filter: grayscale(0.4) brightness(1.02) contrast(0.92); }
+.leaflet-control-attribution { background: oklch(1 0 0 / 0.85) !important; color: var(--muted-foreground) !important; font-size: 10px !important; }
+.leaflet-control-attribution a { color: var(--primary) !important; }
+.leaflet-control-zoom a { background: var(--card) !important; color: var(--ink) !important; border-color: var(--border) !important; }
+.leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--card) !important; color: var(--foreground) !important; box-shadow: var(--shadow-pop) !important; border-radius: 12px !important; }
+.leaflet-popup-content { margin: 12px 14px !important; font-size: 13px; }
+.leaflet-popup-content-wrapper { padding: 2px; }
+
+/* Subtle grid bg */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, oklch(0.92 0.005 250 / 0.6) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(0.92 0.005 250 / 0.6) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, black 30%, transparent 80%);
+}
+
+@layer utilities {
+  .pip-compact input,
+  .pip-compact textarea,
+  .pip-compact select,
+  .pip-compact button {
+    font-size: 12px;
+  }
+  [data-pip-mode="capture"] .pip-compact,
+  [data-pip-mode="manage"] .pip-compact {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+  [data-pip-mode="dashboard"] aside,
+  [data-pip-mode="dashboard"] nav.fixed,
+  [data-pip-mode="dashboard"] header.sticky {
+    display: none !important;
+  }
+  [data-pip-mode="dashboard"] main {
+    padding: 12px !important;
+    max-width: none !important;
+  }
+}
