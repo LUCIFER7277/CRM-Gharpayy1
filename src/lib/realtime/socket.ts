@@ -15,6 +15,9 @@ export function getSocket() {
       {
         autoConnect: false,
         reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
+        reconnectionAttempts: Infinity,
       }
     );
   }
@@ -36,11 +39,22 @@ export function useSocketSync() {
     s.on("LEAD_UPDATED", (payload: { leadId: string; patch: any; actorId?: string }) => {
       // Only invalidate if from another actor, otherwise optimistic updates handled it
       queryClient.invalidateQueries({ queryKey: ["leads"] });
-      // In a real app we might check actorId against currentUser
     });
 
     s.on("TOUR_SCHEDULED", () => {
       queryClient.invalidateQueries({ queryKey: ["tours"] });
+    });
+
+    // Dedicated War Room channels for high-density minimalist UI updates
+    s.on("WAR_ROOM_UPDATE", (payload: { tourId: string; patch: any }) => {
+      // Instant synchronization for tour state changes
+      queryClient.invalidateQueries({ queryKey: ["tours"] });
+    });
+
+    s.on("WAR_ROOM_SYNC", () => {
+      // Full sync event triggered periodically or on reconnect
+      queryClient.invalidateQueries({ queryKey: ["tours"] });
+      queryClient.invalidateQueries({ queryKey: ["leads"] });
     });
 
     s.on("QUOTE_SENT", () => {
@@ -56,6 +70,8 @@ export function useSocketSync() {
       s.off("connect");
       s.off("LEAD_UPDATED");
       s.off("TOUR_SCHEDULED");
+      s.off("WAR_ROOM_UPDATE");
+      s.off("WAR_ROOM_SYNC");
       s.off("QUOTE_SENT");
       s.off("SLA_BREACHED");
       s.disconnect();

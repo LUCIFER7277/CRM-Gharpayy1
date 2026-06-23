@@ -32,7 +32,7 @@ export function TeamPulseGrid({ now }: { now: number }) {
         <KPI icon={AlertTriangle} label="SLA breaches" value={teamSla} tone="destructive" />
       </div>
 
-      <Card className="p-0 overflow-hidden">
+      <div className="border bg-card rounded-sm shadow-sm overflow-hidden">
         <div className="grid grid-cols-12 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold bg-muted/40 px-3 py-2 border-b">
           <div className="col-span-3">TCM</div>
           <div className="col-span-1 text-center">Live</div>
@@ -43,7 +43,7 @@ export function TeamPulseGrid({ now }: { now: number }) {
           <div className="col-span-3">Coach</div>
         </div>
         {rows.map((r) => <PulseRow key={r.tcmId} r={r} />)}
-      </Card>
+      </div>
     </div>
   );
 }
@@ -89,14 +89,14 @@ function KPI({ icon: Icon, label, value, tone }: { icon: typeof Activity; label:
     : tone === "destructive" ? "text-destructive bg-destructive/10"
     : "text-info bg-info/10";
   return (
-    <Card className="p-3">
+    <div className="border bg-card p-3 rounded-sm shadow-sm">
       <div className="flex items-center gap-2">
-        <div className={cn("h-7 w-7 rounded-md flex items-center justify-center", cls)}>
+        <div className={cn("h-7 w-7 rounded-sm flex items-center justify-center", cls)}>
           <Icon className="h-3.5 w-3.5" />
         </div>
-        <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+        <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{label}</div>
       </div>
-      <div className="mt-1 text-2xl font-bold tabular-nums">{value}</div>
-    </Card>
+      <div className="mt-1.5 text-2xl font-bold tabular-nums font-mono">{value}</div>
+    </div>
   );
 }

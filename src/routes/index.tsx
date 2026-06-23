@@ -3,7 +3,7 @@ import { AppShell } from "@/components/AppShell";
 import { useApp, computePropertyMetrics } from "@/lib/store";
 import { KpiCard } from "@/components/atoms";
 import { format } from "date-fns";
-import { AlertTriangle, ArrowUpRight, CalendarPlus, Flame, Building2, Zap, Sun, TrendingUp, Sparkles, IndianRupee } from "lucide-react";
+import { AlertTriangle, ArrowUpRight, CalendarPlus, Flame, Building2, Zap, Sun, TrendingUp, Sparkles, IndianRupee, Activity, CheckCircle2 } from "lucide-react";
 import { useMemo } from "react";
 import { useMountedNow } from "@/hooks/use-now";
 import { buildDoNextQueue, liveConfidence, intentFor } from "@/lib/engine";
@@ -77,47 +77,6 @@ function DashboardPage() {
           </Link>
         )}
 
-        {/* KPIs */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-          <KpiCard label="Active leads" value={liveLeads.filter((l) => l.stage !== "booked" && l.stage !== "dropped").length} sub={`${hotLeads.length} hot · live score`} />
-          <KpiCard label="Today's tours" value={todayTours.length} sub="Scheduled" tone="accent" />
-          <KpiCard label="Overdue follow-ups" value={overdueFu} sub={`${incompleteTours.length} post-tour pending`} tone={overdueFu || incompleteTours.length ? "destructive" : "default"} />
-          <KpiCard label="Conversion rate" value={`${conversion}%`} sub={`${booked} booked total`} tone="success" />
-          <KpiCard label="MRR closed" value={`₹${(monthlyRevenue / 1000).toFixed(0)}k`} sub={`${bookings.length} booking${bookings.length === 1 ? "" : "s"}`} tone="success" />
-        </div>
-
-        {/* Today's queue (top 5 quick view) */}
-        <section className="rounded-xl border border-border bg-card overflow-hidden">
-          <header className="flex items-center justify-between px-4 py-3 border-b border-border">
-            <div className="flex items-center gap-2">
-              <Zap className="h-4 w-4 text-accent" />
-              <h2 className="font-display text-sm font-semibold">Do this next</h2>
-              <span className="text-[10px] text-muted-foreground font-mono">{queue.length} ranked</span>
-            </div>
-            <Link to="/today" className="text-xs text-accent inline-flex items-center gap-1">
-              <Sun className="h-3 w-3" /> Today view <ArrowUpRight className="h-3 w-3" />
-            </Link>
-          </header>
-          {queue.length === 0 ? (
-            <div className="px-4 py-8 text-center text-sm text-muted-foreground">Inbox zero. Nothing pending right now.</div>
-          ) : (
-            <div className="divide-y divide-border">
-              {queue.slice(0, 5).map((a) => {
-                const lead = leads.find((l) => l.id === a.leadId);
-                if (!lead) return null;
-                return (
-                  <QuickActionRow
-                    key={`${a.leadId}-${a.kind}`}
-                    lead={lead}
-                    reason={a.reason}
-                    accent={a.kind === "post-tour-overdue" || a.kind === "first-response" || a.kind === "follow-up-overdue" ? "destructive" : a.kind === "no-follow-up" ? "warning" : "accent"}
-                  />
-                );
-              })}
-            </div>
-          )}
-        </section>
-
         {/* Post-tour enforcement banner */}
         {incompleteTours.length > 0 && (
           <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 flex items-start gap-3">
@@ -149,109 +108,204 @@ function DashboardPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Hot pipeline */}
-          <Card title="Hot pipeline" icon={Flame} accent action={<Link to="/leads" className="text-xs text-accent inline-flex items-center gap-1">All leads <ArrowUpRight className="h-3 w-3" /></Link>}>
-            <div className="divide-y divide-border -mx-3">
-              {hotLeads.slice(0, 5).map((l) => (
-                <QuickActionRow key={l.id} lead={l} accent="accent" />
-              ))}
-              {hotLeads.length === 0 && <div className="text-xs text-muted-foreground text-center py-6">No hot leads right now.</div>}
-            </div>
-          </Card>
-
-          {/* Today's tours */}
-          <Card title="Today's tours" icon={CalendarPlus} action={<Link to="/tours" className="text-xs text-accent inline-flex items-center gap-1">All tours <ArrowUpRight className="h-3 w-3" /></Link>}>
-            <div className="space-y-2">
-              {todayTours.map((t) => {
-                const lead = leads.find((l) => l.id === t.leadId);
-                const prop = properties.find((p) => p.id === t.propertyId);
-                if (!lead) return null;
-                const minsTo = (+new Date(t.scheduledAt) - now) / 60_000;
-                return (
-                  <button
-                    key={t.id}
-                    onClick={() => selectLead(lead.id)}
-                    className="w-full text-left rounded-lg border border-border bg-card hover:border-accent/40 transition-colors p-3"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-sm">{lead.name}</span>
-                      <span className={`text-xs font-mono ${mounted && minsTo < 60 && minsTo > 0 ? "text-accent" : "text-muted-foreground"}`}>
-                        {mounted ? (minsTo > 0 ? `in ${formatMins(minsTo)}` : `${formatMins(-minsTo)} ago`) : "\u00a0"}
-                      </span>
-                    </div>
-                    <div className="text-xs text-muted-foreground mt-0.5">{prop?.name} · {format(new Date(t.scheduledAt), "p")}</div>
-                  </button>
-                );
-              })}
-              {todayTours.length === 0 && <div className="text-xs text-muted-foreground text-center py-6">No tours scheduled today.</div>}
-            </div>
-          </Card>
-        </div>
-
-        {/* Revival opportunities */}
-        {revivals.length > 0 && (
-          <section className="rounded-xl border border-info/30 bg-info/5 overflow-hidden">
-            <header className="flex items-center justify-between px-4 py-3 border-b border-info/20">
-              <div className="flex items-center gap-2">
-                <IndianRupee className="h-4 w-4 text-info" />
-                <h2 className="font-display text-sm font-semibold">Hidden revenue · revival queue</h2>
-                <span className="text-[10px] text-muted-foreground font-mono">{revivals.length} candidate{revivals.length === 1 ? "" : "s"}</span>
-              </div>
-              <Link to="/revival" className="text-xs text-info inline-flex items-center gap-1">
-                Open queue <ArrowUpRight className="h-3 w-3" />
-              </Link>
-            </header>
-            <div className="divide-y divide-info/10">
-              {revivals.slice(0, 4).map((r) => {
-                const lead = leads.find((l) => l.id === r.leadId);
-                if (!lead) return null;
-                return (
-                  <button
-                    key={r.leadId}
-                    onClick={() => selectLead(lead.id)}
-                    className="w-full text-left px-4 py-2 hover:bg-info/5 flex items-center justify-between gap-3"
-                  >
-                    <div className="min-w-0">
-                      <div className="text-sm font-medium truncate">{lead.name}</div>
-                      <div className="text-[11px] text-muted-foreground truncate">{r.reason}</div>
-                    </div>
-                    <span className="text-[10px] font-mono text-info shrink-0">score {r.score}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </section>
-        )}
-
-        {/* Inventory pressure */}
-        <Card title="Inventory pressure" icon={Building2} action={<Link to="/inventory" className="text-xs text-accent inline-flex items-center gap-1">All properties <ArrowUpRight className="h-3 w-3" /></Link>}>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {metrics.slice(0, 6).map((m) => (
-              <div key={m.property.id} className="rounded-lg border border-border bg-card p-3 space-y-2">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <div className="font-medium text-sm leading-tight">{m.property.name}</div>
-                    <div className="text-[11px] text-muted-foreground">{m.property.area}</div>
-                  </div>
-                  <SignalChip signal={m.signal} />
-                </div>
-                <div className="grid grid-cols-3 gap-2 text-[11px]">
-                  <Stat label="Demand" value={m.demandScore} />
-                  <Stat label="Conv %" value={m.conversionPct} />
-                  <Stat label="Vacant" value={`${m.property.vacantBeds}/${m.property.totalBeds}`} mono />
-                </div>
-                <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                  <div className="h-full bg-accent" style={{ width: `${m.pressureScore}%` }} />
-                </div>
-                <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-                  <span>Pressure {m.pressureScore}/100</span>
-                  <span className="inline-flex items-center gap-1"><TrendingUp className="h-2.5 w-2.5" /> live</span>
-                </div>
-              </div>
-            ))}
+        {/* Bento Dashboard Layout */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4">
+          
+          {/* Main KPIs (Col Span 12) */}
+          <div className="col-span-1 md:col-span-2 lg:col-span-12 grid grid-cols-2 lg:grid-cols-5 gap-3">
+            <KpiCard label="Active leads" value={liveLeads.filter((l) => l.stage !== "booked" && l.stage !== "dropped").length} sub={`${hotLeads.length} hot · live score`} />
+            <KpiCard label="Today's tours" value={todayTours.length} sub="Scheduled" tone="accent" />
+            <KpiCard label="Overdue follow-ups" value={overdueFu} sub={`${incompleteTours.length} post-tour pending`} tone={overdueFu || incompleteTours.length ? "destructive" : "default"} />
+            <KpiCard label="Conversion rate" value={`${conversion}%`} sub={`${booked} booked total`} tone="success" />
+            <KpiCard label="MRR closed" value={`₹${(monthlyRevenue / 1000).toFixed(0)}k`} sub={`${bookings.length} booking${bookings.length === 1 ? "" : "s"}`} tone="success" />
           </div>
-        </Card>
+
+          {/* Do this next - col span 4 */}
+          <div className="col-span-1 md:col-span-2 lg:col-span-4 h-full flex flex-col">
+            <section className="rounded-xl border border-border bg-card overflow-hidden h-full flex flex-col">
+              <header className="flex items-center justify-between px-4 py-3 border-b border-border">
+                <div className="flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-primary" />
+                  <h2 className="font-display text-sm font-semibold">Do this next</h2>
+                  <span className="text-[10px] text-muted-foreground font-mono">{queue.length} ranked</span>
+                </div>
+                <Link to="/today" className="text-xs text-primary hover:text-primary/80 transition-colors inline-flex items-center gap-1">
+                  <Sun className="h-3 w-3" /> Today view <ArrowUpRight className="h-3 w-3" />
+                </Link>
+              </header>
+              <div className="flex-1 overflow-y-auto scrollbar-none min-h-[220px] max-h-[350px]">
+                {queue.length === 0 ? (
+                  <div className="px-4 py-8 text-center text-sm text-muted-foreground">Inbox zero. Nothing pending right now.</div>
+                ) : (
+                  <div className="divide-y divide-border">
+                    {queue.slice(0, 10).map((a) => {
+                      const lead = leads.find((l) => l.id === a.leadId);
+                      if (!lead) return null;
+                      return (
+                        <QuickActionRow
+                          key={`${a.leadId}-${a.kind}`}
+                          lead={lead}
+                          reason={a.reason}
+                          compact={true}
+                          accent={a.kind === "post-tour-overdue" || a.kind === "first-response" || a.kind === "follow-up-overdue" ? "destructive" : a.kind === "no-follow-up" ? "warning" : "accent"}
+                        />
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </section>
+          </div>
+
+          {/* Hot pipeline - col span 4 */}
+          <div className="col-span-1 lg:col-span-4 h-full flex flex-col">
+            <Card title="Hot pipeline" icon={Flame} accent action={<Link to="/leads" className="text-xs text-primary hover:text-primary/80 transition-colors inline-flex items-center gap-1">All leads <ArrowUpRight className="h-3 w-3" /></Link>}>
+              <div className="divide-y divide-border -mx-3 min-h-[200px] max-h-[300px]">
+                {hotLeads.slice(0, 10).map((l) => (
+                  <QuickActionRow key={l.id} lead={l} accent="accent" compact={true} />
+                ))}
+                {hotLeads.length === 0 && <div className="text-xs text-muted-foreground text-center py-6">No hot leads right now.</div>}
+              </div>
+            </Card>
+          </div>
+
+          {/* Today's tours - col span 4 */}
+          <div className="col-span-1 lg:col-span-4 h-full flex flex-col">
+            <Card title="Today's tours" icon={CalendarPlus} action={<Link to="/tours" className="text-xs text-primary hover:text-primary/80 transition-colors inline-flex items-center gap-1">All tours <ArrowUpRight className="h-3 w-3" /></Link>}>
+              <div className="space-y-2 min-h-[200px] max-h-[300px]">
+                {todayTours.slice(0, 10).map((t) => {
+                  const lead = leads.find((l) => l.id === t.leadId);
+                  const prop = properties.find((p) => p.id === t.propertyId);
+                  if (!lead) return null;
+                  const minsTo = (+new Date(t.scheduledAt) - now) / 60_000;
+                  return (
+                    <button
+                      key={t.id}
+                      onClick={() => selectLead(lead.id)}
+                      className="w-full text-left rounded-lg border border-border bg-card hover:border-accent/40 transition-colors p-3"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-sm">{lead.name}</span>
+                        <span className={`text-xs font-mono ${mounted && minsTo < 60 && minsTo > 0 ? "text-accent" : "text-muted-foreground"}`}>
+                          {mounted ? (minsTo > 0 ? `in ${formatMins(minsTo)}` : `${formatMins(-minsTo)} ago`) : "\u00a0"}
+                        </span>
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-0.5">{prop?.name} · {format(new Date(t.scheduledAt), "p")}</div>
+                    </button>
+                  );
+                })}
+                {todayTours.length === 0 && <div className="text-xs text-muted-foreground text-center py-6">No tours scheduled today.</div>}
+              </div>
+            </Card>
+          </div>
+
+          {/* Inventory pressure - col span 8 */}
+          <div className="col-span-1 md:col-span-2 lg:col-span-8 h-full flex flex-col">
+            <Card title="Inventory pressure" icon={Building2} action={<Link to="/inventory" className="text-xs text-primary hover:text-primary/80 transition-colors inline-flex items-center gap-1">All properties <ArrowUpRight className="h-3 w-3" /></Link>}>
+              <div className="divide-y divide-border -mx-3 min-h-[150px] max-h-[300px]">
+                {metrics.slice(0, 10).map((m) => {
+                  const demand = Number.isNaN(m.demandScore) ? "-" : m.demandScore;
+                  const conv = Number.isNaN(m.conversionPct) ? 0 : m.conversionPct;
+                  const pressure = Number.isNaN(m.pressureScore) ? 0 : m.pressureScore;
+                  
+                  let statusColor = "muted-foreground";
+                  let StatusIcon = Building2;
+                  if (m.signal === "high-demand-low-conv") { statusColor = "destructive"; StatusIcon = AlertTriangle; }
+                  else if (m.signal === "low-demand-high-vacancy") { statusColor = "warning"; StatusIcon = Activity; }
+                  else if (m.signal === "high-conv-low-supply") { statusColor = "success"; StatusIcon = CheckCircle2; }
+                  else { statusColor = "primary"; StatusIcon = Building2; }
+                  
+                  return (
+                    <div key={m.property.id} className={`group flex items-center justify-between gap-4 px-3 py-2.5 border-l-2 border-transparent hover:border-${statusColor} hover:bg-${statusColor}/5 transition-colors`}>
+                      
+                      {/* Name & Location (Left) */}
+                      <div className="w-[180px] shrink-0 min-w-0 flex items-center gap-3">
+                        <div className={`flex items-center justify-center h-8 w-8 rounded-md shrink-0 bg-${statusColor}/10 text-${statusColor}`}>
+                          <StatusIcon className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="font-medium text-sm truncate">{m.property.name}</div>
+                          <div className="text-[11px] text-muted-foreground truncate">{m.property.area}</div>
+                        </div>
+                      </div>
+
+                      {/* Signal Badge */}
+                      <div className="w-[120px] shrink-0 hidden md:block">
+                        <SignalChip signal={m.signal} />
+                      </div>
+                      
+                      {/* Stats Inline */}
+                      <div className="flex-1 hidden lg:flex items-center gap-6 justify-center">
+                        <div className="flex flex-col items-center">
+                          <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Demand</span>
+                          <span className="text-xs font-mono">{demand}</span>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Conv %</span>
+                          <span className="text-xs font-mono">{conv}%</span>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Vacant</span>
+                          <span className="text-xs font-mono text-accent">{m.property.vacantBeds}/{m.property.totalBeds}</span>
+                        </div>
+                      </div>
+
+                      {/* Pressure Bar (Right) */}
+                      <div className="w-[100px] shrink-0 flex flex-col items-end gap-1">
+                        <div className="text-[10px] text-muted-foreground font-mono flex items-center gap-1">
+                          <TrendingUp className="h-3 w-3" />
+                          {pressure}/100
+                        </div>
+                        <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                          <div className="h-full bg-accent" style={{ width: `${pressure}%` }} />
+                        </div>
+                      </div>
+
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
+          </div>
+
+          {/* Revival opportunities - col span 4 */}
+          {revivals.length > 0 && (
+            <div className="col-span-1 md:col-span-2 lg:col-span-4 h-full flex flex-col">
+              <section className="rounded-xl border border-info/30 bg-info/5 overflow-hidden h-full flex flex-col">
+                <header className="flex items-center justify-between px-4 py-3 border-b border-info/20">
+                  <div className="flex items-center gap-2">
+                    <IndianRupee className="h-4 w-4 text-info" />
+                    <h2 className="font-display text-sm font-semibold">Revival queue</h2>
+                    <span className="text-[10px] text-muted-foreground font-mono">{revivals.length} candidate{revivals.length === 1 ? "" : "s"}</span>
+                  </div>
+                  <Link to="/revival" className="text-xs text-info inline-flex items-center gap-1">
+                    Open <ArrowUpRight className="h-3 w-3" />
+                  </Link>
+                </header>
+                <div className="divide-y divide-info/10 flex-1 overflow-y-auto scrollbar-none min-h-[150px] max-h-[300px]">
+                  {revivals.slice(0, 10).map((r) => {
+                    const lead = leads.find((l) => l.id === r.leadId);
+                    if (!lead) return null;
+                    return (
+                      <button
+                        key={r.leadId}
+                        onClick={() => selectLead(lead.id)}
+                        className="w-full text-left px-4 py-3 hover:bg-info/10 flex items-center justify-between gap-3"
+                      >
+                        <div className="min-w-0">
+                          <div className="text-sm font-medium truncate">{lead.name}</div>
+                          <div className="text-[11px] text-muted-foreground truncate">{r.reason}</div>
+                        </div>
+                        <span className="text-[10px] font-mono text-info shrink-0">score {r.score}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+            </div>
+          )}
+
+        </div>
       </div>
     </AppShell>
   );
@@ -263,15 +317,15 @@ function Card({
   title: string; icon: typeof Flame; action?: React.ReactNode; accent?: boolean; children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-xl border border-border bg-card overflow-hidden">
+    <section className="rounded-xl border border-border bg-card overflow-hidden h-full flex flex-col">
       <header className="flex items-center justify-between px-4 py-3 border-b border-border">
         <div className="flex items-center gap-2">
-          <Icon className={`h-4 w-4 ${accent ? "text-accent" : "text-muted-foreground"}`} />
+          <Icon className={`h-4 w-4 ${accent ? "text-primary" : "text-muted-foreground"}`} />
           <h2 className="font-display text-sm font-semibold">{title}</h2>
         </div>
         {action}
       </header>
-      <div className="p-3">{children}</div>
+      <div className="p-3 flex-1 overflow-y-auto scrollbar-none">{children}</div>
     </section>
   );
 }

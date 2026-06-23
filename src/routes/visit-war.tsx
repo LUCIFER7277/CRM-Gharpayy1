@@ -310,12 +310,20 @@ function VisitWarRoom() {
       const pName = prop?.name || v.propertyName || "No property";
       const pArea = prop?.area ?? v.propertyArea;
       const tcmName = tcm?.name ?? v.tcmName;
+      const t = tours.find((t) => t.id === v.tourId);
+      // Sync stage back from global status
+      let nextStage = v.stage;
+      if (lead && lead.stage === "booked") nextStage = "booked";
+      else if (lead && ["dropped"].includes(lead.stage)) nextStage = "lost";
+      else if (t && (t.status === "cancelled" || t.status === "no-show")) nextStage = "lost";
+
       if (
         name !== v.leadName ||
         phone !== v.leadPhone ||
         pName !== v.propertyName ||
         pArea !== v.propertyArea ||
-        tcmName !== v.tcmName
+        tcmName !== v.tcmName ||
+        nextStage !== v.stage
       ) {
         changed = true;
         patch(v.tourId, {
@@ -324,6 +332,7 @@ function VisitWarRoom() {
           propertyName: pName,
           propertyArea: pArea,
           tcmName,
+          stage: nextStage,
         });
       }
     });
@@ -608,32 +617,32 @@ function VisitWarRoom() {
 
   return (
     <div className="space-y-4">
-      <Card className="p-4 md:p-5 border-l-4 border-l-accent bg-gradient-to-br from-card to-card/60">
+      <div className="p-4 md:p-5 border-b border-border bg-card flex flex-col gap-4 mb-2 shadow-sm">
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2.5">
-            <div className="h-10 w-10 rounded-xl bg-accent/15 text-accent flex items-center justify-center">
+            <div className="h-10 w-10 rounded bg-muted text-muted-foreground flex items-center justify-center border border-border">
               <Radio className="h-5 w-5" />
             </div>
             <div>
-              <div className="text-[10px] uppercase tracking-[0.18em] text-accent font-semibold">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
                 Gharpayy · Visit OS
               </div>
-              <h1 className="text-lg md:text-xl font-bold leading-tight">Visit Command Center</h1>
+              <h1 className="text-lg md:text-xl font-bold leading-tight font-display text-foreground">Visit Command Center</h1>
             </div>
           </div>
           <Badge
             variant="outline"
-            className="ml-1 gap-1.5 border-success/40 bg-success/10 text-success"
+            className="ml-1 gap-1.5 border-border bg-card text-foreground rounded-sm"
           >
-            <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
+            <span className="h-1.5 w-1.5 rounded-full bg-success" />
             {liveTours.length} LIVE
           </Badge>
           {intervention.length > 0 && (
             <Badge
               variant="outline"
-              className="gap-1.5 border-destructive/40 bg-destructive/10 text-destructive"
+              className="gap-1.5 border-destructive border bg-card text-destructive rounded-sm"
             >
-              <Siren className="h-3 w-3" /> {intervention.length} need intervention
+              <Siren className="h-3 w-3" /> {intervention.length} INTERVENTION
             </Badge>
           )}
           <div className="ml-auto flex items-center gap-3">
@@ -644,25 +653,54 @@ function VisitWarRoom() {
           </div>
         </div>
 
-        <div className="mt-4 grid grid-cols-2 md:grid-cols-6 gap-3">
-          <Metric icon={Activity} label="Visits today" value={todaysTours.length} />
-          <Metric icon={CalendarClock} label="Next 24h" value={upcomingTours.length} tone="info" />
-          <Metric icon={Gauge} label="All visits" value={allToursCount} tone="accent" />
-          <Metric icon={Flame} label="Hot (<24h)" value={hotTours.length} tone="warning" />
-          <Metric
-            icon={Wallet}
-            label="Revenue walking"
-            value={`₹${(revenueWalking / 1000).toFixed(0)}k`}
-            tone="success"
-          />
-          <Metric
-            icon={TrendingUp}
-            label="Expected bookings"
-            value={expectedBookings}
-            tone="accent"
-          />
+        {/* Bento Grid: 12 Columns */}
+        <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-12 gap-4 mt-6">
+          
+          {/* Bento KPIs - 4 cols */}
+          <div className="lg:col-span-4 grid grid-cols-2 gap-3">
+            <Metric icon={Activity} label="Visits today" value={todaysTours.length} />
+            <Metric icon={CalendarClock} label="Next 24h" value={upcomingTours.length} />
+            <Metric icon={Gauge} label="All visits" value={allToursCount} />
+            <Metric icon={Flame} label="Hot (<24h)" value={hotTours.length} />
+            <Metric
+              icon={Wallet}
+              label="Revenue walking"
+              value={`₹${(revenueWalking / 1000).toFixed(0)}k`}
+            />
+            <Metric
+              icon={TrendingUp}
+              label="Expected bookings"
+              value={expectedBookings}
+            />
+          </div>
+
+          {/* Bento Team Pulse - 5 cols */}
+          <div className="lg:col-span-5 border bg-card rounded-xl shadow-sm overflow-hidden flex flex-col min-h-[180px]">
+            <div className="p-3 border-b bg-muted/30">
+              <h3 className="text-xs font-semibold uppercase text-muted-foreground flex items-center gap-1.5">
+                <Users className="h-3.5 w-3.5" /> Team Pulse Overview
+              </h3>
+            </div>
+            <div className="flex-1 overflow-y-auto p-3">
+              <TeamPulseGrid now={now} />
+            </div>
+          </div>
+
+          {/* Bento Alerts - 3 cols */}
+          <div className="lg:col-span-3 border bg-card rounded-xl shadow-sm overflow-hidden flex flex-col min-h-[180px]">
+            <div className="p-3 border-b bg-muted/30 flex justify-between items-center">
+              <h3 className="text-xs font-semibold uppercase text-muted-foreground flex items-center gap-1.5">
+                <Bell className="h-3.5 w-3.5" /> Live Alerts
+              </h3>
+              {unreadAlerts > 0 && <Badge variant="destructive" className="h-4 px-1">{unreadAlerts}</Badge>}
+            </div>
+            <div className="flex-1 overflow-y-auto p-3 max-h-[220px]">
+              <AlertFeed />
+            </div>
+          </div>
+
         </div>
-      </Card>
+      </div>
 
       <DayPlanner
         visits={Object.values(records)}
@@ -672,7 +710,7 @@ function VisitWarRoom() {
         focusTourId={focusTour}
       />
 
-      <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
+      <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)} className="mt-6">
         <div className="flex flex-wrap items-center gap-3">
           <TabsList>
             <TabsTrigger value="live" className="gap-1.5">
@@ -684,115 +722,56 @@ function VisitWarRoom() {
             <TabsTrigger value="hot" className="gap-1.5">
               <Flame className="h-3.5 w-3.5" /> Hot ({hotTours.length})
             </TabsTrigger>
-            <TabsTrigger value="team" className="gap-1.5">
-              <Users className="h-3.5 w-3.5" /> Team Pulse
-            </TabsTrigger>
             <TabsTrigger value="map" className="gap-1.5">
               <MapIcon className="h-3.5 w-3.5" /> War Map
             </TabsTrigger>
             <TabsTrigger value="stats" className="gap-1.5">
               <BarChart3 className="h-3.5 w-3.5" /> Stats
             </TabsTrigger>
-            <TabsTrigger value="alerts" onClick={() => markAlertsSeen()} className="gap-1.5">
-              <Bell className="h-3.5 w-3.5" /> Alerts
-              {unreadAlerts > 0 && (
-                <Badge variant="destructive" className="ml-1 px-1.5 py-0 text-[10px] h-4">
-                  {unreadAlerts}
-                </Badge>
-              )}
-            </TabsTrigger>
           </TabsList>
           {tab === "live" && (
             <div className="ml-auto flex items-center gap-1.5">
-              <span className="text-[10px] uppercase text-muted-foreground tracking-wider mr-1">
-                Sort
-              </span>
+              <span className="text-[10px] uppercase text-muted-foreground tracking-wider mr-1">Sort</span>
               {(["prob", "dur", "obj", "update"] as const).map((m) => (
-                <Button
-                  key={m}
-                  size="sm"
-                  variant={sortMode === m ? "default" : "outline"}
-                  className="h-7 px-2.5 text-[11px] uppercase font-mono"
-                  onClick={() => setSortMode(m)}
-                >
-                  {m === "prob"
-                    ? "Probability"
-                    : m === "dur"
-                      ? "Duration"
-                      : m === "obj"
-                        ? "Objections"
-                        : "Updated"}
+                <Button key={m} size="sm" variant={sortMode === m ? "default" : "outline"} className="h-7 px-2.5 text-[11px] uppercase font-mono" onClick={() => setSortMode(m)}>
+                  {m === "prob" ? "Prob" : m === "dur" ? "Dur" : m === "obj" ? "Obj" : "Upd"}
                 </Button>
               ))}
             </div>
           )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_400px] gap-4 mt-3">
-          <div className="min-w-0">
-            <TabsContent value="live" className="m-0">
-              <LiveBoard
-                list={sorted.filter((v) => !["booked", "lost"].includes(v.stage))}
-                now={now}
-                mounted={mounted}
-                onFocus={setFocusTour}
-                focus={focusTour}
-              />
-            </TabsContent>
-            <TabsContent value="upcoming" className="m-0">
-              <UpcomingPanel list={upcoming} now={now} mounted={mounted} onFocus={setFocusTour} />
-            </TabsContent>
-            <TabsContent value="hot" className="m-0">
-              <HotRoom list={hot} now={now} mounted={mounted} onFocus={setFocusTour} />
-            </TabsContent>
-            <TabsContent value="team" className="m-0">
-              <TeamPulseGrid now={now} />
-            </TabsContent>
-            <TabsContent value="map" className="m-0">
-              <WarMapPanel now={now} />
-            </TabsContent>
-            <TabsContent value="stats" className="m-0">
-              <WarRoomStats
-                list={list}
-                tours={tours}
-                leads={leads}
-                properties={properties}
-                records={records}
-              />
-            </TabsContent>
-            <TabsContent value="alerts" className="m-0">
-              <AlertFeed />
-            </TabsContent>
-          </div>
+        <div className="mt-4 relative min-h-[500px]">
+          <TabsContent value="live" className="m-0"><LiveBoard list={sorted.filter((v) => !["booked", "lost"].includes(v.stage))} now={now} mounted={mounted} onFocus={setFocusTour} focus={focusTour} /></TabsContent>
+          <TabsContent value="upcoming" className="m-0"><UpcomingPanel list={upcoming} now={now} mounted={mounted} onFocus={setFocusTour} /></TabsContent>
+          <TabsContent value="hot" className="m-0"><HotRoom list={hot} now={now} mounted={mounted} onFocus={setFocusTour} /></TabsContent>
+          <TabsContent value="map" className="m-0"><WarMapPanel now={now} /></TabsContent>
+          <TabsContent value="stats" className="m-0"><WarRoomStats list={list} tours={tours} leads={leads} properties={properties} records={records} /></TabsContent>
 
-          <Card className="p-0 overflow-hidden sticky top-[56px] h-[calc(100vh-72px)]">
-            {focusTour && records[focusTour] ? (
-              <VisitDetailPanel
-                key={focusTour}
-                v={records[focusTour]}
-                now={now}
-                onClose={() => setFocusTour(null)}
-                onPatch={(p) => patch(focusTour, p)}
-                onAddObjection={(o) => addObjection(focusTour, o)}
-                onAlert={(severity, kind, message) =>
-                  pushAlert({
-                    tourId: focusTour,
-                    leadName: records[focusTour].leadName,
-                    severity,
-                    kind,
-                    message,
-                  })
-                }
+          {/* Conditional Overlay Slide-out for Visit Details */}
+          {focusTour && records[focusTour] && (
+            <>
+              {/* Backdrop */}
+              <div 
+                className="fixed inset-0 bg-black/20 z-40 backdrop-blur-sm transition-opacity" 
+                onClick={() => setFocusTour(null)} 
               />
-            ) : (
-              <div className="p-10 text-center text-sm text-muted-foreground">
-                <Building2 className="h-10 w-10 mx-auto mb-3 opacity-30" />
-                <div className="font-semibold text-foreground mb-1">Select a visit</div>
-                Open any row on the left to capture reactions, objections, and outcomes in real
-                time.
+              {/* Slide-out Drawer */}
+              <div className="fixed inset-y-0 right-0 w-[450px] bg-card border-l shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-200">
+                <div className="flex-1 overflow-y-auto">
+                  <VisitDetailPanel
+                    key={focusTour}
+                    v={records[focusTour]}
+                    now={now}
+                    onClose={() => setFocusTour(null)}
+                    onPatch={(p) => patch(focusTour, p)}
+                    onAddObjection={(o) => addObjection(focusTour, o)}
+                    onAlert={(severity, kind, message) => pushAlert({ tourId: focusTour, leadName: records[focusTour].leadName, severity, kind, message })}
+                  />
+                </div>
               </div>
-            )}
-          </Card>
+            </>
+          )}
         </div>
       </Tabs>
     </div>
@@ -1042,14 +1021,14 @@ function Metric({
             ? "text-accent bg-accent/10"
             : "text-foreground bg-muted";
   return (
-    <div className="rounded-lg border bg-card/60 p-3">
+    <div className="border bg-card p-3 rounded-sm shadow-sm">
       <div className="flex items-center gap-2">
-        <div className={cn("h-7 w-7 rounded-md flex items-center justify-center", toneCls)}>
+        <div className={cn("h-7 w-7 flex items-center justify-center rounded-sm", toneCls)}>
           <Icon className="h-3.5 w-3.5" />
         </div>
-        <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+        <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{label}</div>
       </div>
-      <div className="mt-1.5 text-2xl font-bold tabular-nums">{value}</div>
+      <div className="mt-1.5 text-2xl font-bold tabular-nums font-mono">{value}</div>
     </div>
   );
 }
@@ -1270,7 +1249,7 @@ function LiveBoard({
             )}
           >
             <div className="flex flex-col md:flex-row md:items-center gap-2">
-              <div className="flex-1 min-w-0 flex flex-col md:flex-row md:items-center gap-2 md:gap-3">
+              <div className="flex-1 min-w-0 flex flex-col md:flex-row md:items-center md:flex-wrap gap-2 md:gap-3">
                 <div className="md:w-[220px] shrink-0">
                   <div className="font-semibold truncate flex items-center gap-1.5">
                     {v.leadName}
@@ -1978,12 +1957,16 @@ function VisitDetailPanel({
               tone="info"
               active={v.startedMode === "on-the-way"}
               onClick={() => {
-                onPatch({
-                  stage: "started",
-                  startedMode: "on-the-way",
-                  startedAt: v.startedAt ?? Date.now(),
-                });
-                onAlert("info", "started", "Customer on the way");
+                if (v.startedMode === "on-the-way") {
+                  onPatch({ stage: "scheduled", startedMode: undefined, startedAt: undefined });
+                } else {
+                  onPatch({
+                    stage: "started",
+                    startedMode: "on-the-way",
+                    startedAt: v.startedAt ?? Date.now(),
+                  });
+                  onAlert("info", "started", "Customer on the way");
+                }
               }}
             />
             <ActBtn
@@ -1991,13 +1974,17 @@ function VisitDetailPanel({
               tone="success"
               active={v.startedMode === "reached"}
               onClick={() => {
-                onPatch({
-                  stage: "at-property",
-                  startedMode: "reached",
-                  startedAt: v.startedAt ?? Date.now(),
-                  reachedAt: Date.now(),
-                });
-                onAlert("win", "reached", "Reached property");
+                if (v.startedMode === "reached") {
+                  onPatch({ stage: "started", startedMode: "on-the-way", reachedAt: undefined });
+                } else {
+                  onPatch({
+                    stage: "at-property",
+                    startedMode: "reached",
+                    startedAt: v.startedAt ?? Date.now(),
+                    reachedAt: Date.now(),
+                  });
+                  onAlert("win", "reached", "Reached property");
+                }
               }}
             />
             <ActBtn
@@ -2005,8 +1992,12 @@ function VisitDetailPanel({
               tone="warning"
               active={v.startedMode === "delayed"}
               onClick={() => {
-                onPatch({ startedMode: "delayed" });
-                onAlert("warn", "delay", "Customer delayed");
+                if (v.startedMode === "delayed") {
+                  onPatch({ startedMode: undefined });
+                } else {
+                  onPatch({ startedMode: "delayed" });
+                  onAlert("warn", "delay", "Customer delayed");
+                }
               }}
             />
             <ActBtn
@@ -2014,8 +2005,12 @@ function VisitDetailPanel({
               tone="destructive"
               active={v.startedMode === "no-show"}
               onClick={() => {
-                onPatch({ stage: "lost", startedMode: "no-show", outcome: "lost" });
-                onAlert("risk", "lost", "No-show");
+                if (v.startedMode === "no-show") {
+                  onPatch({ stage: "scheduled", startedMode: undefined, outcome: null });
+                } else {
+                  onPatch({ stage: "lost", startedMode: "no-show", outcome: "lost" });
+                  onAlert("risk", "lost", "No-show");
+                }
               }}
             />
           </ButtonRow>
@@ -2039,13 +2034,17 @@ function VisitDetailPanel({
                     size="sm"
                     variant={active ? "default" : "outline"}
                     className="h-8 gap-1 capitalize"
-                    onClick={() =>
-                      onPatch({
-                        reaction: r,
-                        stage: v.stage === "completed" ? "completed" : "tour-ongoing",
-                        ongoingAt: v.ongoingAt ?? Date.now(),
-                      })
-                    }
+                    onClick={() => {
+                      if (v.reaction === r) {
+                        onPatch({ reaction: undefined });
+                      } else {
+                        onPatch({
+                          reaction: r,
+                          stage: v.stage === "completed" ? "completed" : "tour-ongoing",
+                          ongoingAt: v.ongoingAt ?? Date.now(),
+                        });
+                      }
+                    }}
                   >
                     <span>{emoji}</span>
                     {r}
@@ -2074,22 +2073,31 @@ function VisitDetailPanel({
                 tone={tone}
                 active={v.decision === d}
                 onClick={() => {
-                  onPatch({
-                    decision: d,
-                    stage: d === "not-interested" ? "lost" : "completed",
-                    completedAt: v.completedAt ?? Date.now(),
-                    outcome:
-                      d === "ready-to-book"
-                        ? "thinking"
-                        : d === "not-interested"
-                          ? "lost"
-                          : "thinking",
-                  });
-                  onAlert(
-                    d === "not-interested" ? "risk" : "info",
-                    "completed",
-                    `Visit done · ${label}`,
-                  );
+                  if (v.decision === d) {
+                    onPatch({
+                      decision: undefined,
+                      stage: "tour-ongoing",
+                      completedAt: undefined,
+                      outcome: null,
+                    });
+                  } else {
+                    onPatch({
+                      decision: d,
+                      stage: d === "not-interested" ? "lost" : "completed",
+                      completedAt: v.completedAt ?? Date.now(),
+                      outcome:
+                        d === "ready-to-book"
+                          ? "thinking"
+                          : d === "not-interested"
+                            ? "lost"
+                            : "thinking",
+                    });
+                    onAlert(
+                      d === "not-interested" ? "risk" : "info",
+                      "completed",
+                      `Visit done · ${label}`,
+                    );
+                  }
                 }}
               />
             ))}
@@ -2139,10 +2147,10 @@ function VisitDetailPanel({
                 setSub(OBJECTION_CATALOG[c as ObjectionCategory][0]);
               }}
             >
-              <SelectTrigger className="h-8 text-xs">
+              <SelectTrigger className="h-8 text-xs capitalize">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent onCloseAutoFocus={(e) => e.preventDefault()}>
                 {Object.keys(OBJECTION_CATALOG).map((c) => (
                   <SelectItem key={c} value={c} className="capitalize">
                     {c}
@@ -2154,7 +2162,7 @@ function VisitDetailPanel({
               <SelectTrigger className="h-8 text-xs">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent onCloseAutoFocus={(e) => e.preventDefault()}>
                 {OBJECTION_CATALOG[cat].map((s) => (
                   <SelectItem key={s} value={s}>
                     {s}

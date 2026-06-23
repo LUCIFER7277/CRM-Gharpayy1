@@ -175,7 +175,7 @@ function getMoveInLabel(iso: string | null | undefined): string {
 
 // ─── Page ────────────────────────────────────────────────────────
 function LeadsPage() {
-  const { leads, tours, properties, selectLead, tcms } = useApp();
+  const { leads = [], tours = [], properties = [], selectLead, tcms = [] } = useApp();
   const [, mounted] = useMountedNow();
   const userMap = useUserMap();
 
@@ -187,8 +187,8 @@ function LeadsPage() {
 
   const memberName = (id: string) => userMap.get(id)?.name || id;
 
-  const addedByOptions = useMemo(() => Array.from(new Set(leads.map((l) => l.createdBy || "system"))).sort(), [leads]);
-  const zoneOptions = useMemo(() => Array.from(new Set(tcms.map(t => t.zone))).sort(), [tcms]);
+  const addedByOptions = useMemo(() => (Array.from(new Set(leads.map((l) => l.createdBy || "system"))) as string[]).sort(), [leads]);
+  const zoneOptions = useMemo(() => (Array.from(new Set(tcms.map(t => t.zone))) as string[]).sort(), [tcms]);
   const [openBands, setOpenBands] = useState<Record<BandKey, boolean>>(
     Object.fromEntries(BAND_ORDER.map((k) => [k, BANDS[k].defaultOpen])) as Record<
       BandKey,
@@ -201,7 +201,9 @@ function LeadsPage() {
   // Filter
   const filtered = useMemo(() => {
     return leads.filter((l) => {
-      if (q && !l.name.toLowerCase().includes(q.toLowerCase()) && !l.phone.includes(q))
+      const leadName = l.name || "";
+      const leadPhone = l.phone || "";
+      if (q && !leadName.toLowerCase().includes(q.toLowerCase()) && !leadPhone.includes(q))
         return false;
       if (stageFilter !== "all" && l.stage !== stageFilter) return false;
       if (memberFilter !== "all" && (l.createdBy || "system") !== memberFilter) return false;
@@ -211,12 +213,16 @@ function LeadsPage() {
         if (tcm?.zone !== zoneFilter) return false;
       }
 
-      if (dateAddedFilter !== "all") {
+      if (dateAddedFilter !== "all" && l.createdAt) {
         const d = new Date(l.createdAt);
-        if (dateAddedFilter === "today" && !isToday(d)) return false;
-        if (dateAddedFilter === "yesterday" && !isYesterday(d)) return false;
-        if (dateAddedFilter === "this-week" && !isThisWeek(d)) return false;
-        if (dateAddedFilter === "this-month" && !isThisMonth(d)) return false;
+        if (!isNaN(d.getTime())) {
+          if (dateAddedFilter === "today" && !isToday(d)) return false;
+          if (dateAddedFilter === "yesterday" && !isYesterday(d)) return false;
+          if (dateAddedFilter === "this-week" && !isThisWeek(d)) return false;
+          if (dateAddedFilter === "this-month" && !isThisMonth(d)) return false;
+        } else {
+          return false;
+        }
       }
       return true;
     });
@@ -453,7 +459,7 @@ function LeadsPage() {
 
                           {/* Created */}
                           <div className="col-span-2 text-xs">
-                            <div>{fmtTourScheduleLabel(l.createdAt)}</div>
+                            <div>{l.createdAt ? fmtTourScheduleLabel(l.createdAt) : "-"}</div>
                             <div className="text-muted-foreground truncate">{memberName(l.createdBy || "system")}</div>
                           </div>
 
@@ -490,7 +496,7 @@ function LeadsPage() {
 
                           {/* Updated */}
                           <div className="col-span-1 text-right text-[11px] text-muted-foreground">
-                            {mounted
+                            {mounted && l.updatedAt
                               ? formatDistanceToNow(new Date(l.updatedAt), { addSuffix: true })
                               : "-"}
                           </div>

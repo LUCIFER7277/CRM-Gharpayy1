@@ -18,12 +18,14 @@ export function QuickActionRow({
   accent,
   dueLabel,
   onDone,
+  compact,
 }: {
   lead: Lead;
   reason?: string;
   accent?: "destructive" | "accent" | "warning" | "default";
   dueLabel?: string;
   onDone?: () => void;
+  compact?: boolean;
 }) {
   const { selectLead, logCall, sendMessage, tcms, tours, properties } = useApp();
   const [now, mounted] = useMountedNow();
@@ -40,6 +42,65 @@ export function QuickActionRow({
     warning: "border-l-warning",
     default: "border-l-transparent",
   }[accent ?? "default"];
+
+  if (compact) {
+    return (
+      <div className={`group grid grid-cols-12 items-center gap-2 px-3 py-2.5 border-l-2 ${ring} hover:bg-accent/5 transition-colors`}>
+        <button onClick={() => selectLead(lead.id)} className="col-span-4 text-left min-w-0">
+          <div className="font-medium text-sm truncate">{displayName}</div>
+          <div className="text-[11px] text-muted-foreground truncate">
+            {reason ?? `${lead.phone} · ${location.area}`}
+          </div>
+        </button>
+
+        <div className="col-span-2 hidden sm:block">
+          <IntentChip intent={liveIntent} />
+        </div>
+
+        <div className="col-span-3 hidden sm:block">
+          <ConfidenceBar value={live} />
+        </div>
+
+        <div className="col-span-6 sm:col-span-3 flex items-center justify-end gap-1">
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-7 w-7"
+            onClick={(e) => {
+              e.stopPropagation();
+              logCall(lead.id);
+              toast.success(`Call logged · ${displayName}`);
+            }}
+            title="Log call"
+          >
+            <Phone className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-7 w-7"
+            onClick={(e) => {
+              e.stopPropagation();
+              sendMessage(lead.id, "WhatsApp template sent");
+              toast.success(`WA sent · ${displayName}`);
+            }}
+            title="WhatsApp"
+          >
+            <MessageSquare className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-7 w-7"
+            onClick={() => selectLead(lead.id)}
+            title="Open"
+          >
+            <ChevronRight className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

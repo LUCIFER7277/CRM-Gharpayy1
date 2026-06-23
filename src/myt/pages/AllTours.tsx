@@ -16,7 +16,26 @@ export default function AllTours() {
   const [statusFilter, setStatusFilter] = useState<TourStatus | 'all'>('all');
   const [outcomeFilter, setOutcomeFilter] = useState<TourOutcome | 'all'>('all');
 
-  const filtered = tours.filter(t => {
+  // Deduplicate tours to only show the latest tour per lead
+  const latestToursMap = new Map<string, Tour>();
+  tours.forEach(t => {
+    if (!t.leadId) {
+      latestToursMap.set(t.id, t);
+      return;
+    }
+    const existing = latestToursMap.get(t.leadId);
+    if (!existing) {
+      latestToursMap.set(t.leadId, t);
+    } else {
+      const existingTs = existing.updatedAt ? new Date(existing.updatedAt).getTime() : new Date(`${existing.tourDate}T${existing.tourTime || "00:00"}`).getTime();
+      const currentTs = t.updatedAt ? new Date(t.updatedAt).getTime() : new Date(`${t.tourDate}T${t.tourTime || "00:00"}`).getTime();
+      if (currentTs > existingTs) {
+        latestToursMap.set(t.leadId, t);
+      }
+    }
+  });
+
+  const filtered = Array.from(latestToursMap.values()).filter(t => {
     // Role-based visibility
     if (authUser?.role === 'admin') {
       const myMemberIds = members
