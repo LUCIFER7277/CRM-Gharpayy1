@@ -79,7 +79,7 @@ export function KpiCard({
 }) {
   const toneCls = {
     default: "",
-    accent: "text-accent",
+    accent: "text-primary",
     success: "text-success",
     warning: "text-warning-foreground",
     destructive: "text-destructive",

@@ -286,10 +286,16 @@ export const api = {
   },
 
   tours: {
-    list: () =>
+    list: (q: Record<string, string | number> = {}) =>
       safe<{ items: import("@/contracts").Tour[]; nextCursor: string | null }>(
-        () =>
-          request<{ items: import("@/contracts").Tour[]; nextCursor: string | null }>(`/api/tours`),
+        () => {
+          const qs = new URLSearchParams(
+            Object.entries(q).map(([k, v]) => [k, String(v)]),
+          ).toString();
+          return request<{ items: import("@/contracts").Tour[]; nextCursor: string | null }>(
+            `/api/tours${qs ? `?${qs}` : ""}`
+          );
+        },
         () => localAdapter.listTours(),
       ),
     update: (tourId: string, updates: Record<string, unknown>) =>

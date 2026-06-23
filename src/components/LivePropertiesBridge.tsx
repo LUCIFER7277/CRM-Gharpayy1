@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import { useApp } from "@/lib/store";
 import { api } from "@/lib/api/client";
+import { onEvent, getSocket } from "@/lib/api/socket";
+import type { DomainEvent } from "@/contracts";
 
 export function LivePropertiesBridge() {
   const setProperties = useApp((s) => s.setProperties);
@@ -20,8 +22,13 @@ export function LivePropertiesBridge() {
 
     void load();
 
-    const interval = setInterval(load, 5 * 60_000);
-    return () => { cancelled = true; clearInterval(interval); };
+    getSocket();
+    const off = onEvent((e: DomainEvent) => {
+      if (!e.type.startsWith("evt.property.")) return;
+      void load();
+    });
+
+    return () => { cancelled = true; off(); };
   }, [setProperties]);
 
   return null;

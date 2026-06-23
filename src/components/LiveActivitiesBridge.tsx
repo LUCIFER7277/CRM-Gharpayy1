@@ -1,7 +1,9 @@
 import { useEffect } from "react";
 import { useApp } from "@/lib/store";
 import { api } from "@/lib/api/client";
+import { onEvent, getSocket } from "@/lib/api/socket";
 import type { ActivityLog } from "@/lib/types";
+import type { DomainEvent } from "@/contracts";
 
 function toActivityLog(raw: Record<string, unknown>): ActivityLog {
   const entityType = raw.entityType as string | undefined;
@@ -50,8 +52,13 @@ export function LiveActivitiesBridge() {
 
     void load();
 
-    const interval = setInterval(load, 5 * 60_000);
-    return () => { cancelled = true; clearInterval(interval); };
+    getSocket();
+    const off = onEvent((e: DomainEvent) => {
+      if (!e.type.startsWith("evt.activity.")) return;
+      void load();
+    });
+
+    return () => { cancelled = true; off(); };
   }, [setActivities]);
 
   return null;

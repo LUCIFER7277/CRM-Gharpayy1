@@ -47,7 +47,7 @@ export function LiveToursAppBridge() {
 
     const load = async () => {
       try {
-        const r = await api.tours.list();
+        const r = await api.tours.list({ limit: 200 });
         if (cancelled) return;
         setTours(r.items.filter(isWireTour).map(toLegacyTour));
       } catch (e) {
@@ -114,11 +114,9 @@ export function LiveToursAppBridge() {
       }
     });
 
-    const interval = setInterval(load, 5 * 60_000);
     return () => {
       cancelled = true;
       off();
-      clearInterval(interval);
     };
   }, [setTours]);
 

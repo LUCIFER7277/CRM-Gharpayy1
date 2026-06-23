@@ -525,14 +525,15 @@ export function LeadPasteParser({ onDone }: Props) {
               </Field>
               <Field label="Areas *" invalid={isPending("areas")} hint={fieldHint("areas")}>
                 <div className="relative">
-                  <Input
+                  <Textarea
                     value={areasText}
                     onChange={(e) => setAreasText(e.target.value)}
                     placeholder="HSR, BTM, Koramangala"
-                    className={invalidInputClass("areas")}
+                    rows={2}
+                    className={cn("resize-none pr-12 min-h-[44px]", invalidInputClass("areas"))}
                   />
                   {detectedZone && (
-                    <Badge variant="secondary" className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px]">
+                    <Badge variant="secondary" className="absolute right-1.5 bottom-1.5 text-[9px] px-1.5 py-0 pointer-events-none">
                       {detectedZone}
                     </Badge>
                   )}
@@ -554,10 +555,12 @@ export function LeadPasteParser({ onDone }: Props) {
                 />
               </Field>
               <Field label="Address / map">
-                <Input
+                <Textarea
                   value={fullAddress}
                   onChange={(e) => setFullAddress(e.target.value)}
                   placeholder="Door, landmark or Maps URL"
+                  rows={2}
+                  className="resize-none min-h-[44px]"
                 />
               </Field>
               <Field label="Type" invalid={isPending("type")} hint={fieldHint("type")}>

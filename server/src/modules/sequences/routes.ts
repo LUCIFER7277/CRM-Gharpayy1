@@ -3,6 +3,7 @@ import { z } from "zod";
 import { col } from "../../db/mongo.js";
 import { requireAuth } from "../../middleware/auth.js";
 import { ulid } from "../../../../src/contracts/ids.js";
+import { emit, newEventId } from "../../realtime/event-bus.js";
 
 const SequenceKind = z.enum(["post-tour", "pre-decision", "cold-revival", "first-contact"]);
 
@@ -61,6 +62,17 @@ export function registerSequencesRoutes(app: FastifyInstance) {
       updatedAt: now,
     };
     await col("sequences").insertOne(doc);
+    await emit({
+      _id: newEventId(),
+      type: "evt.sequence.created",
+      occurredAt: now,
+      actor: req.user!.sub,
+      tenantId: req.user!.tenantId,
+      correlationId: req.id,
+      causationId: null,
+      version: 1,
+      payload: { sequenceId: doc._id },
+    });
     return reply.status(201).send(doc);
   });
 
@@ -79,6 +91,17 @@ export function registerSequencesRoutes(app: FastifyInstance) {
       { returnDocument: "after" },
     );
     if (!result) return reply.status(404).send({ error: "not_found" });
+    await emit({
+      _id: newEventId(),
+      type: "evt.sequence.updated",
+      occurredAt: new Date().toISOString(),
+      actor: req.user!.sub,
+      tenantId: req.user!.tenantId,
+      correlationId: req.id,
+      causationId: null,
+      version: 1,
+      payload: { sequenceId: result._id },
+    });
     return reply.send(result);
   });
 }

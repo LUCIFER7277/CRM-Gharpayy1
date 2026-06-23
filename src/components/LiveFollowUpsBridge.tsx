@@ -1,7 +1,9 @@
 import { useEffect } from "react";
 import { useApp } from "@/lib/store";
 import { api } from "@/lib/api/client";
+import { onEvent, getSocket } from "@/lib/api/socket";
 import type { FollowUp } from "@/lib/types";
+import type { DomainEvent } from "@/contracts";
 
 function toFollowUp(raw: Record<string, unknown>): FollowUp {
   return {
@@ -34,8 +36,13 @@ export function LiveFollowUpsBridge() {
 
     void load();
 
-    const interval = setInterval(load, 5 * 60_000);
-    return () => { cancelled = true; clearInterval(interval); };
+    getSocket();
+    const off = onEvent((e: DomainEvent) => {
+      if (!e.type.startsWith("evt.followup.")) return;
+      void load();
+    });
+
+    return () => { cancelled = true; off(); };
   }, [setFollowUps]);
 
   return null;

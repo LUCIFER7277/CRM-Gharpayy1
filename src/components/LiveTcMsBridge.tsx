@@ -3,7 +3,9 @@
 import { useEffect } from "react";
 import { useApp } from "@/lib/store";
 import { api, type ManagedUser } from "@/lib/api/client";
+import { onEvent, getSocket } from "@/lib/api/socket";
 import type { TCM } from "@/lib/types";
+import type { DomainEvent } from "@/contracts";
 import { useAuthUser } from "@/lib/auth-store";
 
 function toTcm(u: ManagedUser): TCM {
@@ -39,8 +41,13 @@ export function LiveTcMsBridge() {
 
     void load();
 
-    const interval = setInterval(load, 5 * 60_000);
-    return () => { cancelled = true; clearInterval(interval); };
+    getSocket();
+    const off = onEvent((e: DomainEvent) => {
+      if (!e.type.startsWith("evt.user.")) return;
+      void load();
+    });
+
+    return () => { cancelled = true; off(); };
   }, [setTcms]);
 
   // When logged in as a TCM, lock the active TCM scope to the authenticated user.

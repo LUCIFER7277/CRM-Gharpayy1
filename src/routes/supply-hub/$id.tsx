@@ -28,11 +28,104 @@ const OBJECTIONS: { key: Objection; label: string }[] = [
 ];
 
 function SupplyHubDetail() {
-  const { role } = useApp();
+  const { role, properties } = useApp();
   const navigate = useNavigate();
   useEffect(() => { if (role === "owner") navigate({ to: "/property-owner/inventory" }); }, [role, navigate]);
   const { id } = useParams({ from: "/supply-hub/$id" });
-  const pg = useMemo(() => PGS.find((p) => p.id === id), [id]);
+  
+  const pg = useMemo(() => {
+    const found = PGS.find((p) => p.id === id);
+    if (found) return found;
+
+    // Fallback for live Ops properties
+    const ops = properties.find((p) => String(p.id) === id);
+    if (!ops) return undefined;
+
+    return {
+      id: String(ops.id),
+      name: ops.name,
+      actualName: ops.name,
+      area: ops.area || "Unknown Area",
+      locality: ops.address || "Location unverified",
+      gender: "Co-ed" as any,
+      tier: "Budget" as any,
+      audience: "Professionals & Students",
+      prices: {
+        min: ops.pricePerBed || 5000,
+        max: ops.pricePerBed || 15000,
+        single: ops.pricePerBed || 0,
+        double: ops.pricePerBed || 0,
+        triple: ops.pricePerBed || 0,
+      },
+      rooms: "Single, Double, Triple",
+      furnishing: "Fully Furnished",
+      utilities: "Water, Electricity, WiFi",
+      rules: "Standard PG Rules",
+      lows: "Basic property",
+      usp: "Affordable and basic",
+      groupName: "Unknown",
+      mapsLink: "",
+      wa_card: "",
+      location_card: "",
+      landmarksInline: [],
+      deposit: "1 month",
+      minStay: "3 months",
+      iq: 65,
+      iqBreakdown: {
+        "Build": { ok: true, earned: 6, max: 10 },
+        "Maintenance": { ok: true, earned: 6, max: 10 },
+        "Management": { ok: true, earned: 7, max: 10 },
+        "Location": { ok: true, earned: 7, max: 10 }
+      },
+      amenities: ["WiFi", "Power Backup"],
+      safety: ["CCTV"],
+      foodType: "Veg/Non-veg",
+      mealsIncluded: "2 meals/day",
+      cleaning: "Daily",
+      noise: "Moderate",
+      vibe: "Standard",
+      manager: { phone: "9999999999", name: "Property Manager" },
+      owner: { phone: "", name: "Owner" },
+      nearbyLandmarks: [],
+      persona: {
+        archetype: "Professional",
+        ageRange: "22-30",
+        salary: "3LPA - 10LPA",
+        likelyCompanies: "IT/Tech",
+        decisionMaker: "Self",
+        conversionProbability: "Medium",
+        painPoints: [],
+        pitchAngle: [],
+        qualifyingQuestions: [],
+        doNot: []
+      },
+      scripts: {
+        call1: {
+          goal: "Understand requirements",
+          opening: "Hi, calling from Gharpayy...",
+          questions: [],
+          hook: "We have great properties in your budget.",
+          close: "Let's schedule a visit."
+        },
+        call2: {
+          goal: "Address objections",
+          objections: []
+        },
+        pitch: {
+          location: "Central",
+          lifestyle: "Comfortable",
+          priceClose: "It's a great deal.",
+          closeQuestion: "When can you visit?"
+        },
+        money: {
+          breakdown: ["Rent", "Deposit"],
+          payLater: "You can block it now.",
+          depositObjection: "Standard in Bangalore",
+          checklist: []
+        }
+      }
+    };
+  }, [id, properties]);
 
   const [obj, setObj] = useState<Objection>("expensive");
   const [tab, setTab] = useState<"intel" | "wa" | "scripts" | "alternatives">("intel");

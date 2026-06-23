@@ -7,6 +7,11 @@ export default defineConfig({
     server: {
       port: 3001,
       allowedHosts: [".trycloudflare.com"],
+      hmr: {
+        host: "localhost",
+        protocol: "ws",
+        port: 3002,
+      },
     },
     plugins: [
       nitro({ preset: process.env.VERCEL ? "vercel" : "node-server" })

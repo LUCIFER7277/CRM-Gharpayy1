@@ -76,8 +76,7 @@ export function LiveTenantsBridge() {
       }
     });
 
-    const interval = setInterval(load, 5 * 60_000);
-    return () => { cancelled = true; off(); clearInterval(interval); };
+    return () => { cancelled = true; off(); };
   }, []);
 
   return null;

@@ -8,10 +8,15 @@ let socket: Socket | null = null;
 
 export function getSocket() {
   if (!socket) {
-    socket = io((import.meta.env.VITE_WS_URL as string) || "", {
-      autoConnect: false,
-      reconnection: true,
-    });
+    socket = io(
+      (import.meta.env.VITE_WS_URL as string) || 
+      (import.meta.env.VITE_API_URL as string) || 
+      "", 
+      {
+        autoConnect: false,
+        reconnection: true,
+      }
+    );
   }
   return socket;
 }

@@ -518,7 +518,7 @@ export function ImpactFocusPopover({
           type="button"
           className="h-8 shrink-0 rounded-md border border-border bg-background px-2.5 text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-accent/5 flex items-center gap-1.5 transition-colors"
         >
-          <Pin className="h-3.5 w-3.5 text-accent" />
+          <Pin className="h-3.5 w-3.5 text-primary" />
           <span className="hidden sm:inline">Today&apos;s focus</span>
           <span className="sm:hidden">Focus</span>
         </button>

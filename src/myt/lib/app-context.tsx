@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Tour, Role, Lead, Booking, Room, RoomBlock, Property } from './types';
-import { tours as initialTours, initialLeads, initialBookings, setZones } from './mock-data';
+import { setZones } from './mock-data';
 import { generateRooms, generateInitialBlocks } from './properties-seed';
 import { api } from '@/lib/api/client';
 
@@ -35,9 +35,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [tours, setToursState] = useState<Tour[]>(() => {
     try {
       const stored = localStorage.getItem('myt:tours');
-      return stored ? JSON.parse(stored) : initialTours;
+      return stored ? JSON.parse(stored) : [];
     } catch {
-      return initialTours;
+      return [];
     }
   });
   
@@ -54,8 +54,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
-  const [leads, setLeads] = useState<Lead[]>(initialLeads);
-  const [bookings, setBookings] = useState<Booking[]>(initialBookings);
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [blocks, setBlocks] = useState<RoomBlock[]>([]);
   const [managedProperties, setManagedProperties] = useState<Property[]>([]);

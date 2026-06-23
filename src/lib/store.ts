@@ -24,7 +24,7 @@ import type {
   RentStatus,
 } from "./types";
 import type { Todo } from "@/contracts";
-import { ACTIVITIES, FOLLOWUPS, PROPERTIES, TCMS, HANDOFFS, SEQUENCES_INIT } from "./mock-data";
+// import { ACTIVITIES, FOLLOWUPS, PROPERTIES, TCMS, HANDOFFS, SEQUENCES_INIT } from "./mock-data";
 import { autoAssign as autoAssignFn } from "./routing";
 import { api } from "@/lib/api/client";
 import { isTodayIST } from "@/lib/crm10x/dates";
@@ -199,16 +199,16 @@ export const useApp = create<AppState>()(
     }),
   consumeSelectedLeadAction: () => set({ selectedLeadAction: null }),
 
-  tcms: TCMS,
+  tcms: [],
   setTcms: (tcms) => set({ tcms }),
-  properties: PROPERTIES,
+  properties: [],
   // Leads + tours hydrated from Mongo by LiveLeadsBridge / LiveToursAppBridge.
   leads: [],
   tours: [],
-  activities: ACTIVITIES,
-  followUps: FOLLOWUPS,
-  handoffs: HANDOFFS,
-  sequences: SEQUENCES_INIT,
+  activities: [],
+  followUps: [],
+  handoffs: [],
+  sequences: [],
   bookings: [],
   tenants: [],
   rents: [],
@@ -333,6 +333,15 @@ export const useApp = create<AppState>()(
       leadId,
       text: `Follow-up set: ${reason}`,
     });
+    api.followUps
+      .create({
+        leadId,
+        tcmId: lead.assignedTcmId,
+        dueAt,
+        priority,
+        reason,
+      })
+      .catch((err) => console.error("[store] Failed to save follow-up:", err));
   },
 
   addLeadTag: (leadId, tag) => {
@@ -796,6 +805,16 @@ export const useApp = create<AppState>()(
           done: false,
         };
         set((s) => ({ followUps: [f, ...s.followUps] }));
+        api.followUps
+          .create({
+            leadId: f.leadId,
+            tourId: f.tourId,
+            tcmId: f.tcmId,
+            dueAt: f.dueAt,
+            priority: f.priority,
+            reason: f.reason,
+          })
+          .catch((err) => console.error("[store] Failed to create post-tour follow-up:", err));
       }
     }
     if (next.objection && next.objection !== prevObjection) {
@@ -840,11 +859,24 @@ export const useApp = create<AppState>()(
       tourId: f.tourId,
       text: `Follow-up done: ${f.reason}`,
     });
+    api.followUps
+      .update(followUpId, { done: true })
+      .catch((err) => console.error("[store] Failed to complete follow-up:", err));
   },
 
   addFollowUp: (input) => {
     const f: FollowUp = { ...input, id: uid("f"), done: false };
     set((s) => ({ followUps: [f, ...s.followUps] }));
+    api.followUps
+      .create({
+        leadId: input.leadId,
+        tourId: input.tourId,
+        tcmId: input.tcmId,
+        dueAt: input.dueAt,
+        priority: input.priority,
+        reason: input.reason,
+      })
+      .catch((err) => console.error("[store] Failed to create follow-up:", err));
   },
 
   reassignLead: (leadId, tcmId, reason) => {
@@ -1199,7 +1231,7 @@ function pushActivity(
 /* ============== SELECTORS / DERIVED ============== */
 
 export function getTcm(id: string) {
-  return TCMS.find((t) => t.id === id);
+  return useApp.getState().tcms.find((t) => t.id === id);
 }
 
 export function getProperty(id: string | null | undefined, properties: Property[]) {

@@ -765,7 +765,7 @@ export function LeadControlPanel() {
         style={{ maxWidth: 560 }}
       >
         {/* Header block */}
-        <SheetHeader className="px-4 py-3 border-b border-border space-y-2">
+        <SheetHeader className="pl-4 pr-12 py-3 border-b border-border space-y-2">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <SheetTitle className="font-display text-base leading-tight">
@@ -1404,12 +1404,6 @@ export function LeadControlPanel() {
                 const setPostTourReminder = async () => {
                   const dueAt = postTourFollowUpAt();
                   await updatePostTour(target.id, { nextFollowUpAt: dueAt });
-                  setLeadFollowUp(
-                    lead.id,
-                    dueAt,
-                    priorityFor(pt.confidence),
-                    `Post-tour follow-up · ${postTourPropertyName}`,
-                  );
                   scheduleLocalReminderAlert(
                     `post-tour:${target.id}`,
                     dueAt,
@@ -2671,11 +2665,16 @@ function PropertyShortlistStep({
   const [createdOthers, setCreatedOthers] = useState<string[]>([]);
 
   const list = useMemo(() => {
-    const base = query.trim()
+    let base = query.trim()
       ? searchPropertyCatalog(query, properties, { preferredArea: lead.preferredArea, limit: 12 })
       : areas.flatMap((area) =>
           searchPropertyCatalog(area, properties, { preferredArea: area, limit: 5 }),
         );
+
+    if (!query.trim() && base.length === 0) {
+      base = allCatalogProperties(properties).slice(0, 12);
+    }
+
     const seen = new Set<string>();
     const filtered = base
       .filter((property) => {
@@ -2697,7 +2696,7 @@ function PropertyShortlistStep({
       }
     }
     return filtered;
-  }, [areas, lead.preferredArea, properties, query, interests]);
+  }, [areas, lead.preferredArea, properties, query, interests, createdOthers]);
 
   return (
     <div className="space-y-3">

@@ -40,6 +40,7 @@ import {
   memberDisplayName,
   memberOptionLabel,
   memberShortLabel,
+  memberAreaLabel,
   useActiveTcMs,
   useOrgMembers,
 } from "@/hooks/useOrgDirectory";
@@ -448,7 +449,10 @@ export function ImpactQueue() {
   const selectedLeadId = useApp((s) => s.selectedLeadId);
   const authUser = useAuthUser((s) => s.user);
   const canSelectTcmScope =
-    authUser?.role === "super_admin" || authUser?.role === "manager" || authUser?.role === "admin";
+    authUser?.role === "super_admin" || authUser?.role === "super-admin" || authUser?.role === "manager" || authUser?.role === "admin" || role === "super-admin" || role === "super_admin";
+  const focusProps = useTcmContacts((s) => s.focusProps);
+
+
   const selfScopeId = authUser?.id || currentTcmId;
   const { tcms: activeTcms } = useActiveTcMs();
   const { members: orgMembers } = useOrgMembers();
@@ -492,7 +496,7 @@ export function ImpactQueue() {
         const reportsToMe = Boolean(authUser?.id) && m.adminId === authUser.id;
         return sameZone || reportsToMe;
       })
-      .map((m) => ({ id: m.id, name: m.name }));
+      .map((m) => ({ id: m.id, name: m.name, zones: m.zones }));
     if (fromDirectory.length > 0) {
       return Array.from(new Map(fromDirectory.map((m) => [m.id, m])).values()).sort((a, b) =>
         a.name.localeCompare(b.name),
@@ -1061,15 +1065,33 @@ export function ImpactQueue() {
                 <SelectTrigger className="h-8 text-[11px] w-40 bg-background">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all" className="text-[11px]">
+                <SelectContent className="max-h-[50vh]">
+                  <SelectItem value="all" className="text-[11px] font-semibold py-2">
                     All Members
                   </SelectItem>
-                  {memberScopeOptions.map((m) => (
-                    <SelectItem key={m.id} value={m.id} className="text-[11px]">
-                      {memberOptionLabel(m)}
-                    </SelectItem>
-                  ))}
+                  {memberScopeOptions.map((m) => {
+                    const pinned = focusProps?.[m.id];
+                    let subtext = memberAreaLabel(m);
+                    let hasPinned = false;
+                    if (pinned && pinned.length > 0) {
+                      const pNames = pinned.map((id) => properties?.find((p) => String(p.id) === String(id))?.name).filter(Boolean);
+                      if (pNames.length > 0) {
+                        subtext = pNames.slice(0, 2).join(", ") + (pNames.length > 2 ? '...' : '');
+                        hasPinned = true;
+                      }
+                    }
+                    
+                    return (
+                      <SelectItem key={m.id} value={m.id} className="text-[11px] py-1.5 cursor-pointer">
+                        <div className="grid grid-cols-[120px_1fr] items-center gap-3 w-full">
+                          <span className="font-semibold text-foreground truncate">{memberDisplayName(m)}</span>
+                          <span className={cn("text-[10px] truncate", hasPinned ? "text-primary font-medium" : "text-muted-foreground")}>
+                            {hasPinned ? "Pinned: " : ""}{subtext}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             )}
@@ -2126,7 +2148,7 @@ function LeadDrawer({
         className="w-full sm:max-w-xl p-0 flex flex-col gap-0 overflow-hidden bg-gradient-to-b from-card via-card to-background"
       >
         {/* Glossy header */}
-        <SheetHeader className="relative px-5 pt-5 pb-3 border-b border-border space-y-2 bg-gradient-to-br from-accent/10 via-card to-primary/5 backdrop-blur-xl">
+        <SheetHeader className="relative pl-5 pr-12 pt-5 pb-3 border-b border-border space-y-2 bg-gradient-to-br from-accent/10 via-card to-primary/5 backdrop-blur-xl">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/60 to-transparent" />
           <div className="flex items-center gap-2 flex-wrap">
             <SheetTitle className="text-base font-display">{lead.name}</SheetTitle>

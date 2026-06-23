@@ -21,6 +21,7 @@ import { intentBg, confirmationLabel } from "@/myt/lib/confidence";
 import { toast } from "sonner";
 import { cn, formatTime12h } from "@/lib/utils";
 import { format, formatDistanceToNow } from "date-fns";
+import { api } from "@/lib/api/client";
 
 type Subject =
   | { kind: "tour"; tour: Tour }
@@ -165,7 +166,7 @@ export function LeadControlPanel({ subject, trigger, defaultTab = "overview" }: 
     if (lead) updateLead({ notes: `[FU ${fuDate}] ${fuReason}\n${lead.notes ?? ""}` });
   };
 
-  const savePostTour = () => {
+  const savePostTour = async () => {
     if (!tour) return;
     if (!ptOutcome) { toast.error("Pick an outcome"); return; }
     if (!ptObjection && ptOutcome !== "booked" && ptOutcome !== "token-paid") {
@@ -194,6 +195,7 @@ export function LeadControlPanel({ subject, trigger, defaultTab = "overview" }: 
     });
     log("tcm_report_filed", `Outcome: ${ptOutcome} · confidence ${ptConfidence}%`);
     toast.success("Post-tour update saved");
+    const { items } = await api.tours.list({ limit: 200 });
   };
 
   const stale = tour?.status === "completed" && !tour.outcome;

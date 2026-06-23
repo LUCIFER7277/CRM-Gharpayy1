@@ -31,6 +31,7 @@ import {
 } from "@/lib/checkins/templates";
 import { useApp } from "@/lib/store";
 import { Button } from "@/components/ui/button";
+import confetti from "canvas-confetti";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -42,6 +43,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useMountedNow } from "@/hooks/use-now";
 import { useQuotationsQuery } from "@/lib/crm10x/quotations";
@@ -299,6 +301,7 @@ export function CheckInPanel({ lead }: { lead: Lead }) {
         icon={MessageSquare}
         title="Paste customer's confirmation"
         helper="WhatsApp reply text. Optional: attach confirmation screenshot."
+        attachments={[checkin.ackScreenshotUrl]}
       >
         <Textarea
           value={ackText || checkin.ackText || ""}
@@ -347,6 +350,7 @@ export function CheckInPanel({ lead }: { lead: Lead }) {
         icon={IndianRupee}
         title="Token paid"
         helper="Enter amount + UPI ref number from the customer's screenshot."
+        attachments={[checkin.tokenScreenshotUrl]}
       >
         <div className="grid grid-cols-2 gap-2">
           <div>
@@ -427,7 +431,11 @@ export function CheckInPanel({ lead }: { lead: Lead }) {
         helper="Pick property & room number. Blocks inventory."
       >
         <div className="grid grid-cols-2 gap-2">
-          <Select value={propertyId || checkin.propertyId || ""} onValueChange={setPropertyId}>
+          <Select
+            value={propertyId || checkin.propertyId || ""}
+            onValueChange={setPropertyId}
+            disabled={Boolean(checkin.propertyId)}
+          >
             <SelectTrigger className="h-8 text-xs">
               <SelectValue placeholder="Property" />
             </SelectTrigger>
@@ -617,6 +625,7 @@ export function CheckInPanel({ lead }: { lead: Lead }) {
         icon={KeyRound}
         title="Key handover"
         helper="Hand over keys only after balance is clear. This marks the customer moved in."
+        attachments={[checkin.keyHandoverPhotoUrl]}
       >
         <ImageUploadInput
           label="Add key handover photo"
@@ -681,19 +690,20 @@ export function CheckInPanel({ lead }: { lead: Lead }) {
             />
             <Button
               size="sm"
-              className="h-8 text-xs"
-              disabled={!issueDesc.trim()}
+              className={`h-8 text-xs ${issueCat === "none" ? "bg-success text-success-foreground hover:bg-success/90" : ""}`}
+              disabled={!issueDesc.trim() && issueCat !== "none"}
               onClick={() => {
+                const desc = issueCat === "none" && !issueDesc.trim() ? "All clear, no issues reported" : issueDesc.trim();
                 addIssue({
                   id: checkin.id,
                   leadId: lead.id,
-                  issue: { category: issueCat, description: issueDesc.trim() },
+                  issue: { category: issueCat, description: desc },
                 });
                 setIssueDesc("");
-                toast.success("Issue logged");
+                toast.success(issueCat === "none" ? "Marked as clear" : "Issue logged");
               }}
             >
-              Add
+              {issueCat === "none" ? "Mark clear" : "Add"}
             </Button>
           </div>
           <div className="space-y-1.5">
@@ -793,6 +803,12 @@ export function CheckInPanel({ lead }: { lead: Lead }) {
                 void setLeadStage(lead.id, "booked");
                 setStage({ id: checkin.id, leadId: lead.id, stage: "settled" });
                 copyWA(waSettleCheck(lead.name));
+                confetti({
+                  particleCount: 150,
+                  spread: 80,
+                  origin: { y: 0.6 },
+                  colors: ['#10b981', '#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6'],
+                });
                 toast.success("Check-in complete · booking created");
               }}
             >
@@ -803,12 +819,15 @@ export function CheckInPanel({ lead }: { lead: Lead }) {
       )}
 
       {checkin.stage === "settled" && (
-        <div className="rounded-lg border border-success/40 bg-success/10 p-3 text-sm">
-          <div className="flex items-center gap-2 font-semibold text-success">
-            <CheckCircle2 className="h-4 w-4" /> Check-in complete
-          </div>
-          <div className="mt-1 text-xs text-muted-foreground">
-            Booking is final, keys are handed over, and balance is {formatINR(checkin.balanceDue)}.
+        <div className="rounded-lg border-2 border-emerald-500/40 bg-emerald-500/10 p-6 text-center shadow-lg shadow-emerald-500/10">
+          <div className="flex flex-col items-center justify-center gap-3">
+            <div className="h-12 w-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
+              <CheckCircle2 className="h-6 w-6 text-emerald-600" />
+            </div>
+            <h3 className="text-lg font-bold text-emerald-700 dark:text-emerald-400">Deal Closed! 🎉</h3>
+            <p className="text-xs text-emerald-600/80 max-w-[200px] leading-relaxed">
+              Booking is final, keys handed over, and balance collected. Great job!
+            </p>
           </div>
         </div>
       )}
@@ -927,12 +946,16 @@ function ImageUploadInput({
         </label>
       </Button>
       {value && (
-        <Badge
-          variant="outline"
-          className="h-8 shrink-0 border-success/40 bg-success/10 text-[10px] text-success"
-        >
-          Attached
-        </Badge>
+        <Dialog>
+          <DialogTrigger asChild>
+            <div className="h-8 w-12 shrink-0 cursor-pointer overflow-hidden rounded border border-border transition-opacity hover:opacity-80">
+              <img src={value} alt="Preview" className="h-full w-full object-cover" />
+            </div>
+          </DialogTrigger>
+          <DialogContent className="max-w-3xl bg-transparent border-none p-0 shadow-none">
+            <img src={value} alt="Full preview" className="w-full max-h-[85vh] rounded-md object-contain" />
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );
@@ -944,6 +967,7 @@ function StageCard({
   icon: Icon,
   title,
   helper,
+  attachments,
   children,
 }: {
   active?: boolean;
@@ -951,8 +975,11 @@ function StageCard({
   icon: React.ComponentType<{ className?: string }>;
   title: string;
   helper?: string;
+  attachments?: (string | null | undefined)[];
   children?: React.ReactNode;
 }) {
+  const validAttachments = attachments?.filter(Boolean) as string[];
+  
   return (
     <div
       className={`rounded-lg border p-3 space-y-2 ${
@@ -972,6 +999,22 @@ function StageCard({
       </div>
       {helper && !done && <div className="text-[11px] text-muted-foreground">{helper}</div>}
       {!done && children}
+      {done && validAttachments && validAttachments.length > 0 && (
+        <div className="flex flex-wrap gap-2 pt-1">
+          {validAttachments.map((url, i) => (
+            <Dialog key={i}>
+              <DialogTrigger asChild>
+                <div className="h-10 w-14 shrink-0 cursor-pointer overflow-hidden rounded border border-emerald-500/30 transition-opacity hover:opacity-80">
+                  <img src={url} alt="Attachment" className="h-full w-full object-cover" />
+                </div>
+              </DialogTrigger>
+              <DialogContent className="max-w-3xl bg-transparent border-none p-0 shadow-none">
+                <img src={url} alt="Full attachment" className="w-full max-h-[85vh] rounded-md object-contain" />
+              </DialogContent>
+            </Dialog>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

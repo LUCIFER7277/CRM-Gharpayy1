@@ -3,6 +3,7 @@ import { z } from "zod";
 import { col } from "../../db/mongo.js";
 import { requireAuth, requireScope } from "../../middleware/auth.js";
 import { ulid } from "../../../../src/contracts/ids.js";
+import { emit, newEventId } from "../../realtime/event-bus.js";
 
 export interface PropertyDoc {
   _id: string;
@@ -97,6 +98,17 @@ export function registerPropertyRoutes(app: FastifyInstance) {
         updatedAt: now,
       };
       await properties().insertOne(doc);
+      await emit({
+        _id: newEventId(),
+        type: "evt.property.created",
+        occurredAt: now,
+        actor: req.user!.sub,
+        tenantId: req.user!.tenantId,
+        correlationId: req.id,
+        causationId: null,
+        version: 1,
+        payload: { propertyId: doc._id },
+      });
       return reply.code(201).send(propertyOut(doc));
     } catch (e) {
       const err = e as Error;
@@ -146,6 +158,17 @@ export function registerPropertyRoutes(app: FastifyInstance) {
         { returnDocument: "after" },
       );
       if (!r) return reply.code(404).send({ code: "NOT_FOUND", message: "Property not found" });
+      await emit({
+        _id: newEventId(),
+        type: "evt.property.updated",
+        occurredAt: new Date().toISOString(),
+        actor: req.user!.sub,
+        tenantId: req.user!.tenantId,
+        correlationId: req.id,
+        causationId: null,
+        version: 1,
+        payload: { propertyId: r._id },
+      });
       return reply.send(propertyOut(r));
     } catch (e) {
       const err = e as Error;
@@ -171,6 +194,17 @@ export function registerPropertyRoutes(app: FastifyInstance) {
       { returnDocument: "after" },
     );
     if (!r) return reply.code(404).send({ code: "NOT_FOUND", message: "Property not found" });
+    await emit({
+      _id: newEventId(),
+      type: "evt.property.updated",
+      occurredAt: new Date().toISOString(),
+      actor: req.user!.sub,
+      tenantId: req.user!.tenantId,
+      correlationId: req.id,
+      causationId: null,
+      version: 1,
+      payload: { propertyId: r._id },
+    });
     return reply.send(propertyOut(r));
   });
 
@@ -179,6 +213,17 @@ export function registerPropertyRoutes(app: FastifyInstance) {
     const { id } = req.params as { id: string };
     const r = await properties().deleteOne({ _id: id, tenantId: req.user!.tenantId });
     if (r.deletedCount === 0) return reply.code(404).send({ code: "NOT_FOUND", message: "Property not found" });
+    await emit({
+      _id: newEventId(),
+      type: "evt.property.deleted",
+      occurredAt: new Date().toISOString(),
+      actor: req.user!.sub,
+      tenantId: req.user!.tenantId,
+      correlationId: req.id,
+      causationId: null,
+      version: 1,
+      payload: { propertyId: id },
+    });
     return reply.send({ ok: true });
   });
 }

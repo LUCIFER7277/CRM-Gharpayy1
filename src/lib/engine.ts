@@ -114,11 +114,12 @@ export function buildDoNextQueue(
 
   // 1. post-tour pending - highest priority
   tours
-    .filter((t) => t.status === "completed" && !t.postTour.filledAt)
+    .filter((t) => t.status === "completed" && !(t.postTour?.filledAt))
     .forEach((t) => {
       const lead = leads.find((l) => l.id === t.leadId);
       if (!lead || !byLead(lead) || !isLeadActive(lead)) return;
-      const hrs = (now - +new Date(t.scheduledAt)) / 36e5;
+      const ts = t.scheduledAt ? +new Date(t.scheduledAt) : now;
+      const hrs = Math.max(0, (now - ts) / 36e5) || 0;
       actions.push({
         leadId: lead.id,
         reason: `Post-tour form pending · ${Math.max(1, Math.round(hrs))}h overdue`,
@@ -129,11 +130,12 @@ export function buildDoNextQueue(
 
   // 2. overdue follow-ups
   followUps
-    .filter((f) => !f.done && +new Date(f.dueAt) < now)
+    .filter((f) => !f.done && f.dueAt && +new Date(f.dueAt) < now)
     .forEach((f) => {
       const lead = leads.find((l) => l.id === f.leadId);
       if (!lead || !byLead(lead) || !isLeadActive(lead)) return;
-      const hrs = (now - +new Date(f.dueAt)) / 36e5;
+      const ts = f.dueAt ? +new Date(f.dueAt) : now;
+      const hrs = Math.max(0, (now - ts) / 36e5) || 0;
       actions.push({
         leadId: lead.id,
         reason: `Follow-up overdue · ${f.reason}`,
@@ -145,11 +147,12 @@ export function buildDoNextQueue(
 
   // 3. tours scheduled today
   tours
-    .filter((t) => t.status === "scheduled" && sameDay(+new Date(t.scheduledAt), now))
+    .filter((t) => t.status === "scheduled" && t.scheduledAt && sameDay(+new Date(t.scheduledAt), now))
     .forEach((t) => {
       const lead = leads.find((l) => l.id === t.leadId);
       if (!lead || !byLead(lead) || !isLeadActive(lead)) return;
-      const minsToTour = (+new Date(t.scheduledAt) - now) / 60_000;
+      const ts = t.scheduledAt ? +new Date(t.scheduledAt) : now;
+      const minsToTour = (ts - now) / 60_000 || 0;
       actions.push({
         leadId: lead.id,
         reason:
@@ -157,14 +160,14 @@ export function buildDoNextQueue(
             ? `Tour today in ${formatRel(minsToTour)}`
             : `Tour was ${formatRel(-minsToTour)} ago - confirm`,
         kind: "tour-today",
-        score: 700 + intentBoost(lead.intent) - Math.abs(minsToTour) / 30,
+        score: 700 + intentBoost(lead.intent) - (Math.abs(minsToTour) / 30 || 0),
         dueAt: t.scheduledAt,
       });
     });
 
   // 4. follow-ups due today
   followUps
-    .filter((f) => !f.done && sameDay(+new Date(f.dueAt), now) && +new Date(f.dueAt) >= now)
+    .filter((f) => !f.done && f.dueAt && sameDay(+new Date(f.dueAt), now) && +new Date(f.dueAt) >= now)
     .forEach((f) => {
       const lead = leads.find((l) => l.id === f.leadId);
       if (!lead || !byLead(lead) || !isLeadActive(lead)) return;
@@ -193,7 +196,8 @@ export function buildDoNextQueue(
   leads
     .filter((l) => byLead(l) && isLeadActive(l) && l.stage === "new")
     .forEach((l) => {
-      const ageMin = (now - +new Date(l.createdAt)) / 60_000;
+      const ts = l.createdAt ? +new Date(l.createdAt) : now;
+      const ageMin = Math.max(0, (now - ts) / 60_000) || 0;
       if (ageMin > SLA.firstResponseMins) {
         actions.push({
           leadId: l.id,

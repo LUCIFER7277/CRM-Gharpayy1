@@ -47,9 +47,10 @@ export const DELAY_REASONS: { id: DelayReason; label: string }[] = [
   { id: "other", label: "Other" },
 ];
 
-export type IssueCategory = "wifi" | "water" | "cleaning" | "roommate" | "ac" | "food" | "other";
+export type IssueCategory = "none" | "wifi" | "water" | "cleaning" | "roommate" | "ac" | "food" | "other";
 
 export const ISSUE_CATEGORIES: { id: IssueCategory; label: string }[] = [
+  { id: "none", label: "No issue" },
   { id: "wifi", label: "WiFi" },
   { id: "water", label: "Water" },
   { id: "cleaning", label: "Cleaning" },

@@ -136,7 +136,7 @@ export function LiveToursBridge() {
     const fetchData = async () => {
       try {
         // Stagger API calls to avoid rate limiting
-        const toursRes = await api.tours.list();
+        const toursRes = await api.tours.list({ limit: 200 });
         await new Promise((resolve) => setTimeout(resolve, 100)); // Small delay
 
         const leadsRes = await api.leads.list({ limit: 200 });

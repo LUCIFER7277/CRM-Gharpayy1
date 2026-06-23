@@ -45,6 +45,22 @@ export const EventType = z.enum([
   "evt.room.released",
   // Owner sharing
   "evt.booking.shared_with_owner",
+  // Properties
+  "evt.property.created",
+  "evt.property.updated",
+  "evt.property.deleted",
+  // FollowUps
+  "evt.followup.created",
+  "evt.followup.updated",
+  // Handoffs
+  "evt.handoff.created",
+  "evt.handoff.updated",
+  // Sequences
+  "evt.sequence.created",
+  "evt.sequence.updated",
+  // Users/TcMs
+  "evt.user.created",
+  "evt.user.updated",
 ]);
 export type EventType = z.infer<typeof EventType>;
 
@@ -233,6 +249,60 @@ export const TenantStatusChangedEvt = Envelope.extend({
   payload: z.object({ tenantId: z.string(), from: z.string(), to: z.string(), exitDate: z.string().nullable() }),
 });
 
+// ---------- Property events ----------
+export const PropertyCreatedEvt = Envelope.extend({
+  type: z.literal("evt.property.created"),
+  payload: z.object({ propertyId: z.string() }),
+});
+export const PropertyUpdatedEvt = Envelope.extend({
+  type: z.literal("evt.property.updated"),
+  payload: z.object({ propertyId: z.string() }),
+});
+export const PropertyDeletedEvt = Envelope.extend({
+  type: z.literal("evt.property.deleted"),
+  payload: z.object({ propertyId: z.string() }),
+});
+
+// ---------- FollowUp events ----------
+export const FollowUpCreatedEvt = Envelope.extend({
+  type: z.literal("evt.followup.created"),
+  payload: z.object({ followupId: z.string() }),
+});
+export const FollowUpUpdatedEvt = Envelope.extend({
+  type: z.literal("evt.followup.updated"),
+  payload: z.object({ followupId: z.string() }),
+});
+
+// ---------- Handoff events ----------
+export const HandoffCreatedEvt = Envelope.extend({
+  type: z.literal("evt.handoff.created"),
+  payload: z.object({ handoffId: z.string() }),
+});
+export const HandoffUpdatedEvt = Envelope.extend({
+  type: z.literal("evt.handoff.updated"),
+  payload: z.object({ handoffId: z.string() }),
+});
+
+// ---------- Sequence events ----------
+export const SequenceCreatedEvt = Envelope.extend({
+  type: z.literal("evt.sequence.created"),
+  payload: z.object({ sequenceId: z.string() }),
+});
+export const SequenceUpdatedEvt = Envelope.extend({
+  type: z.literal("evt.sequence.updated"),
+  payload: z.object({ sequenceId: z.string() }),
+});
+
+// ---------- User events ----------
+export const UserCreatedEvt = Envelope.extend({
+  type: z.literal("evt.user.created"),
+  payload: z.object({ userId: z.string() }),
+});
+export const UserUpdatedEvt = Envelope.extend({
+  type: z.literal("evt.user.updated"),
+  payload: z.object({ userId: z.string() }),
+});
+
 export const DomainEvent = z.discriminatedUnion("type", [
   LeadCreatedEvt,
   LeadUpdatedEvt,
@@ -267,5 +337,16 @@ export const DomainEvent = z.discriminatedUnion("type", [
   TenantCreatedEvt,
   TenantUpdatedEvt,
   TenantStatusChangedEvt,
+  PropertyCreatedEvt,
+  PropertyUpdatedEvt,
+  PropertyDeletedEvt,
+  FollowUpCreatedEvt,
+  FollowUpUpdatedEvt,
+  HandoffCreatedEvt,
+  HandoffUpdatedEvt,
+  SequenceCreatedEvt,
+  SequenceUpdatedEvt,
+  UserCreatedEvt,
+  UserUpdatedEvt,
 ]);
 export type DomainEvent = z.infer<typeof DomainEvent>;

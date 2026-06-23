@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 import { useApp } from "@/lib/store";
 import { api } from "@/lib/api/client";
-import type { Todo } from "@/contracts";
+import { onEvent, getSocket } from "@/lib/api/socket";
+import type { Todo, DomainEvent } from "@/contracts";
 
 export function LiveTodosBridge() {
   const setTodos = useApp((s) => s.setTodos);
@@ -21,8 +22,13 @@ export function LiveTodosBridge() {
 
     void load();
 
-    const interval = setInterval(load, 5 * 60_000);
-    return () => { cancelled = true; clearInterval(interval); };
+    getSocket();
+    const off = onEvent((e: DomainEvent) => {
+      if (!e.type.startsWith("evt.todo.")) return;
+      void load();
+    });
+
+    return () => { cancelled = true; off(); };
   }, [setTodos]);
 
   return null;

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { col } from "../../db/mongo.js";
 import { requireAuth } from "../../middleware/auth.js";
 import { ulid } from "../../../../src/contracts/ids.js";
+import { emit, newEventId } from "../../realtime/event-bus.js";
 
 const FollowUpDoc = z.object({
   _id: z.string(),
@@ -64,6 +65,17 @@ export function registerFollowUpsRoutes(app: FastifyInstance) {
       updatedAt: now,
     };
     await col("follow_ups").insertOne(doc);
+    await emit({
+      _id: newEventId(),
+      type: "evt.followup.created",
+      occurredAt: now,
+      actor: req.user!.sub,
+      tenantId: req.user!.tenantId,
+      correlationId: req.id,
+      causationId: null,
+      version: 1,
+      payload: { followupId: doc._id },
+    });
     return reply.status(201).send(doc);
   });
 
@@ -81,6 +93,17 @@ export function registerFollowUpsRoutes(app: FastifyInstance) {
       { returnDocument: "after" },
     );
     if (!result) return reply.status(404).send({ error: "not_found" });
+    await emit({
+      _id: newEventId(),
+      type: "evt.followup.updated",
+      occurredAt: new Date().toISOString(),
+      actor: req.user!.sub,
+      tenantId: req.user!.tenantId,
+      correlationId: req.id,
+      causationId: null,
+      version: 1,
+      payload: { followupId: result._id },
+    });
     return reply.send(result);
   });
 }

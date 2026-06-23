@@ -28,7 +28,8 @@ import { useApp } from "@/lib/store";
 import { PGS } from "@/property-genius/data/pgs";
 import { searchPGs } from "@/property-genius/lib/search";
 import type { PG } from "@/property-genius/data/types";
-import { formatINR } from "@/lib/utils";
+import { formatINR, cn } from "@/lib/utils";
+import { useToggleInterest } from "@/lib/crm10x/lead-interests";
 
 interface Props {
   onCreated?: (lead: UnifiedLead) => void;
@@ -83,6 +84,7 @@ export function DirectLeadForm({ onCreated }: Props) {
   const { zones: orgZones } = useOrgZones();
   const authUser = useAuthUser((s) => s.user);
   const addLead = useApp((s) => s.addLead);
+  const { toggleInterest } = useToggleInterest();
 
   // Default to the current member when a regular member is adding a lead
   const defaultAssigneeId = authUser?.role === "member" || authUser?.role === "tcm" ? authUser.id : "";
@@ -264,7 +266,16 @@ export function DirectLeadForm({ onCreated }: Props) {
       stage: "new",
       intent: draft.quality === "hot" ? "hot" : draft.quality === "bad" ? "cold" : "warm",
       tags: [],
+      propertySelection: draft.propertySelection,
     });
+
+    if (draft.propertySelection?.type === "hub" && draft.propertySelection.propertyId) {
+      void toggleInterest({
+        leadId: newLeadId || identityLead.id,
+        propertyId: draft.propertySelection.propertyId,
+        interested: true,
+      });
+    }
 
     toast.success(`Lead saved · ${draft.name.trim()}`);
     setDraft({ ...emptyDraft(), assigneeId: defaultAssigneeId });

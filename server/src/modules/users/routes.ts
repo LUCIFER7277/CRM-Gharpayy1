@@ -5,6 +5,7 @@ import { col } from "../../db/mongo.js";
 import { requireAuth, requireScope } from "../../middleware/auth.js";
 import { createManagedUser, type UserDoc } from "../../auth/auth.js";
 import type { TopRole } from "../../../../src/contracts/roles.js";
+import { emit, newEventId } from "../../realtime/event-bus.js";
 
 const CreateBody = z.object({
   fullName: z.string().min(1).max(120),
@@ -129,6 +130,17 @@ export function registerUserRoutes(app: FastifyInstance) {
         return reply.code(400).send({ code: "VALIDATION_FAILED", message: "Zones required for admin/member/tcm" });
       }
       const u = await createManagedUser(body);
+      await emit({
+        _id: newEventId(),
+        type: "evt.user.created",
+        occurredAt: new Date().toISOString(),
+        actor: req.user!.sub,
+        tenantId: req.user!.tenantId,
+        correlationId: req.id,
+        causationId: null,
+        version: 1,
+        payload: { userId: u._id },
+      });
       return reply.code(201).send(userOut(u));
     } catch (e) {
       const err = e as Error & { code?: string };
@@ -163,6 +175,17 @@ export function registerUserRoutes(app: FastifyInstance) {
       { returnDocument: "after" },
     );
     if (!r) return reply.code(404).send({ code: "NOT_FOUND", message: "User not found" });
+    await emit({
+      _id: newEventId(),
+      type: "evt.user.updated",
+      occurredAt: new Date().toISOString(),
+      actor: req.user!.sub,
+      tenantId: req.user!.tenantId,
+      correlationId: req.id,
+      causationId: null,
+      version: 1,
+      payload: { userId: r._id },
+    });
     return reply.send(userOut(r));
   });
 
@@ -196,6 +219,17 @@ export function registerUserRoutes(app: FastifyInstance) {
       patch.deletedAt = now;
     }
     await users().updateOne({ _id: id }, { $set: patch });
+    await emit({
+      _id: newEventId(),
+      type: "evt.user.updated",
+      occurredAt: now,
+      actor: req.user!.sub,
+      tenantId: req.user!.tenantId,
+      correlationId: req.id,
+      causationId: null,
+      version: 1,
+      payload: { userId: id },
+    });
     return reply.send({ ok: true });
   });
 }

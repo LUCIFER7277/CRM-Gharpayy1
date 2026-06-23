@@ -28,7 +28,7 @@ export function BulkPasteImport() {
 
   const onParse = () => {
     const chunks = splitLeads(raw);
-    const drafts = chunks.map(parseLead).filter((d): d is ParsedLeadDraft => !!d);
+    const drafts = chunks.map(chunk => parseLead(chunk)).filter((d): d is ParsedLeadDraft => !!d);
     if (!drafts.length) { toast.error("No leads detected in pasted text"); return; }
     const next: Row[] = drafts.map((d) => {
       const m = checkDuplicates(d);

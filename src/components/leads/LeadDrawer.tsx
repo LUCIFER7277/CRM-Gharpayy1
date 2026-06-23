@@ -91,7 +91,7 @@ function DrawerInner({ lead, currentUserId, assignees }: { lead: Lead; currentUs
   return (
     <>
       {/* Sticky header rail */}
-      <SheetHeader className="px-5 py-4 border-b sticky top-0 z-10 bg-background/95 backdrop-blur">
+      <SheetHeader className="pl-5 pr-12 py-4 border-b sticky top-0 z-10 bg-background/95 backdrop-blur">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <SheetTitle className="text-lg truncate flex items-center gap-2">

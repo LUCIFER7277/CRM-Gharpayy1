@@ -1,7 +1,9 @@
 import { useEffect } from "react";
 import { useApp } from "@/lib/store";
 import { api } from "@/lib/api/client";
+import { onEvent, getSocket } from "@/lib/api/socket";
 import type { ActiveSequence } from "@/lib/types";
+import type { DomainEvent } from "@/contracts";
 
 function toSequence(raw: Record<string, unknown>): ActiveSequence {
   return {
@@ -33,8 +35,13 @@ export function LiveSequencesBridge() {
 
     void load();
 
-    const interval = setInterval(load, 5 * 60_000);
-    return () => { cancelled = true; clearInterval(interval); };
+    getSocket();
+    const off = onEvent((e: DomainEvent) => {
+      if (!e.type.startsWith("evt.sequence.")) return;
+      void load();
+    });
+
+    return () => { cancelled = true; off(); };
   }, [setSequences]);
 
   return null;

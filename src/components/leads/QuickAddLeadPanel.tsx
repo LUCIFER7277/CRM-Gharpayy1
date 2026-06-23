@@ -23,7 +23,8 @@ import { memberOptionLabel, resolveMemberPrimaryZone, useOrgMembers, useOrgZones
 import { useAuthUser } from "@/lib/auth-store";
 import { dispatch } from "@/lib/api/command-bus";
 import { toast } from "sonner";
-import { Save, Repeat2, Phone, MapPin, Sparkles, X, CalendarPlus, Search, Building2 } from "lucide-react";
+import { Save, Repeat2, Phone, MapPin, Sparkles, CalendarPlus, UserCheck, X, Search, Building2 } from "lucide-react";
+import { useToggleInterest } from "@/lib/crm10x/lead-interests";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNavigate } from "@/shims/react-router-dom";
@@ -79,6 +80,7 @@ export function QuickAddLeadPanel({ open, onClose }: Props) {
   const { members: orgMembers } = useOrgMembers();
   const { tcms: activeTcms } = useActiveTcMs();
   const { zones: orgZones } = useOrgZones();
+  const { mutate: toggleInterest } = useToggleInterest();
 
   const authUser = useAuthUser((s) => s.user);
   const sortedZones = useMemo(() => orgZones.slice().sort((a, b) => a.name.localeCompare(b.name)), [orgZones]);
@@ -202,25 +204,22 @@ export function QuickAddLeadPanel({ open, onClose }: Props) {
 
   const scheduleExisting = (lead: ReturnType<typeof checkDup>["candidates"][number]["lead"], parsedOverride?: ParsedLeadDraft | null) => {
     onClose();
-    navigate("/myt/schedule", { state: { lead, pastedLead: buildScheduleLead(parsedOverride ?? lastParsed), inventoryFit: areaFit?.fits[0] } });
-    toast.info(`Scheduling tour for ${lead.name}`);
+    navigate({ search: (prev: any) => ({ ...prev, lead: lead.id }) });
+    toast.info(`Opened existing lead: ${lead.name} to schedule tour.`);
   };
 
-  const scheduleDraft = () => {
+  const scheduleDraft = async () => {
     if (!name.trim() || !phone.trim()) { toast.error("Need name and phone before scheduling"); return; }
-    const dup = checkDup({ name, phone, email, location: areasText });
-    const existing = dup.candidates[0]?.lead;
-    if (existing && (dup.type === "exact" || dup.type === "strong")) {
-      scheduleExisting(existing);
-      return;
+    
+    // Create the lead, keeping the panel open conceptually (though we'll close it manually)
+    // so we don't flash state.
+    const leadId = await save(true);
+    
+    if (leadId) {
+      onClose();
+      // Open the lead drawer so the user can natively schedule the tour
+      navigate({ search: (prev: any) => ({ ...prev, lead: leadId }) });
     }
-    onClose();
-    navigate("/myt/schedule", {
-      state: {
-        lead: buildScheduleLead(lastParsed),
-        inventoryFit: areaFit?.fits[0],
-      },
-    });
   };
 
   const save = async (keepOpen: boolean) => {
@@ -297,7 +296,7 @@ export function QuickAddLeadPanel({ open, onClose }: Props) {
       const existingLeadId = (result as any).data?.leadId;
       toast.warning(`Lead already exists${existingLeadId ? ` (ID: ${existingLeadId})` : ""}. No new lead was created.`);
       if (!keepOpen) onClose();
-      return;
+      return existingLeadId;
     }
     
     const newLeadId = (result as any).data?.leadId;
@@ -362,7 +361,12 @@ export function QuickAddLeadPanel({ open, onClose }: Props) {
       notes: notes.trim(),
       zoneCategory: zoneBucket,
       stageLabel: stage,
+      propertySelection,
     });
+
+    if (propertySelection?.type === "hub" && propertySelection.propertyId) {
+      toggleInterest({ leadId: newLeadId || identityLead.id, propertyId: propertySelection.propertyId });
+    }
 
     toast.success(`Lead saved · ${name.trim()}`);
     if (keepOpen) reset(); else onClose();

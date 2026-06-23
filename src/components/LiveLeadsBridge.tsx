@@ -47,6 +47,7 @@ function toLegacy(w: WireLead, fallbackTcmId = ""): LegacyLead {
     notes: w.notes,
     zoneCategory: w.zoneCategory,
     stageLabel: w.stageLabel,
+    propertySelection: w.propertySelection,
   });
 }
 
@@ -162,8 +163,7 @@ export function LiveLeadsBridge() {
       }
     });
 
-    const interval = setInterval(load, 5 * 60_000);
-    return () => { cancelled = true; off(); clearInterval(interval); };
+    return () => { cancelled = true; off(); };
   }, [setLeads]);
 
   return null;

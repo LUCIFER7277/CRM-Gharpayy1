@@ -165,6 +165,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const navByRole: Record<typeof role, NavItem[]> = {
     hr: withTailNav([
+      { to: "/", label: "Arena Home", icon: Home },
       { to: "/today", label: "Today", icon: Sun, badge: queue.length },
       { to: "/leads", label: "Leads", icon: Target },
       { to: "/myt/tours", label: "Tours", icon: CalendarPlus },
@@ -181,6 +182,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       { to: "/my-tasks", label: "My Tasks", icon: ListTodo },
     ]),
     "flow-ops": withTailNav([
+      { to: "/", label: "Arena Home", icon: Home },
       { to: "/today", label: "Today", icon: Sun, badge: queue.length },
       { to: "/inbox", label: "Inbox", icon: Inbox },
       { to: "/leads", label: "Leads", icon: Target },
@@ -196,6 +198,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       { to: "/my-tasks", label: "My Tasks", icon: ListTodo },
     ]),
     tcm: withTailNav([
+      { to: "/", label: "Arena Home", icon: Home },
       { to: "/today", label: "Today", icon: Sun, badge: queue.length },
       { to: "/impact", label: "Impact Queue", icon: HeartPulse },
       { to: "/property-hub", label: "Property Hub", icon: Building2 },
@@ -272,7 +275,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       >
         <div className="px-5 py-5 flex items-center gap-2 border-b border-sidebar-border">
           <Link
-            to={role === "super-admin" ? "/admin" : "/"}
+            to="/"
             className="flex min-w-0 flex-1 items-center gap-2 hover:opacity-80 transition-opacity"
             onClick={() => setSidebarOpen(false)}
           >
