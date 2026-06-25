@@ -52,30 +52,37 @@ export function AreaMoodCard({ area }: { area: string }) {
   ].join("\n");
 
   return (
-    <div className="rounded-lg border border-primary/30 bg-gradient-to-br from-primary/5 via-card to-card p-4">
-      <div className="flex items-start justify-between gap-3">
+    <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 via-background to-background p-5 shadow-sm relative overflow-hidden">
+      <div className="absolute top-0 right-0 p-32 bg-primary/5 blur-3xl rounded-full -mr-16 -mt-16 pointer-events-none" />
+      <div className="relative z-10 flex items-start justify-between gap-4">
         <div>
-          <div className="text-[10px] uppercase tracking-widest text-primary">Mood Board</div>
-          <h3 className="mt-1 font-display text-lg font-bold">{mood.area}</h3>
-          <p className="mt-0.5 text-xs text-muted-foreground">{mood.weekend}</p>
+          <div className="text-[10px] uppercase tracking-widest text-primary font-semibold flex items-center gap-1.5">
+            <Sparkles className="h-3.5 w-3.5" />
+            Mood Board
+          </div>
+          <h3 className="mt-2 font-display text-2xl font-bold tracking-tight text-foreground">{mood.area}</h3>
+          <p className="mt-1.5 text-sm text-muted-foreground max-w-xl">{mood.weekend}</p>
         </div>
         <CopyButton text={shareText} label="Forward" />
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+      <div className="relative z-10 mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
         <MoodChip icon={Users} label="Crowd" value={mood.crowd} />
         <MoodChip icon={Coffee} label="Age band" value={mood.ageBand} />
-        <MoodChip icon={Music} label="Nightlife" value={mood.nightlife} accent={mood.nightlife === "High" ? "text-fuchsia-300" : mood.nightlife === "Medium" ? "text-amber-300" : "text-emerald-300"} />
-        <MoodChip icon={Volume2} label="Noise" value={mood.noise} accent={mood.noise === "Buzzing" ? "text-rose-300" : mood.noise === "Active" ? "text-amber-300" : "text-emerald-300"} />
+        <MoodChip icon={Music} label="Nightlife" value={mood.nightlife} accent={mood.nightlife === "High" ? "text-fuchsia-500 bg-fuchsia-500/10 border-fuchsia-500/20" : mood.nightlife === "Medium" ? "text-amber-500 bg-amber-500/10 border-amber-500/20" : "text-emerald-500 bg-emerald-500/10 border-emerald-500/20"} />
+        <MoodChip icon={Volume2} label="Noise" value={mood.noise} accent={mood.noise === "Buzzing" ? "text-rose-500 bg-rose-500/10 border-rose-500/20" : mood.noise === "Active" ? "text-amber-500 bg-amber-500/10 border-amber-500/20" : "text-emerald-500 bg-emerald-500/10 border-emerald-500/20"} />
         <MoodChip icon={Train} label="Metro" value={mood.metroAccess.split("·")[0].trim()} />
         <MoodChip icon={Briefcase} label="Price band" value={mood.priceBand} />
       </div>
 
       {mood.topCompanies.length > 0 && (
-        <div className="mt-3 border-t border-border pt-3">
-          <div className="mb-2 text-[10px] uppercase tracking-widest text-muted-foreground">Lead source — top employers here</div>
-          <div className="flex flex-wrap gap-1.5">
-            {mood.topCompanies.map((c) => <span key={c} className="rounded-md bg-violet-400/10 px-2 py-1 text-xs text-violet-300">{c}</span>)}
+        <div className="relative z-10 mt-5 rounded-xl border border-border/50 bg-muted/20 p-4">
+          <div className="mb-3 flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-muted-foreground font-medium">
+            <Briefcase className="h-3.5 w-3.5" />
+            Lead source — top employers here
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {mood.topCompanies.map((c) => <span key={c} className="rounded-md border border-violet-500/20 bg-violet-500/10 px-2.5 py-1 text-xs font-medium text-violet-500">{c}</span>)}
           </div>
         </div>
       )}
@@ -85,11 +92,11 @@ export function AreaMoodCard({ area }: { area: string }) {
 
 function MoodChip({ icon: Icon, label, value, accent }: { icon: typeof Users; label: string; value: string; accent?: string }) {
   return (
-    <div className="rounded-md bg-surface-2 p-2.5">
-      <div className="flex items-center gap-1.5 text-[9px] uppercase tracking-widest text-muted-foreground">
-        <Icon className="h-3 w-3" /> {label}
+    <div className={cn("rounded-xl border border-border/50 bg-card p-3 shadow-sm transition-all hover:shadow-md", accent)}>
+      <div className={cn("flex items-center gap-1.5 text-[10px] uppercase tracking-widest font-medium mb-1.5", accent ? "opacity-80" : "text-muted-foreground")}>
+        <Icon className="h-3.5 w-3.5" /> {label}
       </div>
-      <div className={cn("mt-1 text-xs font-semibold leading-tight", accent)}>{value}</div>
+      <div className={cn("text-sm font-semibold leading-tight", accent ? "" : "text-foreground")}>{value}</div>
     </div>
   );
 }
@@ -129,12 +136,13 @@ export function DualMatcher({ onOpen }: { onOpen: (pg: PG) => void }) {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
+      <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-background p-5 shadow-sm">
         <div className="flex items-center gap-2">
           <Users className="h-4 w-4 text-primary" />
-          <div className="text-[10px] uppercase tracking-widest text-primary">Dual-Person Match · #11</div>
+          <div className="text-[10px] uppercase tracking-widest text-primary font-semibold">Dual-Person Match</div>
         </div>
-        <p className="mt-1 text-xs text-muted-foreground">
+        <h3 className="mt-2 font-display text-lg font-bold tracking-tight">Find common ground</h3>
+        <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed">
           Two colleagues moving together. Find a PG that works for both — same building or within 15 km of each office.
           Converts one inquiry into two bookings.
         </p>

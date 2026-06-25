@@ -231,7 +231,7 @@ const COLUMN_HELP: Record<ColumnKey, string> = {
 
 const COLUMN_HEADER_TONE: Record<ColumnKey, string> = {
   inbox: "border-info/35 bg-info/5 text-info",
-  scheduled: "border-accent/35 bg-accent/5 text-accent",
+  scheduled: "border-violet-500/35 bg-violet-500/5 text-violet-500",
   onTour: "border-warning/40 bg-warning/5 text-warning",
   quoted: "border-primary/35 bg-primary/5 text-primary",
   booked: "border-success/40 bg-success/5 text-success",

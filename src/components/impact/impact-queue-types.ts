@@ -35,7 +35,7 @@ export type ImpactEnriched = {
 
 export const COLUMNS: { key: ColumnKey; label: string; tint: string; icon: LucideIcon }[] = [
   { key: "inbox", label: "Inbox", tint: "border-l-info", icon: Sparkles },
-  { key: "scheduled", label: "Tour scheduled", tint: "border-l-accent", icon: Calendar },
+  { key: "scheduled", label: "Tour scheduled", tint: "border-l-violet-500", icon: Calendar },
   { key: "onTour", label: "On tour today", tint: "border-l-warning", icon: UserCheck },
   { key: "quoted", label: "Quote sent", tint: "border-l-primary", icon: FileText },
   { key: "booked", label: "Booked", tint: "border-l-success", icon: CheckCircle2 },

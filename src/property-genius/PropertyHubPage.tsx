@@ -42,22 +42,18 @@ export function PropertyHubPage() {
             </h1>
             <p className="text-sm text-muted-foreground flex items-center flex-wrap mt-1.5">
               {PGS.length} properties indexed. Connected to Impact Queue.
-              <span className="relative flex h-2 w-2 mx-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-              </span>
-              <span className="text-primary font-mono font-medium animate-pulse">live</span>
+              <span className="relative flex h-2 w-2 mx-2"> </span>
             </p>
           </div>
         </header>
 
         <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)} className="flex flex-col space-y-4">
           <TabsList className="h-auto justify-start self-start bg-muted/60 p-1 rounded-full">
-            <TabsTrigger value="closer" className="text-[13px] gap-2 rounded-full px-4 py-1.5 data-[state=active]:shadow-sm text-muted-foreground data-[state=active]:text-foreground transition-all"><Zap className="h-3.5 w-3.5 text-accent" />Closer</TabsTrigger>
-            <TabsTrigger value="hub" className="text-[13px] gap-2 rounded-full px-4 py-1.5 data-[state=active]:shadow-sm text-muted-foreground data-[state=active]:text-foreground transition-all"><Building2 className="h-3.5 w-3.5" />Hub</TabsTrigger>
-            <TabsTrigger value="matcher" className="text-[13px] gap-2 rounded-full px-4 py-1.5 data-[state=active]:shadow-sm text-muted-foreground data-[state=active]:text-foreground transition-all"><Brain className="h-3.5 w-3.5" />Matcher</TabsTrigger>
-            <TabsTrigger value="area" className="text-[13px] gap-2 rounded-full px-4 py-1.5 data-[state=active]:shadow-sm text-muted-foreground data-[state=active]:text-foreground transition-all"><MapPin className="h-3.5 w-3.5" />Area Intel</TabsTrigger>
-            <TabsTrigger value="distance" className="text-[13px] gap-2 rounded-full px-4 py-1.5 data-[state=active]:shadow-sm text-muted-foreground data-[state=active]:text-foreground transition-all"><Ruler className="h-3.5 w-3.5" />Distance</TabsTrigger>
+            <TabsTrigger value="closer" className="text-[13px] gap-2 rounded-full px-4 py-1.5 data-[state=active]:shadow-sm text-muted-foreground data-[state=active]:text-foreground transition-all"><Zap className="h-3.5 w-3.5 text-primary" />Closer</TabsTrigger>
+            <TabsTrigger value="hub" className="text-[13px] gap-2 rounded-full px-4 py-1.5 data-[state=active]:shadow-sm text-muted-foreground data-[state=active]:text-foreground transition-all"><Building2 className="h-3.5 w-3.5 text-primary" />Hub</TabsTrigger>
+            <TabsTrigger value="matcher" className="text-[13px] gap-2 rounded-full px-4 py-1.5 data-[state=active]:shadow-sm text-muted-foreground data-[state=active]:text-foreground transition-all"><Brain className="h-3.5 w-3.5 text-primary" />Matcher</TabsTrigger>
+            <TabsTrigger value="area" className="text-[13px] gap-2 rounded-full px-4 py-1.5 data-[state=active]:shadow-sm text-muted-foreground data-[state=active]:text-foreground transition-all"><MapPin className="h-3.5 w-3.5 text-primary" />Area Intel</TabsTrigger>
+            <TabsTrigger value="distance" className="text-[13px] gap-2 rounded-full px-4 py-1.5 data-[state=active]:shadow-sm text-muted-foreground data-[state=active]:text-foreground transition-all"><Ruler className="h-3.5 w-3.5 text-primary" />Distance</TabsTrigger>
           </TabsList>
 
           <TabsContent value="closer" className="mt-0 outline-none">
@@ -314,16 +310,38 @@ function LeadMatcherTab({ onOpen }: { onOpen: (pg: PG) => void }) {
 function AreaIntelTab() {
   const [areaName, setAreaName] = useState(AREAS[0]?.area ?? "Whitefield");
   return (
-    <div className="space-y-4">
-      <section className="rounded-xl border border-border bg-card p-4 flex items-center gap-3">
-        <span className="text-xs font-medium text-muted-foreground">Select Area</span>
-        <select value={areaName} onChange={(e) => setAreaName(e.target.value)}
-          className="rounded-md border border-border bg-background px-2.5 py-1.5 text-xs">
-          {AREAS.map((a) => <option key={a.area} value={a.area}>{a.area}</option>)}
-        </select>
+    <div className="space-y-6">
+      <section className="rounded-xl border border-border/60 bg-card p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent pointer-events-none" />
+        <div className="relative z-10 flex items-center gap-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 shrink-0">
+            <MapPin className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-sm font-semibold tracking-tight">Area Intelligence</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">Select a neighborhood to view its mood board</p>
+          </div>
+        </div>
+        <div className="relative z-10 w-full sm:w-64 shrink-0">
+          <Select value={areaName} onValueChange={setAreaName}>
+            <SelectTrigger className="w-full h-10 bg-background border-border hover:border-primary/40 transition-colors shadow-sm">
+              <SelectValue placeholder="Select an area" />
+            </SelectTrigger>
+            <SelectContent className="max-h-[300px]">
+              {AREAS.map((a) => (
+                <SelectItem key={a.area} value={a.area} className="text-sm">
+                  {a.area}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </section>
-      <AreaMoodCard area={areaName} />
-      <DualMatcher onOpen={() => { /* noop in tab */ }} />
+
+      <div className="grid gap-6">
+        <AreaMoodCard area={areaName} />
+        <DualMatcher onOpen={() => { /* noop in tab */ }} />
+      </div>
     </div>
   );
 }
@@ -338,23 +356,53 @@ function DistanceFinderTab() {
   const row = DISTANCE[from] ?? {};
   const list = Object.entries(row).sort((a, b) => a[1] - b[1]);
   return (
-    <div className="space-y-4">
-      <section className="rounded-xl border border-border bg-card overflow-hidden">
-        <header className="flex items-center gap-3 px-4 py-3 border-b border-border bg-muted/20">
-          <span className="text-xs font-medium text-muted-foreground">Origin Node</span>
-          <select value={from} onChange={(e) => setFrom(e.target.value)}
-            className="rounded-md border border-border bg-background px-2.5 py-1.5 text-xs">
-            {areas.map((a) => <option key={a} value={a}>{a}</option>)}
-          </select>
-          <div className="ml-auto text-[10px] text-muted-foreground font-mono bg-muted px-2 py-0.5 rounded-md border border-border">
-            {list.length} known links
+    <div className="space-y-6">
+      <section className="rounded-xl border border-border/60 bg-card p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent pointer-events-none" />
+        <div className="relative z-10 flex items-center gap-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 shrink-0">
+            <Ruler className="h-5 w-5 text-primary" />
           </div>
-        </header>
-        <div className="p-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+          <div>
+            <h2 className="text-sm font-semibold tracking-tight">Distance Matrix</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">Select an origin node to see travel distances</p>
+          </div>
+        </div>
+        <div className="relative z-10 flex items-center gap-4 w-full sm:w-auto">
+          <div className="w-full sm:w-64 shrink-0">
+            <Select value={from} onValueChange={setFrom}>
+              <SelectTrigger className="w-full h-10 bg-background border-border hover:border-primary/40 transition-colors shadow-sm">
+                <SelectValue placeholder="Origin Node" />
+              </SelectTrigger>
+              <SelectContent className="max-h-[300px]">
+                {areas.map((a) => (
+                  <SelectItem key={a} value={a} className="text-sm">
+                    {a}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="hidden sm:flex shrink-0 items-center gap-1.5 text-[11px] font-medium text-muted-foreground bg-muted/50 px-2.5 py-1.5 rounded-md border border-border/50">
+            <MapPin className="h-3 w-3" />
+            {list.length} links
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-border/60 bg-card overflow-hidden shadow-sm">
+        <div className="p-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {list.map(([to, km]) => (
-            <div key={to} className="rounded-xl border border-border bg-muted/10 p-3 flex flex-col gap-1">
-              <div className="font-medium text-sm truncate">{to}</div>
-              <div className="text-xs font-mono text-muted-foreground bg-surface-2 w-fit px-1.5 py-0.5 rounded-md border border-border">{km} km</div>
+            <div key={to} className="group flex flex-col justify-between rounded-xl border border-border/50 bg-background hover:bg-muted/30 p-4 transition-all hover:shadow-md hover:border-primary/30">
+              <div className="font-semibold text-sm leading-tight text-foreground group-hover:text-primary transition-colors line-clamp-2 mb-3">
+                {to}
+              </div>
+              <div className="flex items-center gap-2 mt-auto">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10">
+                  <Footprints className="h-3 w-3 text-primary" />
+                </div>
+                <div className="text-[13px] font-mono font-medium text-muted-foreground">{km} <span className="text-[10px]">km</span></div>
+              </div>
             </div>
           ))}
         </div>

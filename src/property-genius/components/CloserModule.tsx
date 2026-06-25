@@ -173,7 +173,7 @@ function InstantMatch({ onOpen }: { onOpen: (pg: PG) => void }) {
             {(["Any", "Boys", "Girls", "Co-live"] as const).map((g) => (
               <button key={g} onClick={() => setGender(g)}
                 className={cn("flex-1 rounded-full px-2 py-1.5 text-[11px] font-medium transition-all",
-                  gender === g ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
+                  gender === g ? "bg-orange-500 text-white shadow-sm" : "text-muted-foreground hover:text-foreground")}>
                 {g}
               </button>
             ))}
