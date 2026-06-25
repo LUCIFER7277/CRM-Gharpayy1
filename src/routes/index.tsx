@@ -268,7 +268,7 @@ function DashboardPage() {
 
           {/* Today's tours */}
           <div className={`col-span-1 ${row3ColSpan} self-start`}>
-            <Card title="Today's tours" icon={CalendarPlus} action={<Link to="/tours" className="text-xs font-medium text-primary hover:text-primary/80 transition-colors inline-flex items-center gap-1">All tours <ArrowUpRight className="h-3 w-3" /></Link>}>
+            <Card title="Today's tours" icon={CalendarPlus} action={<a href="http://localhost:3001/myt/tours" className="text-xs font-medium text-primary hover:text-primary/80 transition-colors inline-flex items-center gap-1">All tours <ArrowUpRight className="h-3 w-3" /></a>}>
               <div className="space-y-2 min-h-[200px] max-h-[350px] overflow-y-auto scrollbar-none">
                 {todayTours.slice(0, 10).map((t) => {
                   const lead = leads.find((l) => l.id === t.leadId);

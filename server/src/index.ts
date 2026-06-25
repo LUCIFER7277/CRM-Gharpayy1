@@ -26,6 +26,8 @@ import { registerSequencesRoutes } from "./modules/sequences/routes.js";
 import { registerBookingsRoutes } from "./modules/bookings/routes.js";
 import { registerTenantsRoutes } from "./modules/tenants/routes.js";
 import { registerOwnerRoutes } from "./modules/owner/routes.js";
+import { registerDashboardRoutes } from "./modules/dashboard/routes.js";
+import { registerInventoryRoutes } from "./modules/inventory/routes.js";
 import { ensureDefaultSuperAdmin } from "./auth/auth.js";
 
 async function main() {
@@ -51,14 +53,24 @@ async function main() {
       if (/^https:\/\/[a-z0-9-]+\.vercel\.app$/.test(origin)) {
         return cb(null, true);
       }
-      if (env.NODE_ENV === "development" && /^(https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?)$/.test(origin)) {
+      if (
+        env.NODE_ENV === "development" &&
+        /^(https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?)$/.test(origin)
+      ) {
         return cb(null, true);
       }
       return cb(new Error("Not allowed by CORS"), false);
     },
     credentials: true,
     methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "Idempotency-Key", "X-Requested-With", "Accept", "Origin"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "Idempotency-Key",
+      "X-Requested-With",
+      "Accept",
+      "Origin",
+    ],
   });
   await app.register(cookie);
   await app.register(rateLimit, {
@@ -87,7 +99,7 @@ async function main() {
 h1{margin:0 0 .5rem;font-size:1.5rem;color:#34d399}p{margin:.25rem 0;color:#94a3b8}code{color:#fbbf24}</style>
 </head><body><div class="card"><h1>✓ Backend is running</h1>
 <p>Gharpayy API on port <code>${env.PORT}</code></p>
-<p>${new Date().toISOString()}</p></div></body></html>`
+<p>${new Date().toISOString()}</p></div></body></html>`,
     );
   });
 
@@ -113,9 +125,13 @@ h1{margin:0 0 .5rem;font-size:1.5rem;color:#34d399}p{margin:.25rem 0;color:#94a3
   registerBookingsRoutes(app);
   registerTenantsRoutes(app);
   registerOwnerRoutes(app);
+  registerDashboardRoutes(app);
+  registerInventoryRoutes(app);
 
   // Idempotent — bootstraps the canonical Super Admin if missing.
-  await ensureDefaultSuperAdmin().catch((err) => app.log.warn({ err }, "ensureDefaultSuperAdmin failed"));
+  await ensureDefaultSuperAdmin().catch((err) =>
+    app.log.warn({ err }, "ensureDefaultSuperAdmin failed"),
+  );
 
   await attachSocketIO(app);
 
@@ -138,9 +154,9 @@ h1{margin:0 0 .5rem;font-size:1.5rem;color:#34d399}p{margin:.25rem 0;color:#94a3
     shuttingDown = true;
     app.log.info({ signal }, "shutdown initiated");
     try {
-      await app.close();                // 1 + 2
+      await app.close(); // 1 + 2
       if (io) await new Promise<void>((res) => io!.close(() => res()));
-      await stopOutboxPublisher();      // 3
+      await stopOutboxPublisher(); // 3
       await disconnectMongo();
       await Promise.allSettled([redis.quit(), redisPub.quit(), redisSub.quit()]);
       app.log.info("shutdown clean");
@@ -151,9 +167,9 @@ h1{margin:0 0 .5rem;font-size:1.5rem;color:#34d399}p{margin:.25rem 0;color:#94a3
     }
   };
   process.on("SIGTERM", () => shutdown("SIGTERM"));
-  process.on("SIGINT",  () => shutdown("SIGINT"));
+  process.on("SIGINT", () => shutdown("SIGINT"));
   process.on("unhandledRejection", (reason) => app.log.error({ reason }, "unhandledRejection"));
-  process.on("uncaughtException",  (err)    => app.log.error({ err },    "uncaughtException"));
+  process.on("uncaughtException", (err) => app.log.error({ err }, "uncaughtException"));
 }
 
 main().catch((err) => {

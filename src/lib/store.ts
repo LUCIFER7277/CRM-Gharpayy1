@@ -1265,10 +1265,10 @@ export function computePropertyMetrics(
     const bookings = propTours.filter((t) => t.decision === "booked").length;
     const completed = propTours.filter((t) => t.status === "completed").length;
     const conversionPct = completed > 0 ? Math.round((bookings / completed) * 100) : 0;
-    const occupancyPct = Math.round(((p.totalBeds - p.vacantBeds) / p.totalBeds) * 100);
+    const occupancyPct = p.totalBeds > 0 ? Math.round(((p.totalBeds - p.vacantBeds) / p.totalBeds) * 100) : 0;
     const demandScore = Math.min(
       100,
-      Math.round(propLeads.length * 12 + propTours.length * 8 - p.daysSinceLastBooking * 2),
+      Math.max(0, Math.round(propLeads.length * 12 + propTours.length * 8 - (p.daysSinceLastBooking || 0) * 2)),
     );
     const pressureScore = Math.round(
       Math.max(0, Math.min(100, demandScore * 0.6 + (100 - occupancyPct) * 0.4)),
