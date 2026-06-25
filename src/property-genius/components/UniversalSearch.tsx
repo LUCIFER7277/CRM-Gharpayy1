@@ -47,11 +47,12 @@ interface Props {
   onPickPG: (pg: PG) => void;
   placeholder?: string;
   autoFocus?: boolean;
+  variant?: "default" | "ghost";
 }
 
 const RECENT_KEY = "gh_recent_searches";
 
-export function UniversalSearch({ onPickLandmark, onPickPG, placeholder, autoFocus }: Props) {
+export function UniversalSearch({ onPickLandmark, onPickPG, placeholder, autoFocus, variant = "default" }: Props) {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [recent, setRecent] = useState<string[]>([]);
@@ -103,8 +104,9 @@ export function UniversalSearch({ onPickLandmark, onPickPG, placeholder, autoFoc
   return (
     <div ref={wrapRef} className="relative w-full">
       <div className={cn(
-        "flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 transition-smooth",
-        open && "ring-glow",
+        "flex items-center gap-3 px-4 py-3 transition-smooth",
+        variant === "default" ? "rounded-xl border border-border bg-card" : "bg-transparent",
+        open && variant === "default" && "ring-glow",
       )}>
         <Search className="h-5 w-5 text-muted-foreground shrink-0" />
         <input

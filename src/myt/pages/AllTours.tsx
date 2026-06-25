@@ -1,24 +1,38 @@
-import { type ReactNode, useState } from 'react';
+import { type ReactNode, useState, useEffect } from 'react';
 import { useAppState } from '@/myt/lib/app-context';
+import { api } from '@/lib/api/client';
 import { useApp } from '@/lib/store';
 import { useAuthUser } from '@/lib/auth-store';
 import { useOrgMembers } from '@/hooks/useOrgDirectory';
 import { formatTime12h, cn } from '@/lib/utils';
 import { Tour, TourStatus, TourOutcome } from '@/myt/lib/types';
-import { Badge } from '@/components/ui/badge';
-import { CalendarDays, CheckCircle2, Clock3, Eye, FileText, MapPin, UserRound } from 'lucide-react';
+import { CalendarDays, CheckCircle2, Clock3, Eye, FileText, MapPin, UserRound, Calendar as CalendarIcon } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 
 export default function AllTours() {
-  const { tours } = useAppState();
   const { selectLead, leads } = useApp();
   const authUser = useAuthUser(s => s.user);
   const { members } = useOrgMembers();
   const [statusFilter, setStatusFilter] = useState<TourStatus | 'all'>('all');
   const [outcomeFilter, setOutcomeFilter] = useState<TourOutcome | 'all'>('all');
 
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [fetchedTours, setFetchedTours] = useState<Tour[]>([]);
+
+  useEffect(() => {
+    api.tours.list({ startDate, endDate }).then(res => {
+      setFetchedTours(res.items);
+    }).catch(err => {
+      console.error("Failed to fetch tours:", err);
+    });
+  }, [startDate, endDate]);
+
   // Deduplicate tours to only show the latest tour per lead
   const latestToursMap = new Map<string, Tour>();
-  tours.forEach(t => {
+  fetchedTours.forEach(t => {
     if (!t.leadId) {
       latestToursMap.set(t.id, t);
       return;
@@ -35,7 +49,7 @@ export default function AllTours() {
     }
   });
 
-  const filtered = Array.from(latestToursMap.values()).filter(t => {
+  const visibleTours = Array.from(latestToursMap.values()).filter(t => {
     // Role-based visibility
     if (authUser?.role === 'admin') {
       const myMemberIds = members
@@ -52,8 +66,26 @@ export default function AllTours() {
       
       if (!isVisible) return false;
     }
-    // super_admin sees all by default (no filter applied)
-    
+    // super_admin sees all by default
+    return true;
+  });
+
+  // Derived metrics
+  const todayStr = new Date().toISOString().split('T')[0];
+  const todayTours = visibleTours.filter(t => t.tourDate === todayStr);
+  const doneTodayTours = todayTours.filter(t => t.status === 'completed');
+  const postTourPendingTours = visibleTours.filter(t => t.status === 'completed' && !t.outcome);
+
+  const counts = {
+    all: visibleTours.length,
+    scheduled: visibleTours.filter(t => t.status === 'scheduled').length,
+    confirmed: visibleTours.filter(t => t.status === 'confirmed').length,
+    completed: visibleTours.filter(t => t.status === 'completed').length,
+    cancelled: visibleTours.filter(t => t.status === 'cancelled').length,
+    noShow: visibleTours.filter(t => t.status === 'no-show').length,
+  };
+
+  const filtered = visibleTours.filter(t => {
     if (statusFilter !== 'all' && t.status !== statusFilter) return false;
     if (outcomeFilter !== 'all' && t.outcome !== outcomeFilter) return false;
     return true;
@@ -64,34 +96,55 @@ export default function AllTours() {
   });
 
   return (
-    <div className="space-y-4 md:space-y-6 animate-slide-up">
-      <h1 className="text-xl md:text-2xl font-heading font-bold text-foreground">All Tours</h1>
+    <div className="space-y-6 animate-slide-up bg-background pb-8">
+      <h1 className="text-xl md:text-2xl font-bold text-foreground">My Tours</h1>
 
-      <div className="flex gap-2 flex-wrap">
-        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as any)} className="bg-surface-2 border border-border rounded-lg px-2 py-1.5 text-xs text-foreground outline-none focus:ring-1 focus:ring-primary/30">
-          <option value="all">All Status</option>
-          <option value="scheduled">Scheduled</option>
-          <option value="confirmed">Confirmed</option>
-          <option value="completed">Completed</option>
-          <option value="no-show">No Show</option>
-          <option value="cancelled">Cancelled</option>
-        </select>
-        <select value={outcomeFilter ?? 'all'} onChange={e => setOutcomeFilter(e.target.value === 'all' ? 'all' : e.target.value as TourOutcome)} className="bg-surface-2 border border-border rounded-lg px-2 py-1.5 text-xs text-foreground outline-none focus:ring-1 focus:ring-primary/30">
-          <option value="all">All Outcomes</option>
-          <option value="booked">Booked</option>
-          <option value="token-paid">Token Paid</option>
-          <option value="draft">Draft</option>
-          <option value="follow-up">Follow-up</option>
-          <option value="rejected">Rejected</option>
-          <option value="not-interested">Not Interested</option>
-        </select>
+      {/* Metric Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <MetricCard value={counts.all} label="Total" />
+        <MetricCard value={todayTours.length} label="Today" />
+        <MetricCard value={doneTodayTours.length} label="Done today" />
+        <MetricCard value={postTourPendingTours.length} label="Post-tour pending" />
       </div>
 
-      {/* Tour Cards */}
+      {/* Tabs and Filters */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-4">
+        <div className="flex flex-wrap gap-2">
+          <TabPill label={`All (${counts.all})`} active={statusFilter === 'all'} onClick={() => setStatusFilter('all')} />
+          <TabPill label={`Scheduled (${counts.scheduled})`} active={statusFilter === 'scheduled'} onClick={() => setStatusFilter('scheduled')} />
+          <TabPill label={`Confirmed (${counts.confirmed})`} active={statusFilter === 'confirmed'} onClick={() => setStatusFilter('confirmed')} />
+          <TabPill label={`Done (${counts.completed})`} active={statusFilter === 'completed'} onClick={() => setStatusFilter('completed')} />
+          <TabPill label={`Cancelled (${counts.cancelled})`} active={statusFilter === 'cancelled'} onClick={() => setStatusFilter('cancelled')} />
+          <TabPill label={`No-show (${counts.noShow})`} active={statusFilter === 'no-show'} onClick={() => setStatusFilter('no-show')} />
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <DatePicker date={startDate} setDate={setStartDate} label="Start Date" />
+          <span className="text-muted-foreground text-sm font-medium px-1">to</span>
+          <DatePicker date={endDate} setDate={setEndDate} label="End Date" />
+
+          <Select value={outcomeFilter ?? 'all'} onValueChange={(v) => setOutcomeFilter(v === 'all' ? 'all' : v as TourOutcome)}>
+            <SelectTrigger className="w-[145px] rounded-full bg-surface-2 text-muted-foreground hover:bg-accent/50 hover:text-foreground border-transparent border focus:ring-1 focus:ring-primary/30 h-[32px] text-sm font-medium">
+              <SelectValue placeholder="All Outcomes" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Outcomes</SelectItem>
+              <SelectItem value="booked">Booked</SelectItem>
+              <SelectItem value="token-paid">Token Paid</SelectItem>
+              <SelectItem value="draft">Draft</SelectItem>
+              <SelectItem value="follow-up">Follow-up</SelectItem>
+              <SelectItem value="rejected">Rejected</SelectItem>
+              <SelectItem value="not-interested">Not Interested</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* List */}
       <div className="space-y-4">
         {filtered.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border p-12 text-center text-muted-foreground">
-            No tours found matching your filters.
+          <div className="py-12 text-center text-sm text-muted-foreground">
+            No tours in this category
           </div>
         ) : (
           filtered.map(t => (
@@ -100,6 +153,67 @@ export default function AllTours() {
         )}
       </div>
     </div>
+  );
+}
+
+function MetricCard({ value, label }: { value: number; label: string }) {
+  return (
+    <div className="rounded-xl border border-border/50 bg-surface/50 p-4 flex flex-col items-center justify-center space-y-1 shadow-sm">
+      <div className="text-2xl font-bold text-foreground">{value}</div>
+      <div className="text-[13px] text-muted-foreground">{label}</div>
+    </div>
+  );
+}
+
+function TabPill({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
+        active 
+          ? "bg-[#f97316] text-white hover:bg-[#ea580c]" 
+          : "bg-surface-2 text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+      )}
+    >
+      {label}
+    </button>
+  );
+}
+
+function DatePicker({ date, setDate, label }: { date: string; setDate: (d: string) => void; label: string }) {
+  const d = date ? new Date(`${date}T00:00:00`) : undefined;
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          className={cn(
+            "inline-flex items-center gap-2 w-[135px] rounded-full bg-surface-2 hover:bg-accent/50 border-transparent border focus:ring-1 focus:ring-primary/30 h-[32px] px-3 text-sm font-medium outline-none text-left transition-colors",
+            !date ? "text-muted-foreground" : "text-foreground"
+          )}
+        >
+          <CalendarIcon className="h-3.5 w-3.5 opacity-60" />
+          {date ? new Date(`${date}T00:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : <span>{label}</span>}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start">
+        <Calendar
+          mode="single"
+          selected={d}
+          onSelect={(day) => {
+            if (day) {
+              const yyyy = day.getFullYear();
+              const mm = String(day.getMonth() + 1).padStart(2, '0');
+              const dd = String(day.getDate()).padStart(2, '0');
+              setDate(`${yyyy}-${mm}-${dd}`);
+            } else {
+              setDate("");
+            }
+          }}
+          initialFocus
+        />
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -145,8 +259,8 @@ function TourAdminCard({ tour, onOpenLead }: { tour: Tour; onOpenLead: () => voi
         <InfoTile
           icon={<CalendarDays className="h-4 w-4" />}
           label="Tour Mode"
-          value={capitalizeWords(tour.tourType.replace("-", " "))}
-          hint={`Confirmation: ${capitalizeWords(tour.confirmationStrength)}`}
+          value={capitalizeWords((tour.tourType || "physical").replace("-", " "))}
+          hint={`Confirmation: ${capitalizeWords(tour.confirmationStrength || "none")}`}
         />
         <InfoTile
           icon={<FileText className="h-4 w-4" />}
@@ -156,7 +270,7 @@ function TourAdminCard({ tour, onOpenLead }: { tour: Tour; onOpenLead: () => voi
         />
       </div>
 
-      {tour.qualification.keyConcern ? (
+      {tour.qualification?.keyConcern ? (
         <div className="rounded-lg border border-warning/30 bg-warning/5 px-3 py-2 text-sm text-warning">
           Key concern: {tour.qualification.keyConcern}
         </div>
@@ -188,7 +302,8 @@ function InfoTile({
   );
 }
 
-function StatusPill({ status }: { status: TourStatus }) {
+function StatusPill({ status }: { status?: TourStatus | null }) {
+  if (!status) return null;
   const tone =
     status === "completed" ? "bg-success/10 text-success" :
     status === "confirmed" ? "bg-info/10 text-info" :
@@ -202,7 +317,7 @@ function StatusPill({ status }: { status: TourStatus }) {
   );
 }
 
-function OutcomePill({ outcome }: { outcome: TourOutcome }) {
+function OutcomePill({ outcome }: { outcome?: TourOutcome | null }) {
   if (!outcome) {
     return <span className="text-xs text-muted-foreground">No outcome yet</span>;
   }
@@ -226,6 +341,7 @@ function progressLabel(tour: Tour): string {
   return "Scheduled and pending confirmation";
 }
 
-function capitalizeWords(value: string): string {
+function capitalizeWords(value?: string | null): string {
+  if (!value) return "";
   return value.replace(/\b\w/g, (match) => match.toUpperCase());
 }

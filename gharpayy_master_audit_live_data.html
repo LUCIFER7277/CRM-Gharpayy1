@@ -1,0 +1,331 @@
+<h2 class="sr-only">Gharpayy CRM master audit based on live production data — 451 leads, 95 TCMs, 260 properties, June 2026</h2>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.wrap{font-family:var(--font-sans);padding:1rem 0}
+.hero{display:flex;align-items:center;gap:12px;margin-bottom:1.25rem;padding-bottom:1rem;border-bottom:0.5px solid var(--color-border-tertiary)}
+.logo{width:40px;height:40px;border-radius:var(--border-radius-md);background:#E55C1A;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;color:#fff;flex-shrink:0}
+.hero h1{font-size:17px;font-weight:500;color:var(--color-text-primary)}
+.hero p{font-size:12px;color:var(--color-text-secondary);margin-top:2px}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1.25rem}
+.kpi{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 12px;text-align:center}
+.kpi .n{font-size:20px;font-weight:500}
+.kpi .l{font-size:11px;color:var(--color-text-secondary);margin-top:2px}
+.cr{color:#A32D2D}.cg{color:#3B6D11}.ca{color:#854F0B}.cb{color:#185FA5}
+.tabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:1rem}
+.tab{font-size:12px;padding:5px 11px;border-radius:999px;border:0.5px solid var(--color-border-secondary);background:transparent;color:var(--color-text-secondary);cursor:pointer}
+.tab.on{background:var(--color-background-info);color:var(--color-text-info);border-color:transparent}
+.panel{display:none}.panel.on{display:block}
+.item{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:11px 13px;background:var(--color-background-primary);margin-bottom:8px}
+.ih{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.ih strong{font-size:13px;font-weight:500;color:var(--color-text-primary)}
+.ib{font-size:12px;color:var(--color-text-secondary);margin-top:5px;line-height:1.55}
+.fix{font-size:11px;margin-top:6px;padding:5px 8px;border-radius:var(--border-radius-md);background:var(--color-background-secondary);color:var(--color-text-secondary);border-left:2px solid #185FA5}
+.badge{font-size:10px;padding:2px 7px;border-radius:999px;white-space:nowrap;flex-shrink:0}
+.bp0{background:#FCEBEB;color:#A32D2D}.bp1{background:#FAEEDA;color:#854F0B}.bp2{background:#EAF3DE;color:#3B6D11}.bb{background:#E6F1FB;color:#185FA5}.bpur{background:#EEEDFE;color:#3C3489}
+.stitle{font-size:12px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.stitle i{font-size:15px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;font-weight:500;color:var(--color-text-secondary);font-size:11px;padding:6px 8px;border-bottom:0.5px solid var(--color-border-tertiary)}
+td{padding:6px 8px;border-bottom:0.5px solid var(--color-border-tertiary);color:var(--color-text-primary);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+.pill{font-size:10px;padding:2px 6px;border-radius:999px;font-weight:500}
+.ptop{background:#EAF3DE;color:#3B6D11}.pgood{background:#E6F1FB;color:#185FA5}.pmid{background:#EEEDFE;color:#3C3489}.prisk{background:#FAEEDA;color:#854F0B}.pcrit{background:#FCEBEB;color:#A32D2D}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.bar-label{font-size:12px;color:var(--color-text-secondary);width:160px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{flex:1;height:8px;background:var(--color-background-secondary);border-radius:999px;overflow:hidden}
+.bar-fill{height:100%;border-radius:999px}
+.bar-val{font-size:11px;font-weight:500;color:var(--color-text-primary);width:36px;text-align:right;flex-shrink:0}
+.funnel-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.funnel-stage{font-size:12px;color:var(--color-text-secondary);width:130px;flex-shrink:0}
+.funnel-bar{height:20px;border-radius:3px;display:flex;align-items:center;padding:0 8px;font-size:11px;font-weight:500;color:#fff;min-width:36px;white-space:nowrap}
+.funnel-n{font-size:12px;color:var(--color-text-secondary);margin-left:4px}
+.alert-box{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:10px 13px;margin-bottom:8px;border-left:3px solid}
+.alert-crit{border-left-color:#A32D2D;background:#FCEBEB08}
+.alert-high{border-left-color:#854F0B;background:#FAEEDA08}
+.alert-med{border-left-color:#185FA5;background:#E6F1FB08}
+.alert-title{font-size:13px;font-weight:500;color:var(--color-text-primary);display:flex;align-items:center;gap:6px}
+.alert-body{font-size:12px;color:var(--color-text-secondary);margin-top:5px;line-height:1.5}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.metric-card{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px;font-size:12px}
+.metric-card .mn{font-size:18px;font-weight:500;margin-bottom:3px}
+.metric-card .ml{color:var(--color-text-secondary)}
+button.cta{cursor:pointer;font-family:var(--font-sans);font-size:12px;padding:5px 12px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:transparent;color:var(--color-text-secondary)}
+button.cta:hover{background:var(--color-background-secondary)}
+.footer{margin-top:1.25rem;padding-top:1rem;border-top:0.5px solid var(--color-border-tertiary);display:flex;gap:6px;flex-wrap:wrap}
+</style>
+
+<div class="wrap">
+<div class="hero">
+  <div class="logo">GP</div>
+  <div>
+    <h1>Gharpayy CRM — master audit (live data)</h1>
+    <p>451 leads · 95 TCMs · 260 properties · 317 users · Bangalore · June 24, 2026</p>
+  </div>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi"><div class="n cr">1.3%</div><div class="l">Conversion rate<br><span style="font-size:10px">(target: 8–12%)</span></div></div>
+  <div class="kpi"><div class="n cr">100%</div><div class="l">Leads with zero<br>follow-up set</div></div>
+  <div class="kpi"><div class="n cr">0</div><div class="l">Call logs<br>in system</div></div>
+  <div class="kpi"><div class="n cr">82.7%</div><div class="l">Beds vacant<br>(1,277 of 1,544)</div></div>
+</div>
+
+<div class="tabs">
+  <button class="tab on" onclick="st('fire')">🔥 Fires first</button>
+  <button class="tab" onclick="st('funnel')">📊 Pipeline</button>
+  <button class="tab" onclick="st('tcm')">👤 TCM rankings</button>
+  <button class="tab" onclick="st('api')">⚙️ Broken APIs</button>
+  <button class="tab" onclick="st('ux')">🎨 UX scores</button>
+  <button class="tab" onclick="st('plan')">🗓 90-day plan</button>
+  <button class="tab" onclick="st('vision')">🚀 100x vision</button>
+</div>
+
+<div id="p-fire" class="panel on">
+  <div class="stitle"><i class="ti ti-alert-triangle" aria-hidden="true"></i> Critical fires — fix these before anything else</div>
+  
+  <div class="alert-box alert-crit">
+    <div class="alert-title"><span class="badge bp0">P0 — DAY 1</span> All 260 properties are marked inactive</div>
+    <div class="alert-body">Every property in the database has status: "inactive". TCMs cannot see room availability. The inventory module returns nothing. This is the core product utility — matching leads to rooms — and it is completely dark.</div>
+    <div class="fix">⚡ Fix in 30 seconds: <code>db.properties.updateMany({}, {$set:{status:"active"}})</code> — one database command. Then register the /api/inventory endpoint.</div>
+  </div>
+
+  <div class="alert-box alert-crit">
+    <div class="alert-title"><span class="badge bp0">P0 — DAY 1</span> /api/dashboard returns 404 — home screen is blank</div>
+    <div class="alert-body">Every user opens the app to an empty screen. This single broken endpoint kills the daily habit loop. No compelling reason to open the CRM = 0 daily active usage. The psychological cue → routine → reward loop is broken at step one.</div>
+    <div class="fix">⚡ Register the route. Return: leads to call today, overdue follow-ups, TCM rank, zone pipeline summary. Build time: 1 day.</div>
+  </div>
+
+  <div class="alert-box alert-crit">
+    <div class="alert-title"><span class="badge bp0">P0 — DAY 1</span> 0% follow-up rate — 451 leads, zero nextFollowUpAt set</div>
+    <div class="alert-body">Not a single one of 451 leads has a follow-up scheduled. Leads enter the CRM and die there. This is the #1 revenue leak — estimated ₹1.57 crore/year in MRR abandoned.</div>
+    <div class="fix">⚡ On lead creation, auto-set nextFollowUpAt = now + 2 hours. Add a "Call Now" banner on any lead older than 2h with no activity. Backend change: 4 hours of dev work.</div>
+  </div>
+
+  <div class="alert-box alert-crit">
+    <div class="alert-title"><span class="badge bp0">P0 — DAY 1</span> API URL publicly visible on login page</div>
+    <div class="alert-body">The backend server URL (opsserver.gharpayy.in) is displayed on the public login screen. This exposes your API to probing, enumeration attacks, and competitors.</div>
+    <div class="fix">⚡ Delete one line of HTML. Takes 5 minutes. Do it today.</div>
+  </div>
+
+  <div class="alert-box alert-high">
+    <div class="alert-title"><span class="badge bp1">P0 — WEEK 1</span> Budget field has 150+ text formats — filtering is broken</div>
+    <div class="alert-body">"8-12k", "8to12", "₹8,000–₹12,000 per month", "BASIC 7k-11k" are all the same budget range stored as different strings. Matching, filtering, and analytics on budget are completely unreliable.</div>
+    <div class="fix">⚡ Replace freetext with budgetTier enum: BASIC (7–11k) / MID (12–16k) / PRIME (17–26k) / PREMIUM (27k+). Run migration on all 451 leads. 1 day of work.</div>
+  </div>
+
+  <div class="alert-box alert-high">
+    <div class="alert-title"><span class="badge bp1">P0 — WEEK 1</span> 64 of 95 TCM agents have zero leads — ghost army</div>
+    <div class="alert-body">67% of registered TCMs have never received a single lead. These accounts are either churned agents, test accounts, or misconfigured zones — and they still have access to all lead data.</div>
+    <div class="fix">⚡ Audit all 95 accounts. Deactivate test accounts (test_mwb, demotcm etc). Re-zone idle agents. Revoke data access for deactivated users immediately.</div>
+  </div>
+
+  <div class="alert-box alert-med">
+    <div class="alert-title"><span class="badge bb">HIGH</span> Quotation validity is 20 minutes — killing conversions</div>
+    <div class="alert-body">29 quotations sent → only 3 bookings = 10.3% quote-to-booking rate. A 20-minute window forces a snap decision. Leads need to check with family, verify commute, compare options.</div>
+    <div class="fix">⚡ Change default validity to 48 hours. Add a "hold this room" pre-booking deposit of ₹2,000. Track quote_viewed_at. Auto-trigger follow-up 1 hour before expiry. 4 hours of dev work.</div>
+  </div>
+</div>
+
+<div id="p-funnel" class="panel">
+  <div class="stitle"><i class="ti ti-chart-bar" aria-hidden="true"></i> Live pipeline — where 451 leads are dying</div>
+  
+  <div style="margin-bottom:16px">
+    <div class="funnel-row"><span class="funnel-stage">Lead enters CRM</span><div class="funnel-bar" style="width:100%;background:#185FA5">451 (100%)</div></div>
+    <div class="funnel-row"><span class="funnel-stage">Contacted</span><div class="funnel-bar" style="width:40%;background:#378ADD">30 (6.7%)</div><span class="funnel-n">⚠️ 77.4% never contacted</span></div>
+    <div class="funnel-row"><span class="funnel-stage">Tour Scheduled</span><div class="funnel-bar" style="width:28%;background:#639922">19 (4.2%)</div></div>
+    <div class="funnel-row"><span class="funnel-stage">On Tour</span><div class="funnel-bar" style="width:30%;background:#639922">31 (6.9%)</div></div>
+    <div class="funnel-row"><span class="funnel-stage">Tour Done</span><div class="funnel-bar" style="width:12%;background:#BA7517">5 (1.1%)</div><span class="funnel-n">⚠️ 26/31 tours unresolved</span></div>
+    <div class="funnel-row"><span class="funnel-stage">Negotiation</span><div class="funnel-bar" style="width:10%;background:#BA7517">7 (1.6%)</div></div>
+    <div class="funnel-row"><span class="funnel-stage">Quote Sent</span><div class="funnel-bar" style="width:6%;background:#D85A30">4 (0.9%)</div></div>
+    <div class="funnel-row"><span class="funnel-stage">BOOKED ✅</span><div class="funnel-bar" style="width:4%;background:#A32D2D">6 (1.3%)</div><span class="funnel-n">vs 8–12% benchmark</span></div>
+  </div>
+
+  <div class="two">
+    <div class="metric-card">
+      <div class="mn cr">349</div>
+      <div class="ml">Leads stuck in "new" — never worked<br>= ₹1.57cr/yr in abandoned MRR</div>
+    </div>
+    <div class="metric-card">
+      <div class="mn cr">100%</div>
+      <div class="ml">Leads from "paste" source only<br>— zero platform integrations</div>
+    </div>
+  </div>
+
+  <div class="stitle" style="margin-top:12px"><i class="ti ti-map-pin" aria-hidden="true"></i> Zone demand breakdown</div>
+  <div class="bar-row"><span class="bar-label">MWB MORE (Whitefield)</span><div class="bar-track"><div class="bar-fill" style="width:100%;background:#185FA5"></div></div><span class="bar-val">166 (37%)</span></div>
+  <div class="bar-row"><span class="bar-label">KORA CORE (Koramangala)</span><div class="bar-track"><div class="bar-fill" style="width:64%;background:#185FA5"></div></div><span class="bar-val">106 (24%)</span></div>
+  <div class="bar-row"><span class="bar-label">YPR MAJOR (Yeshwantpur)</span><div class="bar-track"><div class="bar-fill" style="width:40%;background:#378ADD"></div></div><span class="bar-val">67 (15%)</span></div>
+  <div class="bar-row"><span class="bar-label">HOMES KORA</span><div class="bar-track"><div class="bar-fill" style="width:32%;background:#378ADD"></div></div><span class="bar-val">53 (12%)</span></div>
+  <div class="bar-row"><span class="bar-label">MTECH HUB</span><div class="bar-track"><div class="bar-fill" style="width:30%;background:#85B7EB"></div></div><span class="bar-val">49 (11%)</span></div>
+  <div style="font-size:11px;color:var(--color-text-secondary);margin-top:8px">MWB MORE + KORA CORE = 60.3% of all demand. These 2 zones need your best TCMs and most active inventory.</div>
+</div>
+
+<div id="p-tcm" class="panel">
+  <div class="stitle"><i class="ti ti-users" aria-hidden="true"></i> TCM performance leaderboard — live data</div>
+  <table>
+    <tr><th>TCM</th><th>Leads</th><th>Booked</th><th>On Tour</th><th>Conv%</th><th>% Stuck</th><th>Status</th></tr>
+    <tr><td><strong>Gorav</strong></td><td>39</td><td>3</td><td>6</td><td class="cg">7.7%</td><td>49%</td><td><span class="pill ptop">TOP</span></td></tr>
+    <tr><td><strong>Satvik</strong></td><td>4</td><td>1</td><td>0</td><td class="cg">25%</td><td>75%</td><td><span class="pill ptop">TOP</span></td></tr>
+    <tr><td>Rittesh</td><td>20</td><td>1</td><td>6</td><td class="cb">5.0%</td><td>40%</td><td><span class="pill pgood">GOOD</span></td></tr>
+    <tr><td>Mann Sharma</td><td>4</td><td>0</td><td>2</td><td>0%</td><td>25%</td><td><span class="pill pmid">MID</span></td></tr>
+    <tr><td>Mannpreet</td><td>35</td><td>0</td><td>4</td><td>0%</td><td>69%</td><td><span class="pill prisk">RISK</span></td></tr>
+    <tr><td>Atharva</td><td>20</td><td>0</td><td>3</td><td>0%</td><td>75%</td><td><span class="pill prisk">RISK</span></td></tr>
+    <tr><td>Manav</td><td>19</td><td>0</td><td>2</td><td>0%</td><td>79%</td><td><span class="pill prisk">RISK</span></td></tr>
+    <tr><td>Yash</td><td>20</td><td>0</td><td>2</td><td>0%</td><td>85%</td><td><span class="pill prisk">RISK</span></td></tr>
+    <tr><td>sanika</td><td>54</td><td>0</td><td>1</td><td>0%</td><td>91%</td><td><span class="pill pcrit">CRITICAL</span></td></tr>
+    <tr><td>Tejal</td><td>42</td><td>0</td><td>1</td><td>0%</td><td>79%</td><td><span class="pill pcrit">CRITICAL</span></td></tr>
+    <tr><td>Hrithik</td><td>28</td><td>0</td><td>0</td><td>0%</td><td>86%</td><td><span class="pill pcrit">CRITICAL</span></td></tr>
+    <tr><td>Bercy / Mahi</td><td>23</td><td>0</td><td>0</td><td>0%</td><td>91%</td><td><span class="pill pcrit">CRITICAL</span></td></tr>
+    <tr><td style="color:var(--color-text-secondary)">+64 agents</td><td>0</td><td>0</td><td>0</td><td>—</td><td>—</td><td><span class="pill pcrit">GHOST</span></td></tr>
+  </table>
+  <div class="fix" style="margin-top:10px">🏆 Gorav is your playbook. He has lowest "stuck in new" rate (49%) and highest conv (7.7%). Extract his activity patterns — time-to-first-contact, call frequency, message templates — and build them as CRM defaults for all TCMs.</div>
+  <div class="fix" style="margin-top:6px;border-left-color:#A32D2D">⚠️ sanika has 54 leads (most on team) and 0 bookings. Either she's working leads on WhatsApp and not logging, or she's not working them at all. You can't tell because activity logs have no actor IDs. Fix audit logging first.</div>
+</div>
+
+<div id="p-api" class="panel">
+  <div class="stitle"><i class="ti ti-code" aria-hidden="true"></i> API health — 12 broken endpoints tested live</div>
+  <table>
+    <tr><th>Endpoint</th><th>Status</th><th>Priority</th><th>Impact</th></tr>
+    <tr><td><code>/api/inventory</code></td><td class="cr">404</td><td><span class="badge bp0">P0</span></td><td>Entire inventory module dark</td></tr>
+    <tr><td><code>/api/dashboard</code></td><td class="cr">404</td><td><span class="badge bp0">P0</span></td><td>Home screen blank — kills habit</td></tr>
+    <tr><td><code>/api/revenue</code></td><td class="cr">404</td><td><span class="badge bp0">P0</span></td><td>Leadership flying blind</td></tr>
+    <tr><td><code>/api/notifications</code></td><td class="cr">404</td><td><span class="badge bp1">P1</span></td><td>TCMs miss assignments</td></tr>
+    <tr><td><code>/api/ai/coach</code></td><td class="cr">404</td><td><span class="badge bp1">P1</span></td><td>Branded in UI, returns nothing</td></tr>
+    <tr><td><code>/api/analytics</code></td><td class="cr">404</td><td><span class="badge bp1">P1</span></td><td>Admin intelligence page empty</td></tr>
+    <tr><td><code>/api/audit-log</code></td><td class="cr">404</td><td><span class="badge bp1">P1</span></td><td>200 activities, 0 with actor IDs</td></tr>
+    <tr><td><code>/api/reports</code></td><td class="cr">404</td><td><span class="badge bp1">P1</span></td><td>No CSV/PDF export possible</td></tr>
+    <tr><td><code>/api/commands</code></td><td class="cr">404</td><td><span class="badge bp1">P1</span></td><td>Command palette broken</td></tr>
+    <tr><td><code>/api/hr</code></td><td class="cr">404</td><td><span class="badge bb">P2</span></td><td>HR module non-functional</td></tr>
+    <tr><td><code>/api/automations</code></td><td class="cr">404</td><td><span class="badge bb">P2</span></td><td>Automation triggers not live</td></tr>
+    <tr><td><code>/api/leads/stats</code></td><td class="cr">404</td><td><span class="badge bb">P2</span></td><td>No aggregate charts</td></tr>
+  </table>
+  <div class="fix" style="margin-top:10px">One backend developer, one week, priority order: inventory → dashboard → revenue → notifications → analytics → audit-log → reports. Each route takes 2–8 hours. The frontend routes already exist — the backend just needs to catch up.</div>
+</div>
+
+<div id="p-ux" class="panel">
+  <div class="stitle"><i class="ti ti-palette" aria-hidden="true"></i> UI/UX scorecard — overall 4.8/10</div>
+  <div class="bar-row"><span class="bar-label">Speed perception</span><div class="bar-track"><div class="bar-fill" style="width:70%;background:#3B6D11"></div></div><span class="bar-val">7/10</span></div>
+  <div class="bar-row"><span class="bar-label">Color & trust signals</span><div class="bar-track"><div class="bar-fill" style="width:60%;background:#639922"></div></div><span class="bar-val">6/10</span></div>
+  <div class="bar-row"><span class="bar-label">Data density</span><div class="bar-track"><div class="bar-fill" style="width:60%;background:#639922"></div></div><span class="bar-val">6/10</span></div>
+  <div class="bar-row"><span class="bar-label">Navigation clarity</span><div class="bar-track"><div class="bar-fill" style="width:50%;background:#BA7517"></div></div><span class="bar-val">5/10</span></div>
+  <div class="bar-row"><span class="bar-label">First impression</span><div class="bar-track"><div class="bar-fill" style="width:40%;background:#D85A30"></div></div><span class="bar-val">4/10</span></div>
+  <div class="bar-row"><span class="bar-label">Error / empty states</span><div class="bar-track"><div class="bar-fill" style="width:20%;background:#A32D2D"></div></div><span class="bar-val">2/10</span></div>
+  <div class="bar-row"><span class="bar-label">Action visibility</span><div class="bar-track"><div class="bar-fill" style="width:20%;background:#A32D2D"></div></div><span class="bar-val">2/10</span></div>
+  <div class="bar-row"><span class="bar-label">Mobile experience</span><div class="bar-track"><div class="bar-fill" style="width:30%;background:#A32D2D"></div></div><span class="bar-val">3/10</span></div>
+
+  <div style="margin-top:12px">
+  <div class="item">
+    <div class="ih"><strong>Action visibility: 2/10 — the worst score</strong><span class="badge bp0">fix first</span></div>
+    <div class="ib">A TCM opening the app has zero indication of what to do. No "call queue", no priority, no daily list. The app is passive, not directive. This is why leads die.</div>
+    <div class="fix">Build a "Your Day" view as default home: (1) Leads to call now, (2) Follow-ups due, (3) Tours today. One primary action button per card.</div>
+  </div>
+  <div class="item">
+    <div class="ih"><strong>Empty states: 2/10</strong><span class="badge bp0">visible immediately</span></div>
+    <div class="ib">Broken API endpoints show blank screens with no explanation. Users think the product is broken (it is, but they shouldn't see raw emptiness).</div>
+    <div class="fix">Add friendly empty state for every module: illustration + message + action CTA. "No rooms loaded yet — ask your admin to activate properties."</div>
+  </div>
+  <div class="item">
+    <div class="ih"><strong>Navigation: 5/10</strong><span class="badge bp1">cluttered</span></div>
+    <div class="ib">30+ routes in sidebar is overwhelming for new TCMs. No role-based filtering of nav.</div>
+    <div class="fix">Group into 5 collapsible sections: Pipeline · Supply · Team · Owner · Admin. TCMs see 5 items. Managers see 12. Admins see all.</div>
+  </div>
+  </div>
+</div>
+
+<div id="p-plan" class="panel">
+  <div class="stitle"><i class="ti ti-calendar" aria-hidden="true"></i> 90-day plan — 3x daily active usage</div>
+
+  <div class="item">
+    <div class="ih"><strong>Week 1–2: Stop the bleeding</strong><span class="badge bp0">do now</span></div>
+    <div class="ib">
+      1. Register /api/inventory and /api/dashboard — the two most-broken, most-used endpoints<br>
+      2. Run <code>db.properties.updateMany({}, {$set:{status:"active"}})</code> — activate all 260 properties<br>
+      3. Normalize budget field to structured tiers — migrate all 451 leads<br>
+      4. Remove API URL from login page<br>
+      5. Add nextFollowUpAt = now+2h on every new lead creation<br>
+      6. Add manifest.json — make app installable as PWA on phones
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="ih"><strong>Week 3–4: Create the daily habit loop</strong><span class="badge bp1">build habit</span></div>
+    <div class="ib">
+      1. Build "Your Day" view as default home screen<br>
+      2. Add mandatory "first contact" log — TCM cannot advance a lead without logging a call<br>
+      3. SLA cron job: lead in "new" &gt;2h → todo for TCM, &gt;24h → alert manager<br>
+      4. Fix /api/notifications — fire on lead assigned, follow-up due, SLA breach<br>
+      5. Fix activity logging actor IDs — restore accountability for all 200+ activities<br>
+      6. Manager at-a-glance panel: TCM last activity, overdue lead count per agent
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="ih"><strong>Month 2: Drive conversion</strong><span class="badge bb">grow</span></div>
+    <div class="ib">
+      1. WhatsApp integration (Interakt/Wati) — auto-welcome message on lead creation<br>
+      2. nextBestAction rules engine: new+2h→CALL, contacted+24h→FOLLOW_UP<br>
+      3. Extend quotation validity to 48h, add pre-book deposit option<br>
+      4. Revival Engine: nightly job creates "cold leads" task list for each TCM<br>
+      5. Register /api/revenue — bookings by month, zone, TCM<br>
+      6. Extract Gorav's playbook into CRM defaults (response time, message cadence)
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="ih"><strong>Month 3: Scale and monetize</strong><span class="badge bpur">scale</span></div>
+    <div class="ib">
+      1. Owner revenue dashboard — show ₹X/day vacancy cost, 1-tap tour approval<br>
+      2. Lead capture webhook from 99acres / MagicBricks — eliminate manual paste<br>
+      3. Manager war room: live TV mode with zone pipeline and TCM activity<br>
+      4. Rule-based AI coach for bottom 10 TCMs using Gorav's activity patterns<br>
+      5. Conversion rate target: 5% (from 1.3%). DAU target: 3x current.<br>
+      6. Pilot SaaS licensing to 1 other PG operator — multi-tenant arch already built
+    </div>
+  </div>
+</div>
+
+<div id="p-vision" class="panel">
+  <div class="stitle"><i class="ti ti-rocket" aria-hidden="true"></i> 100x version — Gharpayy in 2029</div>
+
+  <div class="item">
+    <div class="ih"><strong>WhatsApp-native workflow</strong><span class="badge bp2">killer feature</span></div>
+    <div class="ib">A lead messages Gharpayy's WhatsApp number → auto-enters CRM → assigns to best-fit TCM → sends draft reply for TCM to approve in one tap → logs conversation automatically. TCMs never open the CRM. They use WhatsApp. The CRM does the work for them. This is when adoption hits 100%.</div>
+  </div>
+
+  <div class="item">
+    <div class="ih"><strong>Revive Engine</strong><span class="badge bp2">₹0 acquisition cost</span></div>
+    <div class="ib">Every night: identify leads cold for &gt;3 days → analyze why (budget mismatch, area, timing) → generate personalized WhatsApp revival message → TCM approves in 1 tap. Expected recovery: 15–25% of 349 dead leads. At ₹15k/booking = ₹7.8L in recoverable revenue from existing data.</div>
+  </div>
+
+  <div class="item">
+    <div class="ih"><strong>Owner as sales partner</strong><span class="badge bb">retention moat</span></div>
+    <div class="ib">Owner app shows: "₹X lost today while this room is vacant." 1-tap tour approval. 1-tap booking confirm. Owners who respond within 1 hour get "Fast Owner" badge and are prioritized in matching. 218 owners already onboarded — this supply-side lock-in is the moat competitors cannot copy.</div>
+  </div>
+
+  <div class="item">
+    <div class="ih"><strong>SaaS expansion</strong><span class="badge bpur">₹24L/yr upside</span></div>
+    <div class="ib">Multi-tenant architecture is already built (tenantId on every record). License to PG operators in Pune, Hyderabad, Chennai. ₹20k/month × 10 customers = ₹24L/year at near-zero marginal cost. You've already built the hardest parts.</div>
+  </div>
+
+  <div class="item">
+    <div class="ih"><strong>The killer insight</strong><span class="badge bp0">read this</span></div>
+    <div class="ib" style="color:var(--color-text-primary);font-size:13px;line-height:1.6">Gharpayy does not have a technology problem. It has a behavior problem. The CRM is being used as a digital notepad — not a sales engine. The win condition for the next 18 months is not a new feature. It is making it <strong>harder to work outside the CRM than inside it.</strong> The moment a TCM logs a call, their manager sees it. The moment they don't log for 48h, they stop receiving leads. Commission is only paid on bookings in the CRM. The moat is not the code. The moat is the data — generated by 95 motivated telecallers who log every interaction, every day.</div>
+  </div>
+</div>
+
+<div class="footer">
+  <button class="cta" onclick="sendPrompt('Write me the exact backend code to register the /api/dashboard and /api/inventory endpoints for Gharpayy CRM')">Code the dashboard API ↗</button>
+  <button class="cta" onclick="sendPrompt('Design the Gorav playbook — extract his winning patterns and write them as CRM default rules for all TCMs')">Build Gorav\'s playbook ↗</button>
+  <button class="cta" onclick="sendPrompt('Write a WhatsApp integration spec for Gharpayy CRM using Interakt — lead auto-capture, 1-tap reply, conversation logging')">WhatsApp integration spec ↗</button>
+  <button class="cta" onclick="sendPrompt('Write the database migration script to normalize budget field and activate all 260 properties in Gharpayy CRM')">Write migration script ↗</button>
+</div>
+</div>
+
+<script>
+function st(id){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('p-'+id).classList.add('on');
+  event.target.classList.add('on');
+}
+</script>

@@ -79,8 +79,10 @@ export const localAdapter = {
     return { items: items.slice(0, q.limit ?? 100), nextCursor: null as string | null };
   },
 
-  listTours() {
-    const items = read<Tour>(TOURS_KEY);
+  listTours(q: { startDate?: string; endDate?: string } = {}) {
+    let items = read<Tour>(TOURS_KEY);
+    if (q.startDate) items = items.filter(t => t.tourDate >= q.startDate!);
+    if (q.endDate) items = items.filter(t => t.tourDate <= q.endDate!);
     return { items: items.sort((a, b) => b._id.localeCompare(a._id)), nextCursor: null as string | null };
   },
 

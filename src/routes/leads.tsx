@@ -195,6 +195,10 @@ function LeadsPage() {
       boolean
     >,
   );
+  
+  const [bandPages, setBandPages] = useState<Record<BandKey, number>>(
+    Object.fromEntries(BAND_ORDER.map((k) => [k, 1])) as Record<BandKey, number>
+  );
 
   const toggleBand = (band: BandKey) => setOpenBands((prev) => ({ ...prev, [band]: !prev[band] }));
 
@@ -288,10 +292,10 @@ function LeadsPage() {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search name or phone…"
-              className="h-9 w-52 text-sm"
+              className="h-9 w-52 text-sm rounded-full"
             />
             <Select value={stageFilter} onValueChange={setStageFilter}>
-              <SelectTrigger className="h-9 w-40 text-sm">
+              <SelectTrigger className="h-9 w-40 text-sm rounded-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -316,7 +320,7 @@ function LeadsPage() {
               </SelectContent>
             </Select>
             <Select value={dateAddedFilter} onValueChange={setDateAddedFilter}>
-              <SelectTrigger className="h-9 w-32 text-sm"><SelectValue placeholder="Date Added" /></SelectTrigger>
+              <SelectTrigger className="h-9 w-32 text-sm rounded-full"><SelectValue placeholder="Date Added" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Time</SelectItem>
                 <SelectItem value="today">Today</SelectItem>
@@ -326,14 +330,14 @@ function LeadsPage() {
               </SelectContent>
             </Select>
             <Select value={memberFilter} onValueChange={setMemberFilter}>
-              <SelectTrigger className="h-9 w-36 text-sm"><SelectValue placeholder="Added By" /></SelectTrigger>
+              <SelectTrigger className="h-9 w-36 text-sm rounded-full"><SelectValue placeholder="Added By" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Members</SelectItem>
                 {addedByOptions.map(m => <SelectItem key={m} value={m}>{memberName(m)}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={zoneFilter} onValueChange={setZoneFilter}>
-              <SelectTrigger className="h-9 w-32 text-sm"><SelectValue placeholder="Zone" /></SelectTrigger>
+              <SelectTrigger className="h-9 w-32 text-sm rounded-full"><SelectValue placeholder="Zone" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Zones</SelectItem>
                 {zoneOptions.map(z => <SelectItem key={z} value={z}>{z}</SelectItem>)}
@@ -378,41 +382,35 @@ function LeadsPage() {
             <section
               key={band}
               id={`band-${band}`}
-              className={cn("rounded-xl border overflow-hidden", cfg.ring)}
+              className="rounded-xl border border-border bg-card overflow-hidden flex flex-col mb-4"
             >
               {/* Section header */}
               <button
                 onClick={() => toggleBand(band)}
                 className={cn(
-                  "w-full flex items-center gap-3 px-4 py-3 text-left transition-colors",
-                  cfg.bg,
+                  "w-full flex items-center justify-between px-4 py-3 border-b border-border transition-colors hover:brightness-95",
+                  cfg.bg
                 )}
               >
-                <cfg.icon className={cn("h-4 w-4 shrink-0", cfg.color)} />
-                <div className="flex-1 min-w-0">
-                  <div className={cn("text-sm font-semibold", cfg.color)}>{cfg.label}</div>
-                  <div className="text-[11px] text-muted-foreground">{cfg.subtitle}</div>
+                <div className="flex items-center gap-2">
+                  <cfg.icon className={cn("h-4 w-4", cfg.color)} />
+                  <h2 className="font-display text-sm font-semibold">{cfg.label}</h2>
+                  <span className="text-[10px] text-muted-foreground font-mono">{items.length} {items.length === 1 ? "lead" : "leads"}</span>
                 </div>
-                <span
-                  className={cn(
-                    "text-xs font-mono font-bold px-2 py-0.5 rounded-full border",
-                    cfg.ring,
-                    cfg.color,
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-muted-foreground hidden sm:inline-block">{cfg.subtitle}</span>
+                  {isOpen ? (
+                    <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
                   )}
-                >
-                  {items.length}
-                </span>
-                {isOpen ? (
-                  <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
-                ) : (
-                  <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                )}
+                </div>
               </button>
 
               {/* Column headers */}
               {isOpen && (
                 <>
-                  <div className="grid grid-cols-12 px-4 py-2 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold border-t border-b border-border bg-muted/20">
+                  <div className="grid grid-cols-12 px-4 py-2 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold border-b border-border bg-muted/20">
                     <div className="col-span-3">Lead · phone</div>
                     <div className="col-span-1">Stage</div>
                     <div className="col-span-2">Created · by</div>
@@ -423,8 +421,16 @@ function LeadsPage() {
                   </div>
 
                   <div className="divide-y divide-border bg-card">
-                    {items.map((l) => {
-                      const assigneeName = l.assignedTcmId
+                    {(() => {
+                      const PAGE_SIZE = 20;
+                      const totalPages = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
+                      const currentPage = Math.max(1, Math.min(bandPages[band] || 1, totalPages));
+                      const pagedItems = items.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+                      return (
+                        <>
+                          {pagedItems.map((l) => {
+                            const assigneeName = l.assignedTcmId
                         ? (userMap.get(l.assignedTcmId)?.name ?? null)
                         : null;
                       const moveInLabel = getMoveInLabel(l.moveInDate);
@@ -500,9 +506,36 @@ function LeadsPage() {
                               ? formatDistanceToNow(new Date(l.updatedAt), { addSuffix: true })
                               : "-"}
                           </div>
-                        </button>
+                              </button>
+                            );
+                          })}
+                          
+                          {totalPages > 1 && (
+                            <div className="flex items-center justify-between px-4 py-3 bg-muted/10 border-t border-border">
+                              <div className="text-xs text-muted-foreground font-medium">
+                                Showing {(currentPage - 1) * PAGE_SIZE + 1} - {Math.min(currentPage * PAGE_SIZE, items.length)} of {items.length}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => setBandPages(prev => ({ ...prev, [band]: currentPage - 1 }))}
+                                  disabled={currentPage === 1}
+                                  className="px-3 py-1.5 text-xs font-semibold rounded-md border border-border bg-card hover:bg-muted disabled:opacity-50 disabled:pointer-events-none transition-colors"
+                                >
+                                  Previous
+                                </button>
+                                <button
+                                  onClick={() => setBandPages(prev => ({ ...prev, [band]: currentPage + 1 }))}
+                                  disabled={currentPage === totalPages}
+                                  className="px-3 py-1.5 text-xs font-semibold rounded-md border border-border bg-card hover:bg-muted disabled:opacity-50 disabled:pointer-events-none transition-colors"
+                                >
+                                  Next
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </>
                       );
-                    })}
+                    })()}
                   </div>
                 </>
               )}

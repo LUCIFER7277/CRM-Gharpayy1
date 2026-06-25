@@ -25,8 +25,8 @@ export function CopyButton({ text, label, className, size = "sm" }: Props) {
     <button
       onClick={onCopy}
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-md border border-border bg-surface-2 font-medium text-muted-foreground transition-smooth hover:border-primary/40 hover:text-foreground",
-        size === "sm" ? "px-2 py-1 text-[11px]" : "px-3 py-1.5 text-xs",
+        "inline-flex items-center gap-1.5 rounded-full border border-border bg-card shadow-sm font-medium text-muted-foreground transition-smooth hover:border-primary/40 hover:text-foreground",
+        size === "sm" ? "px-3 py-1 text-[11px]" : "px-4 py-1.5 text-xs",
         copied && "border-primary/60 text-primary",
         className,
       )}

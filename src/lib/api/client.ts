@@ -296,7 +296,7 @@ export const api = {
             `/api/tours${qs ? `?${qs}` : ""}`
           );
         },
-        () => localAdapter.listTours(),
+        () => localAdapter.listTours(q as any),
       ),
     update: (tourId: string, updates: Record<string, unknown>) =>
       request<{ ok: boolean }>(`/api/tours/${tourId}`, {

@@ -3,7 +3,16 @@ import { AppShell } from "@/components/AppShell";
 import { useApp, computePropertyMetrics } from "@/lib/store";
 import { KpiCard } from "@/components/atoms";
 import { format } from "date-fns";
-import { AlertTriangle, ArrowUpRight, CalendarPlus, Flame, Building2, Zap, Sun, TrendingUp, Sparkles, IndianRupee, Activity, CheckCircle2 } from "lucide-react";
+import { AlertTriangle, ArrowUpRight, CalendarPlus, Flame, Building2, Zap, Sun, TrendingUp, Sparkles, IndianRupee, Activity, CheckCircle2, LineChart } from "lucide-react";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 import { useMemo } from "react";
 import { useMountedNow } from "@/hooks/use-now";
 import { buildDoNextQueue, liveConfidence, intentFor } from "@/lib/engine";
@@ -21,7 +30,7 @@ export const Route = createFileRoute("/")({
 });
 
 function DashboardPage() {
-  const { leads, tours, followUps, properties, role, currentTcmId, selectLead, bookings, handoffs } = useApp();
+  const { leads, tours, followUps, properties, role, currentTcmId, selectLead, bookings, handoffs, activities } = useApp();
   const [now, mounted] = useMountedNow();
 
   const filterTcm = role === "tcm" ? currentTcmId : undefined;
@@ -34,13 +43,31 @@ function DashboardPage() {
     () => scanRevivals(leads, properties, tours, now),
     [leads, properties, tours, now],
   );
+  
+  const hasRevivals = revivals.length > 0;
+  const row3ColSpan = hasRevivals ? "lg:col-span-4" : "lg:col-span-6";
 
   // Live, decayed view of every lead
   const liveLeads = useMemo(
     () => leads.map((l) => ({ ...l, confidence: liveConfidence(l, tours, now), intent: intentFor(liveConfidence(l, tours, now)) })),
     [leads, tours, now],
   );
-  const hotLeads = liveLeads.filter((l) => l.intent === "hot" && l.stage !== "booked" && l.stage !== "dropped");
+  
+  const hotItems = useMemo(() => {
+    const seen = new Set<string>();
+    return queue
+      .filter((a) => {
+        const lead = leads.find((l) => l.id === a.leadId);
+        if (!lead || lead.stage === "booked" || lead.stage === "dropped") return false;
+        const conf = liveConfidence(lead, tours, now);
+        return intentFor(conf) === "hot";
+      })
+      .filter((a) => {
+        if (seen.has(a.leadId)) return false;
+        seen.add(a.leadId);
+        return true;
+      });
+  }, [queue, leads, tours, now]);
   const incompleteTours = tours.filter((t) => t.status === "completed" && !t.postTour.filledAt);
   const todayTours = tours.filter((t) => t.status === "scheduled" && sameDay(+new Date(t.scheduledAt), now));
   const booked = tours.filter((t) => t.decision === "booked").length;
@@ -48,6 +75,29 @@ function DashboardPage() {
   const overdueFu = followUps.filter((f) => !f.done && +new Date(f.dueAt) < now).length;
   const monthlyRevenue = bookings.reduce((s, b) => s + b.amount, 0);
   const unreadHandoffs = handoffs.filter((h) => !h.read && h.to === role).length;
+
+  const chartData = useMemo(() => {
+    const data = [];
+    const today = new Date(now);
+    today.setHours(0, 0, 0, 0);
+    
+    for (let i = 14; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const dayStart = +d;
+      const dayEnd = dayStart + 24 * 3600_000;
+      
+      const dayLeads = leads.filter(l => +new Date(l.createdAt) >= dayStart && +new Date(l.createdAt) < dayEnd).length;
+      const dayTours = tours.filter(t => +new Date(t.createdAt) >= dayStart && +new Date(t.createdAt) < dayEnd).length;
+      
+      data.push({
+        name: format(d, "MMM d"),
+        Leads: dayLeads,
+        Tours: dayTours,
+      });
+    }
+    return data;
+  }, [leads, tours, now]);
 
   return (
     <AppShell>
@@ -113,11 +163,52 @@ function DashboardPage() {
           
           {/* Main KPIs (Col Span 12) */}
           <div className="col-span-1 md:col-span-2 lg:col-span-12 grid grid-cols-2 lg:grid-cols-5 gap-3">
-            <KpiCard label="Active leads" value={liveLeads.filter((l) => l.stage !== "booked" && l.stage !== "dropped").length} sub={`${hotLeads.length} hot · live score`} />
+            <KpiCard label="Active leads" value={liveLeads.filter((l) => l.stage !== "booked" && l.stage !== "dropped").length} sub={`${hotItems.length} hot · live score`} />
             <KpiCard label="Today's tours" value={todayTours.length} sub="Scheduled" tone="accent" />
             <KpiCard label="Overdue follow-ups" value={overdueFu} sub={`${incompleteTours.length} post-tour pending`} tone={overdueFu || incompleteTours.length ? "destructive" : "default"} />
             <KpiCard label="Conversion rate" value={`${conversion}%`} sub={`${booked} booked total`} tone="success" />
             <KpiCard label="MRR closed" value={`₹${(monthlyRevenue / 1000).toFixed(0)}k`} sub={`${bookings.length} booking${bookings.length === 1 ? "" : "s"}`} tone="success" />
+          </div>
+
+          {/* Activity Graph - col span 8 */}
+          <div className="col-span-1 md:col-span-2 lg:col-span-8 h-[350px] flex flex-col">
+            <Card title="Volume Statistics" icon={LineChart}>
+              <div className="h-full w-full min-h-[250px] pt-4">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorLeads" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                      </linearGradient>
+                      <linearGradient id="colorTours" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="hsl(var(--accent))" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="hsl(var(--accent))" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                    <XAxis 
+                      dataKey="name" 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} 
+                      dy={10}
+                    />
+                    <YAxis 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} 
+                    />
+                    <Tooltip 
+                      contentStyle={{ borderRadius: '8px', border: '1px solid hsl(var(--border))', backgroundColor: 'hsl(var(--card))', fontSize: '12px' }}
+                      itemStyle={{ color: 'hsl(var(--foreground))' }}
+                    />
+                    <Area type="monotone" dataKey="Leads" stroke="hsl(var(--primary))" strokeWidth={2} fillOpacity={1} fill="url(#colorLeads)" />
+                    <Area type="monotone" dataKey="Tours" stroke="hsl(var(--accent))" strokeWidth={2} fillOpacity={1} fill="url(#colorTours)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
           </div>
 
           {/* Do this next - col span 4 */}
@@ -129,7 +220,7 @@ function DashboardPage() {
                   <h2 className="font-display text-sm font-semibold">Do this next</h2>
                   <span className="text-[10px] text-muted-foreground font-mono">{queue.length} ranked</span>
                 </div>
-                <Link to="/today" className="text-xs text-primary hover:text-primary/80 transition-colors inline-flex items-center gap-1">
+                <Link to="/today" className="text-xs font-medium text-primary hover:text-primary/80 transition-colors inline-flex items-center gap-1">
                   <Sun className="h-3 w-3" /> Today view <ArrowUpRight className="h-3 w-3" />
                 </Link>
               </header>
@@ -157,22 +248,28 @@ function DashboardPage() {
             </section>
           </div>
 
-          {/* Hot pipeline - col span 4 */}
-          <div className="col-span-1 lg:col-span-4 h-full flex flex-col">
-            <Card title="Hot pipeline" icon={Flame} accent action={<Link to="/leads" className="text-xs text-primary hover:text-primary/80 transition-colors inline-flex items-center gap-1">All leads <ArrowUpRight className="h-3 w-3" /></Link>}>
-              <div className="divide-y divide-border -mx-3 min-h-[200px] max-h-[300px]">
-                {hotLeads.slice(0, 10).map((l) => (
-                  <QuickActionRow key={l.id} lead={l} accent="accent" compact={true} />
-                ))}
-                {hotLeads.length === 0 && <div className="text-xs text-muted-foreground text-center py-6">No hot leads right now.</div>}
+          {/* Hot pipeline */}
+          <div className={`col-span-1 ${row3ColSpan} self-start`}>
+            <Card title="Hot pipeline" icon={Flame} accent action={<Link to="/leads" className="text-xs font-medium text-primary hover:text-primary/80 transition-colors inline-flex items-center gap-1">All leads <ArrowUpRight className="h-3 w-3" /></Link>}>
+              <div className="flex flex-col h-full -mx-3 min-h-[200px] max-h-[350px] overflow-y-auto scrollbar-none">
+                <div className="divide-y divide-border">
+                  {hotItems.slice(0, 10).map((a) => {
+                    const lead = leads.find((l) => l.id === a.leadId);
+                    if (!lead) return null;
+                    return (
+                      <QuickActionRow key={a.leadId} lead={lead} reason={a.reason} accent="accent" compact={true} />
+                    );
+                  })}
+                  {hotItems.length === 0 && <div className="text-xs text-muted-foreground text-center py-6">No hot leads right now.</div>}
+                </div>
               </div>
             </Card>
           </div>
 
-          {/* Today's tours - col span 4 */}
-          <div className="col-span-1 lg:col-span-4 h-full flex flex-col">
-            <Card title="Today's tours" icon={CalendarPlus} action={<Link to="/tours" className="text-xs text-primary hover:text-primary/80 transition-colors inline-flex items-center gap-1">All tours <ArrowUpRight className="h-3 w-3" /></Link>}>
-              <div className="space-y-2 min-h-[200px] max-h-[300px]">
+          {/* Today's tours */}
+          <div className={`col-span-1 ${row3ColSpan} self-start`}>
+            <Card title="Today's tours" icon={CalendarPlus} action={<Link to="/tours" className="text-xs font-medium text-primary hover:text-primary/80 transition-colors inline-flex items-center gap-1">All tours <ArrowUpRight className="h-3 w-3" /></Link>}>
+              <div className="space-y-2 min-h-[200px] max-h-[350px] overflow-y-auto scrollbar-none">
                 {todayTours.slice(0, 10).map((t) => {
                   const lead = leads.find((l) => l.id === t.leadId);
                   const prop = properties.find((p) => p.id === t.propertyId);
@@ -199,10 +296,47 @@ function DashboardPage() {
             </Card>
           </div>
 
-          {/* Inventory pressure - col span 8 */}
-          <div className="col-span-1 md:col-span-2 lg:col-span-8 h-full flex flex-col">
-            <Card title="Inventory pressure" icon={Building2} action={<Link to="/inventory" className="text-xs text-primary hover:text-primary/80 transition-colors inline-flex items-center gap-1">All properties <ArrowUpRight className="h-3 w-3" /></Link>}>
-              <div className="divide-y divide-border -mx-3 min-h-[150px] max-h-[300px]">
+          {/* Revival opportunities */}
+          {hasRevivals && (
+            <div className="col-span-1 md:col-span-2 lg:col-span-4 h-full flex flex-col">
+              <section className="rounded-xl border border-info/30 bg-info/5 overflow-hidden h-full flex flex-col">
+                <header className="flex items-center justify-between px-4 py-3 border-b border-info/20">
+                  <div className="flex items-center gap-2">
+                    <IndianRupee className="h-4 w-4 text-info" />
+                    <h2 className="font-display text-sm font-semibold">Revival queue</h2>
+                    <span className="text-[10px] text-muted-foreground font-mono">{revivals.length} candidate{revivals.length === 1 ? "" : "s"}</span>
+                  </div>
+                  <Link to="/revival" className="text-xs font-medium text-info hover:text-info/80 transition-colors inline-flex items-center gap-1">
+                    Open <ArrowUpRight className="h-3 w-3" />
+                  </Link>
+                </header>
+                <div className="divide-y divide-info/10 flex-1 overflow-y-auto scrollbar-none min-h-[150px] max-h-[300px]">
+                  {revivals.slice(0, 10).map((r) => {
+                    const lead = leads.find((l) => l.id === r.leadId);
+                    if (!lead) return null;
+                    return (
+                      <button
+                        key={r.leadId}
+                        onClick={() => selectLead(lead.id)}
+                        className="w-full text-left px-4 py-3 hover:bg-info/10 flex items-center justify-between gap-3"
+                      >
+                        <div className="min-w-0">
+                          <div className="text-sm font-medium truncate">{lead.name}</div>
+                          <div className="text-[11px] text-muted-foreground truncate">{r.reason}</div>
+                        </div>
+                        <span className="text-[10px] font-mono text-info shrink-0">score {r.score}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+            </div>
+          )}
+
+          {/* Inventory pressure - col span 12 */}
+          <div className="col-span-1 md:col-span-2 lg:col-span-12 h-full flex flex-col">
+            <Card title="Inventory pressure" icon={Building2} action={<Link to="/inventory" className="text-xs font-medium text-primary hover:text-primary/80 transition-colors inline-flex items-center gap-1">All properties <ArrowUpRight className="h-3 w-3" /></Link>}>
+              <div className="divide-y divide-border -mx-3 min-h-[150px] max-h-[350px] overflow-y-auto scrollbar-none lg:grid lg:grid-cols-2 lg:gap-x-8 lg:divide-y-0">
                 {metrics.slice(0, 10).map((m) => {
                   const demand = Number.isNaN(m.demandScore) ? "-" : m.demandScore;
                   const conv = Number.isNaN(m.conversionPct) ? 0 : m.conversionPct;
@@ -267,43 +401,6 @@ function DashboardPage() {
               </div>
             </Card>
           </div>
-
-          {/* Revival opportunities - col span 4 */}
-          {revivals.length > 0 && (
-            <div className="col-span-1 md:col-span-2 lg:col-span-4 h-full flex flex-col">
-              <section className="rounded-xl border border-info/30 bg-info/5 overflow-hidden h-full flex flex-col">
-                <header className="flex items-center justify-between px-4 py-3 border-b border-info/20">
-                  <div className="flex items-center gap-2">
-                    <IndianRupee className="h-4 w-4 text-info" />
-                    <h2 className="font-display text-sm font-semibold">Revival queue</h2>
-                    <span className="text-[10px] text-muted-foreground font-mono">{revivals.length} candidate{revivals.length === 1 ? "" : "s"}</span>
-                  </div>
-                  <Link to="/revival" className="text-xs text-info inline-flex items-center gap-1">
-                    Open <ArrowUpRight className="h-3 w-3" />
-                  </Link>
-                </header>
-                <div className="divide-y divide-info/10 flex-1 overflow-y-auto scrollbar-none min-h-[150px] max-h-[300px]">
-                  {revivals.slice(0, 10).map((r) => {
-                    const lead = leads.find((l) => l.id === r.leadId);
-                    if (!lead) return null;
-                    return (
-                      <button
-                        key={r.leadId}
-                        onClick={() => selectLead(lead.id)}
-                        className="w-full text-left px-4 py-3 hover:bg-info/10 flex items-center justify-between gap-3"
-                      >
-                        <div className="min-w-0">
-                          <div className="text-sm font-medium truncate">{lead.name}</div>
-                          <div className="text-[11px] text-muted-foreground truncate">{r.reason}</div>
-                        </div>
-                        <span className="text-[10px] font-mono text-info shrink-0">score {r.score}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </section>
-            </div>
-          )}
 
         </div>
       </div>

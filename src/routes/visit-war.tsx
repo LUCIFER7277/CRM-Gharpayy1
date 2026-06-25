@@ -616,45 +616,41 @@ function VisitWarRoom() {
   });
 
   return (
-    <div className="space-y-4">
-      <div className="p-4 md:p-5 border-b border-border bg-card flex flex-col gap-4 mb-2 shadow-sm">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2.5">
-            <div className="h-10 w-10 rounded bg-muted text-muted-foreground flex items-center justify-center border border-border">
-              <Radio className="h-5 w-5" />
+    <div className="flex min-h-svh flex-col bg-background text-foreground">
+      <main className="container py-4 sm:py-6 pb-24 space-y-6">
+        <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2.5 mb-1">
+              <span className="flex h-7 w-7 items-center justify-center rounded-md bg-destructive/10 border border-destructive/20 text-destructive">
+                <Radio className="h-4 w-4 animate-pulse" />
+              </span>
+              <h1 className="font-display text-2xl font-semibold tracking-tight">Visit Command Center</h1>
             </div>
-            <div>
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+            <div className="flex items-center gap-3">
+              <p className="text-sm text-muted-foreground">
                 Gharpayy · Visit OS
-              </div>
-              <h1 className="text-lg md:text-xl font-bold leading-tight font-display text-foreground">Visit Command Center</h1>
+              </p>
+              <Badge variant="outline" className="border-border bg-card text-foreground rounded-full text-[10px] font-mono px-2 py-0.5 gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
+                {liveTours.length} LIVE
+              </Badge>
+              {intervention.length > 0 && (
+                <Badge variant="outline" className="border-destructive/40 bg-destructive/10 text-destructive rounded-full text-[10px] font-mono px-2 py-0.5 gap-1.5">
+                  <Siren className="h-3 w-3" /> {intervention.length} INTERVENTION
+                </Badge>
+              )}
             </div>
           </div>
-          <Badge
-            variant="outline"
-            className="ml-1 gap-1.5 border-border bg-card text-foreground rounded-sm"
-          >
-            <span className="h-1.5 w-1.5 rounded-full bg-success" />
-            {liveTours.length} LIVE
-          </Badge>
-          {intervention.length > 0 && (
-            <Badge
-              variant="outline"
-              className="gap-1.5 border-destructive border bg-card text-destructive rounded-sm"
-            >
-              <Siren className="h-3 w-3" /> {intervention.length} INTERVENTION
-            </Badge>
-          )}
-          <div className="ml-auto flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <RoleLensSwitcher value={lens} onChange={setLens} />
-            <div className="text-sm tabular-nums font-mono text-muted-foreground">
+            <div className="text-sm tabular-nums font-mono text-muted-foreground bg-muted/50 border border-border px-3 py-1.5 rounded-md">
               {mounted ? new Date(now).toLocaleTimeString("en-IN", { hour12: false }) : "--:--:--"}
             </div>
           </div>
-        </div>
+        </header>
 
         {/* Bento Grid: 12 Columns */}
-        <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-12 gap-4 mt-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-12 gap-4">
           
           {/* Bento KPIs - 4 cols */}
           <div className="lg:col-span-4 grid grid-cols-2 gap-3">
@@ -675,105 +671,108 @@ function VisitWarRoom() {
           </div>
 
           {/* Bento Team Pulse - 5 cols */}
-          <div className="lg:col-span-5 border bg-card rounded-xl shadow-sm overflow-hidden flex flex-col min-h-[180px]">
-            <div className="p-3 border-b bg-muted/30">
-              <h3 className="text-xs font-semibold uppercase text-muted-foreground flex items-center gap-1.5">
-                <Users className="h-3.5 w-3.5" /> Team Pulse Overview
-              </h3>
-            </div>
-            <div className="flex-1 overflow-y-auto p-3">
+          <div className="lg:col-span-5 rounded-2xl bg-card shadow-sm ring-1 ring-black/5 dark:ring-white/10 overflow-hidden flex flex-col min-h-[180px]">
+            <header className="px-5 py-4 border-b border-border/40 bg-muted/10 flex items-center gap-2">
+              <Users className="h-4 w-4 text-muted-foreground" />
+              <h2 className="font-display text-sm font-semibold">Team Pulse Overview</h2>
+            </header>
+            <div className="flex-1 overflow-y-auto p-5">
               <TeamPulseGrid now={now} />
             </div>
           </div>
 
           {/* Bento Alerts - 3 cols */}
-          <div className="lg:col-span-3 border bg-card rounded-xl shadow-sm overflow-hidden flex flex-col min-h-[180px]">
-            <div className="p-3 border-b bg-muted/30 flex justify-between items-center">
-              <h3 className="text-xs font-semibold uppercase text-muted-foreground flex items-center gap-1.5">
-                <Bell className="h-3.5 w-3.5" /> Live Alerts
-              </h3>
+          <div className="lg:col-span-3 rounded-2xl bg-card shadow-sm ring-1 ring-black/5 dark:ring-white/10 overflow-hidden flex flex-col min-h-[180px]">
+            <header className="px-5 py-4 border-b border-border/40 bg-muted/10 flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <Bell className="h-4 w-4 text-muted-foreground" />
+                <h2 className="font-display text-sm font-semibold">Live Alerts</h2>
+              </div>
               {unreadAlerts > 0 && <Badge variant="destructive" className="h-4 px-1">{unreadAlerts}</Badge>}
-            </div>
-            <div className="flex-1 overflow-y-auto p-3 max-h-[220px]">
+            </header>
+            <div className="flex-1 overflow-y-auto p-0 max-h-[260px]">
               <AlertFeed />
             </div>
           </div>
 
         </div>
-      </div>
 
-      <DayPlanner
-        visits={Object.values(records)}
-        allTours={tours}
-        now={now}
-        onFocus={setFocusTour}
-        focusTourId={focusTour}
-      />
+        <DayPlanner
+          visits={Object.values(records)}
+          allTours={tours}
+          now={now}
+          onFocus={setFocusTour}
+          focusTourId={focusTour}
+        />
 
-      <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)} className="mt-6">
-        <div className="flex flex-wrap items-center gap-3">
-          <TabsList>
-            <TabsTrigger value="live" className="gap-1.5">
-              <Activity className="h-3.5 w-3.5" /> Live ({liveTours.length})
-            </TabsTrigger>
-            <TabsTrigger value="upcoming" className="gap-1.5">
-              <CalendarClock className="h-3.5 w-3.5" /> Upcoming ({upcomingTours.length})
-            </TabsTrigger>
-            <TabsTrigger value="hot" className="gap-1.5">
-              <Flame className="h-3.5 w-3.5" /> Hot ({hotTours.length})
-            </TabsTrigger>
-            <TabsTrigger value="map" className="gap-1.5">
-              <MapIcon className="h-3.5 w-3.5" /> War Map
-            </TabsTrigger>
-            <TabsTrigger value="stats" className="gap-1.5">
-              <BarChart3 className="h-3.5 w-3.5" /> Stats
-            </TabsTrigger>
-          </TabsList>
-          {tab === "live" && (
-            <div className="ml-auto flex items-center gap-1.5">
-              <span className="text-[10px] uppercase text-muted-foreground tracking-wider mr-1">Sort</span>
-              {(["prob", "dur", "obj", "update"] as const).map((m) => (
-                <Button key={m} size="sm" variant={sortMode === m ? "default" : "outline"} className="h-7 px-2.5 text-[11px] uppercase font-mono" onClick={() => setSortMode(m)}>
-                  {m === "prob" ? "Prob" : m === "dur" ? "Dur" : m === "obj" ? "Obj" : "Upd"}
-                </Button>
-              ))}
-            </div>
-          )}
-        </div>
+        <section className="rounded-2xl bg-card shadow-sm ring-1 ring-black/5 dark:ring-white/10 overflow-hidden">
+          <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)} className="w-full">
+            <header className="flex flex-wrap items-center gap-3 px-5 py-4 border-b border-border/40 bg-muted/10">
+              <TabsList className="h-9 justify-start self-start bg-muted/30 rounded-full p-1 border-none shadow-inner">
+                <TabsTrigger value="live" className="text-xs gap-1.5 h-7 px-2.5">
+                  <Activity className="h-3.5 w-3.5" /> Live ({liveTours.length})
+                </TabsTrigger>
+                <TabsTrigger value="upcoming" className="text-xs gap-1.5 h-7 px-2.5">
+                  <CalendarClock className="h-3.5 w-3.5" /> Upcoming ({upcomingTours.length})
+                </TabsTrigger>
+                <TabsTrigger value="hot" className="text-xs gap-1.5 h-7 px-2.5">
+                  <Flame className="h-3.5 w-3.5 text-accent" /> Hot ({hotTours.length})
+                </TabsTrigger>
+                <TabsTrigger value="map" className="text-xs gap-1.5 h-7 px-2.5">
+                  <MapIcon className="h-3.5 w-3.5 text-muted-foreground" /> Map
+                </TabsTrigger>
+                <TabsTrigger value="stats" className="text-xs gap-1.5 h-7 px-2.5">
+                  <BarChart3 className="h-3.5 w-3.5 text-muted-foreground" /> Stats
+                </TabsTrigger>
+              </TabsList>
 
-        <div className="mt-4 relative min-h-[500px]">
-          <TabsContent value="live" className="m-0"><LiveBoard list={sorted.filter((v) => !["booked", "lost"].includes(v.stage))} now={now} mounted={mounted} onFocus={setFocusTour} focus={focusTour} /></TabsContent>
-          <TabsContent value="upcoming" className="m-0"><UpcomingPanel list={upcoming} now={now} mounted={mounted} onFocus={setFocusTour} /></TabsContent>
-          <TabsContent value="hot" className="m-0"><HotRoom list={hot} now={now} mounted={mounted} onFocus={setFocusTour} /></TabsContent>
-          <TabsContent value="map" className="m-0"><WarMapPanel now={now} /></TabsContent>
-          <TabsContent value="stats" className="m-0"><WarRoomStats list={list} tours={tours} leads={leads} properties={properties} records={records} /></TabsContent>
-
-          {/* Conditional Overlay Slide-out for Visit Details */}
-          {focusTour && records[focusTour] && (
-            <>
-              {/* Backdrop */}
-              <div 
-                className="fixed inset-0 bg-black/20 z-40 backdrop-blur-sm transition-opacity" 
-                onClick={() => setFocusTour(null)} 
-              />
-              {/* Slide-out Drawer */}
-              <div className="fixed inset-y-0 right-0 w-[450px] bg-card border-l shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-200">
-                <div className="flex-1 overflow-y-auto">
-                  <VisitDetailPanel
-                    key={focusTour}
-                    v={records[focusTour]}
-                    now={now}
-                    onClose={() => setFocusTour(null)}
-                    onPatch={(p) => patch(focusTour, p)}
-                    onAddObjection={(o) => addObjection(focusTour, o)}
-                    onAlert={(severity, kind, message) => pushAlert({ tourId: focusTour, leadName: records[focusTour].leadName, severity, kind, message })}
-                  />
+              {tab === "live" && (
+                <div className="ml-auto flex items-center gap-1.5">
+                  <span className="text-[10px] text-muted-foreground font-medium uppercase mr-1">Sort</span>
+                  {(["prob", "dur", "obj", "update"] as const).map((m) => (
+                    <Button key={m} size="sm" variant={sortMode === m ? "default" : "outline"} className="h-7 px-2 text-[10px] uppercase font-mono border-border" onClick={() => setSortMode(m)}>
+                      {m === "prob" ? "Prob" : m === "dur" ? "Dur" : m === "obj" ? "Obj" : "Upd"}
+                    </Button>
+                  ))}
                 </div>
-              </div>
-            </>
-          )}
-        </div>
-      </Tabs>
+              )}
+            </header>
+
+            <div className="p-4 relative min-h-[500px]">
+              <TabsContent value="live" className="m-0"><LiveBoard list={sorted.filter((v) => !["booked", "lost"].includes(v.stage))} now={now} mounted={mounted} onFocus={setFocusTour} focus={focusTour} /></TabsContent>
+              <TabsContent value="upcoming" className="m-0"><UpcomingPanel list={upcoming} now={now} mounted={mounted} onFocus={setFocusTour} /></TabsContent>
+              <TabsContent value="hot" className="m-0"><HotRoom list={hot} now={now} mounted={mounted} onFocus={setFocusTour} /></TabsContent>
+              <TabsContent value="map" className="m-0"><WarMapPanel now={now} /></TabsContent>
+              <TabsContent value="stats" className="m-0"><WarRoomStats list={list} tours={tours} leads={leads} properties={properties} records={records} /></TabsContent>
+
+              {/* Conditional Overlay Slide-out for Visit Details */}
+              {focusTour && records[focusTour] && (
+                <>
+                  {/* Backdrop */}
+                  <div 
+                    className="fixed inset-0 bg-background/40 z-40 backdrop-blur-sm transition-opacity" 
+                    onClick={() => setFocusTour(null)} 
+                  />
+                  {/* Slide-out Drawer */}
+                  <div className="fixed inset-y-0 right-0 w-full sm:w-[500px] bg-card border-l shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-200">
+                    <div className="flex-1 overflow-y-auto">
+                      <VisitDetailPanel
+                        key={focusTour}
+                        v={records[focusTour]}
+                        now={now}
+                        onClose={() => setFocusTour(null)}
+                        onPatch={(p) => patch(focusTour, p)}
+                        onAddObjection={(o) => addObjection(focusTour, o)}
+                        onAlert={(severity, kind, message) => pushAlert({ tourId: focusTour, leadName: records[focusTour].leadName, severity, kind, message })}
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </Tabs>
+        </section>
+      </main>
     </div>
   );
 }
@@ -897,20 +896,16 @@ function DayPlanner({
   };
 
   return (
-    <Card className="p-3 overflow-hidden">
-      <div className="flex items-center justify-between mb-2">
-        <div className="text-[10px] uppercase tracking-[0.18em] font-bold text-accent">
-          DAY PLANNER ·{" "}
-          {new Date(today).toLocaleDateString("en-IN", {
-            weekday: "long",
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-          })}
+    <div className="rounded-2xl bg-card shadow-sm ring-1 ring-black/5 dark:ring-white/10 p-5 overflow-hidden">
+      <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center gap-2">
+          <CalendarClock className="h-4 w-4 text-muted-foreground" />
+          <h2 className="font-display text-sm font-semibold">Day Planner</h2>
+          <Badge variant="secondary" className="font-mono text-[10px] ml-2">{new Date(today).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}</Badge>
         </div>
-        <div className="text-[10px] text-muted-foreground font-mono">
+        <div className="text-[10px] text-muted-foreground font-mono bg-surface-2 px-2 py-0.5 rounded-md">
           10:00 - 20:00 · {todayVisits.length} visits
-        </div>{" "}
+        </div>
       </div>
 
       <div className="relative h-4 mb-1 border-b border-border/60">
@@ -995,7 +990,7 @@ function DayPlanner({
         </Badge>
         <span className="ml-auto">Red line = now</span>
       </div>
-    </Card>
+    </div>
   );
 }
 
@@ -1021,14 +1016,14 @@ function Metric({
             ? "text-accent bg-accent/10"
             : "text-foreground bg-muted";
   return (
-    <div className="border bg-card p-3 rounded-sm shadow-sm">
+    <div className="bg-card shadow-sm ring-1 ring-black/5 dark:ring-white/10 p-5 rounded-2xl flex flex-col justify-between transition-all hover:shadow-md">
       <div className="flex items-center gap-2">
-        <div className={cn("h-7 w-7 flex items-center justify-center rounded-sm", toneCls)}>
-          <Icon className="h-3.5 w-3.5" />
+        <div className={cn("h-7 w-7 flex items-center justify-center rounded-md", toneCls)}>
+          <Icon className="h-4 w-4" />
         </div>
-        <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{label}</div>
+        <div className="text-xs text-muted-foreground font-medium">{label}</div>
       </div>
-      <div className="mt-1.5 text-2xl font-bold tabular-nums font-mono">{value}</div>
+      <div className="mt-3 text-2xl font-bold tabular-nums font-mono">{value}</div>
     </div>
   );
 }
@@ -1134,15 +1129,15 @@ function UpcomingPanel({
               ? "border-l-warning"
               : "border-l-info";
         return (
-          <Card
+          <div
             key={v.tourId}
+            onClick={() => onFocus(v.tourId)}
             className={cn(
-              "p-3 border-l-4 hover:bg-muted/40 transition-colors cursor-pointer",
+              "p-5 rounded-2xl bg-card shadow-sm ring-1 ring-black/5 dark:ring-white/10 border-l-4 cursor-pointer transition-all hover:shadow-md hover:ring-black/10 dark:hover:ring-white/20",
               riskCls,
             )}
-            onClick={() => onFocus(v.tourId)}
           >
-            <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-4 flex-wrap">
               <div className="min-w-0 flex-1">
                 <div className="font-semibold truncate">{v.leadName}</div>
                 <div className="text-[11px] text-muted-foreground">
@@ -1176,7 +1171,7 @@ function UpcomingPanel({
               </Badge>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </div>
-          </Card>
+          </div>
         );
       })}
     </div>
@@ -1239,17 +1234,17 @@ function LiveBoard({
                   ? "Follow-up"
                   : null;
         return (
-          <Card
+          <div
             key={v.tourId}
             onClick={() => onFocus(v.tourId)}
             className={cn(
-              "p-3 border-l-4 cursor-pointer transition-all hover:bg-muted/40",
+              "p-5 rounded-2xl bg-card shadow-sm ring-1 ring-black/5 dark:ring-white/10 border-l-4 cursor-pointer transition-all hover:shadow-md hover:ring-black/10 dark:hover:ring-white/20",
               leftTint,
-              isFocus && "ring-2 ring-accent/40 bg-muted/40",
+              isFocus && "ring-2 ring-accent/50 bg-accent/5",
             )}
           >
-            <div className="flex flex-col md:flex-row md:items-center gap-2">
-              <div className="flex-1 min-w-0 flex flex-col md:flex-row md:items-center md:flex-wrap gap-2 md:gap-3">
+            <div className="flex flex-col md:flex-row md:items-center gap-3">
+              <div className="flex-1 min-w-0 flex flex-col md:flex-row md:items-center md:flex-wrap gap-3 md:gap-4">
                 <div className="md:w-[220px] shrink-0">
                   <div className="font-semibold truncate flex items-center gap-1.5">
                     {v.leadName}
@@ -1393,7 +1388,7 @@ function LiveBoard({
             >
               <VisitCopyChips v={v} layout="inline" />
             </div>
-          </Card>
+          </div>
         );
       })}
     </div>
@@ -1505,12 +1500,12 @@ function HotRoom({
           const hrsLeft = Math.max(0, Math.floor(remaining / 3600_000));
           const prob = probabilityFor(v.reaction, v.objections.length, v.stage);
           return (
-            <Card
+            <div
               key={v.tourId}
               onClick={() => onFocus(v.tourId)}
-              className="p-3 border-l-4 border-l-accent cursor-pointer hover:bg-muted/40 transition-colors"
+              className="p-5 rounded-2xl bg-card shadow-sm ring-1 ring-black/5 dark:ring-white/10 border-l-4 border-l-accent cursor-pointer transition-all hover:shadow-md hover:ring-black/10 dark:hover:ring-white/20"
             >
-              <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-4 flex-wrap">
                 <div className="h-10 w-10 rounded-xl bg-accent/15 text-accent flex items-center justify-center shrink-0">
                   <Flame className="h-5 w-5" />
                 </div>
@@ -1572,7 +1567,7 @@ function HotRoom({
                   </Button>
                 </div>
               </div>
-            </Card>
+            </div>
           );
         })}
     </div>
@@ -1890,20 +1885,20 @@ function VisitDetailPanel({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="p-4 border-b bg-muted/30 flex items-center gap-2 shrink-0">
-        <div className="flex-1 min-w-0">
-          <div className="font-bold truncate">{realLeadName}</div>
-          <div className="text-[11px] text-muted-foreground font-mono">
+      <div className="p-4 border-b border-border bg-muted/10 flex items-center justify-between shrink-0">
+        <div className="flex-1 min-w-0 pr-4">
+          <div className="font-semibold text-lg truncate">{realLeadName}</div>
+          <div className="text-xs text-muted-foreground font-mono mt-0.5">
             {realLeadPhone} · {realPropName}
           </div>
         </div>
-        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={onClose}>
+        <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" onClick={onClose}>
           <X className="h-4 w-4" />
         </Button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        <div className="flex items-center gap-2 flex-wrap p-2 rounded-lg bg-muted/40">
+      <div className="flex-1 overflow-y-auto p-4 space-y-5">
+        <div className="flex items-center gap-3 flex-wrap p-3 rounded-xl border border-border bg-card shadow-sm">
           <StagePill stage={v.stage} />
           {v.startedAt && !v.completedAt && (
             <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
@@ -2385,11 +2380,11 @@ type ToneKey = "info" | "success" | "warning" | "destructive";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div>
-      <div className="text-[10px] uppercase tracking-[0.15em] mb-2 text-accent font-bold">
+    <div className="border border-border rounded-xl bg-card overflow-hidden shadow-sm">
+      <div className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground bg-muted/20 px-3 py-2 border-b border-border">
         {title}
       </div>
-      <div>{children}</div>
+      <div className="p-3">{children}</div>
     </div>
   );
 }

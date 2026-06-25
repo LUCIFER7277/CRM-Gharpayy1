@@ -418,43 +418,53 @@ export function AppShell({ children }: { children: ReactNode }) {
       </aside>
 
       {/* Main */}
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="sticky top-0 z-30 h-14 bg-background/85 backdrop-blur border-b border-border flex items-center gap-3 px-4 md:px-6">
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto overflow-x-hidden relative">
+        <header className="sticky top-0 z-30 h-14 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border flex items-center gap-3 px-4 md:px-6">
           <button
             type="button"
             onClick={() => setSidebarOpen(true)}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card text-foreground shadow-sm hover:bg-muted/60"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border bg-card text-muted-foreground shadow-sm hover:bg-accent hover:text-accent-foreground transition-colors"
             aria-label="Open sidebar"
             aria-expanded={sidebarOpen}
           >
             <Menu className="h-4 w-4" />
           </button>
-          <div className="font-display font-semibold md:hidden">Gharpayy</div>
+          
+          <div className="font-display font-semibold md:hidden tracking-tight text-sm flex flex-col leading-none">
+            <span>Gharpayy</span>
+            <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-normal mt-0.5">Arena</span>
+          </div>
+
           <button
             onClick={() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }))}
-            className="md:hidden inline-flex h-8 w-8 items-center justify-center rounded-md border border-border bg-card text-muted-foreground"
+            className="md:hidden ml-auto inline-flex h-8 w-8 items-center justify-center rounded-md border border-border bg-card text-muted-foreground shadow-sm hover:bg-accent hover:text-accent-foreground transition-colors"
             aria-label="Open command palette"
           >
-            <Search className="h-3.5 w-3.5" />
+            <Search className="h-4 w-4" />
           </button>
+
           <button
             onClick={() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }))}
-            className="hidden md:flex items-center gap-2 h-8 px-3 rounded-md border border-border bg-card hover:bg-muted/60 text-xs text-muted-foreground w-full max-w-md transition-colors"
+            className="group hidden md:flex items-center gap-2 h-9 px-3 rounded-md border border-border bg-muted/40 hover:bg-accent hover:text-accent-foreground text-sm text-muted-foreground w-full max-w-md transition-colors shadow-sm focus:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           >
-            <Search className="h-3.5 w-3.5" />
-            <span>Jump to lead, page or action…</span>
-            <kbd className="ml-auto inline-flex items-center gap-0.5 rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-mono">
-              <Command className="h-2.5 w-2.5" />K
+            <Search className="h-4 w-4 opacity-70 group-hover:opacity-100 transition-opacity" />
+            <span className="font-medium">Jump to lead, page or action…</span>
+            <kbd className="ml-auto pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100">
+              <span className="text-xs">⌘</span>K
             </kbd>
           </button>
+
           <div className="ml-auto flex items-center gap-2">
             <ClientOnly><QuickCreateMenu /></ClientOnly>
 
             <PipButton mode="capture" label="PiP Add" className="hidden sm:inline-flex" />
             <PipButton mode="manage" label="PiP Manage" className="hidden sm:inline-flex" />
             <PipButton />
-            <NotificationCenter role={role} />
-            <ProfileMenu />
+            
+            <div className="flex items-center gap-1 ml-1 border-l border-border pl-3">
+              <NotificationCenter role={role} />
+              <ProfileMenu />
+            </div>
           </div>
         </header>
 

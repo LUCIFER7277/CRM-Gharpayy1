@@ -79,12 +79,14 @@ function Section({
   title: string; icon: typeof Clock; tone?: "default" | "destructive"; children: React.ReactNode;
 }) {
   return (
-    <section>
-      <div className="flex items-center gap-2 mb-2">
-        <Icon className={`h-4 w-4 ${tone === "destructive" ? "text-destructive" : "text-muted-foreground"}`} />
-        <h2 className="font-display text-sm font-semibold">{title}</h2>
-      </div>
-      {children}
+    <section className="rounded-xl border border-border bg-card overflow-hidden h-full flex flex-col">
+      <header className="flex items-center justify-between px-4 py-3 border-b border-border bg-card">
+        <div className="flex items-center gap-2">
+          <Icon className={`h-4 w-4 ${tone === "destructive" ? "text-destructive" : "text-primary"}`} />
+          <h2 className="font-display text-sm font-semibold">{title}</h2>
+        </div>
+      </header>
+      <div className="p-3 flex-1 overflow-y-auto scrollbar-none">{children}</div>
     </section>
   );
 }
@@ -92,10 +94,10 @@ function Section({
 function TourList({ tours }: { tours: import("@/lib/types").Tour[] }) {
   const { leads, properties, tcms, selectLead } = useApp();
   if (tours.length === 0) {
-    return <div className="rounded-lg border border-dashed border-border p-6 text-center text-xs text-muted-foreground">No tours.</div>;
+    return <div className="text-center py-6 text-xs text-muted-foreground">No tours.</div>;
   }
   return (
-    <div className="rounded-xl border border-border bg-card overflow-hidden divide-y divide-border">
+    <div className="divide-y divide-border -mx-3 -my-3">
       {tours.map((t) => {
         const lead = leads.find((l) => l.id === t.leadId);
         const prop = properties.find((p) => p.id === t.propertyId);

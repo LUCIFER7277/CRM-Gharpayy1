@@ -38,7 +38,7 @@ export function QuickActionRow({
 
   const ring = {
     destructive: "border-l-destructive",
-    accent: "border-l-accent",
+    accent: "border-l-primary",
     warning: "border-l-warning",
     default: "border-l-transparent",
   }[accent ?? "default"];

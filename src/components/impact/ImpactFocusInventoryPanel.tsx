@@ -158,7 +158,7 @@ export function ImpactFocusInventoryPanel({
             <div key={row.tcm.id} className="relative rounded-xl border border-border/40 bg-card p-3 shadow-sm transition-all hover:shadow-md">
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary shadow-sm ring-1 ring-primary/20">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground shadow-sm">
                     {tmInitials(row.tcm)}
                   </div>
                   <div className="flex flex-col">
@@ -171,10 +171,10 @@ export function ImpactFocusInventoryPanel({
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <div className="flex items-center gap-1 rounded-md bg-muted/40 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                  <div className="flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
                     <span className="text-foreground font-semibold">{row.vacant}</span> beds
                   </div>
-                  <div className="flex items-center gap-1 rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                  <div className="flex items-center gap-1 rounded-md bg-primary px-2 py-0.5 text-[10px] font-medium text-primary-foreground shadow-sm">
                     <span className="font-semibold">{row.props.length}</span> props
                   </div>
                 </div>

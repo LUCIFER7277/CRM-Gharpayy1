@@ -7,6 +7,8 @@ import { Tour } from "../../../../src/contracts/entities.js";
 const ListQuery = z.object({
   limit: z.coerce.number().min(1).max(200).default(50),
   cursor: z.string().optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
 });
 
 export function registerToursRoutes(app: FastifyInstance) {
@@ -22,6 +24,12 @@ export function registerToursRoutes(app: FastifyInstance) {
 
     if (q.cursor) {
       filter._id = { $lt: q.cursor };
+    }
+
+    if (q.startDate || q.endDate) {
+      filter.tourDate = {};
+      if (q.startDate) (filter.tourDate as any).$gte = q.startDate;
+      if (q.endDate) (filter.tourDate as any).$lte = q.endDate;
     }
 
     const items = await col<Tour>("tours")

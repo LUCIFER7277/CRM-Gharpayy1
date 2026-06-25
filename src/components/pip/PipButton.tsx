@@ -18,7 +18,7 @@ export function PipButton({ className, mode = "dashboard", label }: { className?
       onClick={() => (active && activeMode === mode ? close() : open(mode))}
       disabled={mounted ? (!effectiveSupported && !active) : false}
       className={cn(
-        "gap-1.5 h-8 text-xs font-medium shadow-sm",
+        "gap-1.5 h-8 text-xs font-medium shadow-sm transition-colors",
         active && activeMode === mode && "bg-primary/15 text-primary hover:bg-primary/20",
         className,
       )}

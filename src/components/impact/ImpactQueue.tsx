@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ClipboardEvent, type MouseEvent } from "react";
+import { format } from "date-fns";
 import { cn, formatTime12h, localDateISO, tourTimeSlotsForDate } from "@/lib/utils";
 import { PGS } from "@/property-genius/data/pgs";
 import type { PG } from "@/types/entities";
@@ -444,6 +445,7 @@ function parsePastedText(text: string): { name?: string; phone?: string; locatio
 /* ------------------------------------------------------------------ */
 
 export function ImpactQueue() {
+  const [now, mounted] = useMountedNow();
   const { role, currentTcmId, tcms, leads, tours, properties, bookings } = useApp();
   const selectLead = useApp((s) => s.selectLead);
   const selectedLeadId = useApp((s) => s.selectedLeadId);
@@ -954,53 +956,50 @@ export function ImpactQueue() {
   );
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <ImpactApiHealthBanner />
 
-      {/* ---------------- Command deck ---------------- */}
-      <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-        {/* Row 1: heading left | controls right */}
-        <div className="flex flex-wrap items-center justify-between gap-2 px-4 pt-3 pb-1">
-          <h1 className="text-xl font-display font-bold shrink-0">Impact Queue</h1>
+      {/* ---------------- Premium Header ---------------- */}
+      <header className="relative overflow-hidden flex flex-wrap items-end justify-between gap-4 rounded-2xl border border-border bg-gradient-to-r from-orange-50/80 via-pink-50/80 to-indigo-50/80 dark:from-orange-950/30 dark:via-pink-950/30 dark:to-indigo-950/30 px-6 py-5 shadow-sm sticky top-0 z-10 transition-all duration-500 hover:shadow-md group">
+        {/* Animated background blobs */}
+        <div className="absolute -top-12 -left-12 w-48 h-48 bg-orange-400/20 dark:bg-orange-400/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-indigo-400/20 dark:bg-indigo-400/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
+        <div className="absolute top-1/2 left-1/4 w-32 h-32 bg-pink-400/20 dark:bg-pink-400/10 rounded-full blur-2xl animate-pulse" style={{ animationDelay: "2s" }} />
+        
+        <div className="relative z-10">
+          <h1 className="text-3xl font-display font-bold tracking-tight text-foreground flex items-center gap-2">
+            Impact Queue
+            <div className="flex h-3 w-3 relative ml-1">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-accent"></span>
+            </div>
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1.5 flex items-center gap-2 font-medium">
+            One Screen Conversion Engine (Lead → Booked) · Priority Stack
+          </p>
+        </div>
+        <div className="relative z-10 text-xs text-foreground font-mono font-semibold bg-background/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-border shadow-inner hidden sm:block">
+          {mounted ? format(new Date(now), "EEEE, MMM d · h:mm a") : "\u00a0"}
+        </div>
+      </header>
 
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            <TenXCommandBar
-              lastRerank={lastRerank}
-              escalations={escalations}
-              counters={counters}
-              targets={targets}
-              stackSorted={stackSorted}
-              tick={tick}
-              digestOpen={digestOpen}
-              onDigestOpenChange={setDigestOpen}
-              onFocusLead={(leadId) => {
-                setFocusLeadId(leadId);
-                setFocusAction("auto");
-              }}
-            />
-            <QuickAddLead
-              defaultTcmId={tcmFilter !== "all" ? tcmFilter : currentTcmId}
-              open={quickAddOpen}
-              onOpenChange={setQuickAddOpen}
-              tcmOptions={tcmOptions}
-              onLeadSaved={() => {
-                setChipFilter("all");
-                setQuery("");
-                setView("board");
-              }}
-            />
-            <div className="relative">
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+      {/* ---------------- Command Deck (Bento Layout) ---------------- */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 relative z-0">
+        {/* Controls Block */}
+        <div className="lg:col-span-12 flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl border border-border/50 bg-gradient-to-br from-card/80 to-muted/20 backdrop-blur-sm shadow-sm transition-all duration-300 hover:shadow-md hover:border-accent/30">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative group">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-accent transition-colors" />
               <Input
-                className={`h-8 pl-7 text-[11px] w-48 sm:w-56 bg-background ${query.trim() ? "pr-7" : ""}`}
-                placeholder="Search lead or phone"
+                className={`h-9 pl-9 text-xs w-56 sm:w-64 rounded-full bg-background/50 border-border/50 focus-visible:ring-accent/50 focus-visible:border-accent transition-all duration-300 ${query.trim() ? "pr-8" : ""}`}
+                placeholder="Search lead or phone..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
               />
               {query.trim() && (
                 <button
                   type="button"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   aria-label="Clear search"
                   onClick={() => setQuery("")}
                 >
@@ -1043,8 +1042,37 @@ export function ImpactQueue() {
               tcmOptions={tcmOptions}
               onFilterArea={(area) => setAreaFilter(area)}
             />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <TenXCommandBar
+              lastRerank={lastRerank}
+              escalations={escalations}
+              counters={counters}
+              targets={targets}
+              stackSorted={stackSorted}
+              tick={tick}
+              digestOpen={digestOpen}
+              onDigestOpenChange={setDigestOpen}
+              onFocusLead={(leadId) => {
+                setFocusLeadId(leadId);
+                setFocusAction("auto");
+              }}
+            />
+            <QuickAddLead
+              defaultTcmId={tcmFilter !== "all" ? tcmFilter : currentTcmId}
+              open={quickAddOpen}
+              onOpenChange={setQuickAddOpen}
+              tcmOptions={tcmOptions}
+              onLeadSaved={() => {
+                setChipFilter("all");
+                setQuery("");
+                setView("board");
+              }}
+            />
+            
             {!canSelectTcmScope ? (
-              <div className="h-8 min-w-[8rem] rounded-md border border-border bg-background px-3 py-2 text-[11px] font-semibold text-foreground flex items-center gap-1.5">
+              <div className="h-9 min-w-[8rem] rounded-full border border-border/60 bg-background/50 backdrop-blur-sm px-4 py-2 text-[11px] font-semibold text-foreground flex items-center gap-1.5 shadow-sm hover:border-accent/30 transition-all duration-300">
                 {(() => {
                   const me = tcmOptions.find((t: any) => t.id === selfScopeId);
                   const name =
@@ -1062,11 +1090,11 @@ export function ImpactQueue() {
               </div>
             ) : (
               <Select value={tcmFilter} onValueChange={setTcmFilter}>
-                <SelectTrigger className="h-8 text-[11px] w-40 bg-background">
+                <SelectTrigger className="h-9 text-[11px] w-40 rounded-full bg-background/50 border-border/60 backdrop-blur-sm hover:border-accent/30 transition-all duration-300">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="max-h-[50vh]">
-                  <SelectItem value="all" className="text-[11px] font-semibold py-2">
+                <SelectContent className="max-h-[50vh] rounded-xl border-border/60 bg-background/95 backdrop-blur-xl">
+                  <SelectItem value="all" className="text-[11px] font-semibold py-2 rounded-lg">
                     All Members
                   </SelectItem>
                   {memberScopeOptions.map((m) => {
@@ -1082,7 +1110,7 @@ export function ImpactQueue() {
                     }
                     
                     return (
-                      <SelectItem key={m.id} value={m.id} className="text-[11px] py-1.5 cursor-pointer">
+                      <SelectItem key={m.id} value={m.id} className="text-[11px] py-1.5 cursor-pointer rounded-lg mt-0.5">
                         <div className="grid grid-cols-[120px_1fr] items-center gap-3 w-full">
                           <span className="font-semibold text-foreground truncate">{memberDisplayName(m)}</span>
                           <span className={cn("text-[10px] truncate", hasPinned ? "text-primary font-medium" : "text-muted-foreground")}>
@@ -1095,31 +1123,26 @@ export function ImpactQueue() {
                 </SelectContent>
               </Select>
             )}
-            <div className="flex rounded-md border border-border overflow-hidden bg-background">
+            
+            <div className="flex rounded-full border border-border/60 overflow-hidden bg-background/50 backdrop-blur-sm p-0.5 shadow-sm transition-all hover:border-accent/30">
               <button
-                className={`h-8 px-2 text-[9px] uppercase tracking-wider font-semibold flex items-center gap-1 ${view === "stack" ? "bg-accent text-accent-foreground" : "text-muted-foreground"}`}
+                className={`h-8 px-3 rounded-full text-[10px] uppercase tracking-wider font-bold flex items-center gap-1.5 transition-all duration-300 ${view === "stack" ? "bg-accent text-accent-foreground shadow-md scale-100" : "text-muted-foreground hover:bg-muted/80 hover:text-foreground scale-95 opacity-80 hover:opacity-100"}`}
                 onClick={() => setView("stack")}
               >
-                <ListOrdered className="h-3 w-3" /> Stack
+                <ListOrdered className="h-3.5 w-3.5" /> Stack
               </button>
               <button
-                className={`h-8 px-2 text-[9px] uppercase tracking-wider font-semibold flex items-center gap-1 ${view === "board" ? "bg-accent text-accent-foreground" : "text-muted-foreground"}`}
+                className={`h-8 px-3 rounded-full text-[10px] uppercase tracking-wider font-bold flex items-center gap-1.5 transition-all duration-300 ${view === "board" ? "bg-accent text-accent-foreground shadow-md scale-100" : "text-muted-foreground hover:bg-muted/80 hover:text-foreground scale-95 opacity-80 hover:opacity-100"}`}
                 onClick={() => setView("board")}
               >
-                <LayoutGrid className="h-3 w-3" /> Board
+                <LayoutGrid className="h-3.5 w-3.5" /> Board
               </button>
             </div>
           </div>
         </div>
 
-        {/* Row 2: subtitle */}
-        <div className="px-4 pb-2.5">
-          <p className="text-[11px] text-muted-foreground">
-            One Screen Conversion Engine (Lead → Booked)
-          </p>
-        </div>
-
-        <div className="border-t border-border/70 px-3 py-2 bg-muted/10">
+        {/* Hard Actions Bar (Bento style) */}
+        <div className="lg:col-span-12 rounded-2xl border border-warning/20 bg-gradient-to-r from-warning/5 via-card/50 to-card p-1 overflow-hidden transition-all duration-300 hover:border-warning/40 hover:shadow-md backdrop-blur-sm group">
           <ImpactHardActionsBar
             enriched={stackSorted}
             onPickLead={(leadId, _name, action) => {
@@ -1130,7 +1153,9 @@ export function ImpactQueue() {
             onOpenDropped={() => setDroppedSheetOpen(true)}
           />
         </div>
+      </div>
 
+      <div className="rounded-xl border border-border/50 bg-card/80 backdrop-blur-sm shadow-sm overflow-hidden mt-1 transition-all hover:shadow-md">
         <ImpactQueueMetaBar leadCount={filtered.length} view={view} />
       </div>
 
@@ -1216,10 +1241,10 @@ export function ImpactQueue() {
       {/* ---------------- View ---------------- */}
       {!booting || leads.length > 0 ? (
         view === "stack" ? (
-          <div className="space-y-2">
+          <div className="space-y-4">
             {/* Stage filter bar — stack view only */}
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mr-1">
+            <div className="flex flex-wrap items-center gap-2 p-3 rounded-2xl border border-border/50 bg-card/60 backdrop-blur-sm shadow-sm transition-all">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold mr-1">
                 Stage
               </span>
               {(
@@ -1251,59 +1276,62 @@ export function ImpactQueue() {
                 </button>
               ))}
             </div>
-            {stackSorted.length === 0 && (
-              <div className="rounded-lg border border-border bg-card p-10 text-center text-xs text-muted-foreground space-y-2">
-                <p>
-                  {chipFilter !== "all" ||
-                  query.trim() ||
-                  areaFilter !== "all" ||
-                  typeFilter !== "all" ||
-                  roomFilter !== "all" ||
-                  needFilter !== "all"
-                    ? "No leads match your filters."
-                    : "Queue clear. Add a lead or relax 🌱"}
-                </p>
-                {(chipFilter !== "all" ||
-                  query.trim() ||
-                  areaFilter !== "all" ||
-                  typeFilter !== "all" ||
-                  roomFilter !== "all" ||
-                  needFilter !== "all") && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-7 text-[10px]"
-                    onClick={() => {
-                      setChipFilter("all");
-                      setAreaFilter("all");
-                      setTypeFilter("all");
-                      setRoomFilter("all");
-                      setNeedFilter("all");
-                      setQuery("");
-                    }}
-                  >
-                    Show all leads
-                  </Button>
-                )}
-              </div>
-            )}
-            {stackSorted.map((e, i) => (
-              <LeadRow
-                key={e.lead.id}
-                rank={i + 1}
-                enriched={e}
-                tcms={tcms}
-                tcmOptions={tcmOptions}
-                properties={properties}
-                autoOpen={focusLeadId === e.lead.id}
-                focusAction={focusLeadId === e.lead.id ? focusAction : null}
-                keyboardHighlight={keyboardLeadId === e.lead.id}
-                onAutoOpenConsumed={() => {
-                  setFocusLeadId(null);
-                  setFocusAction(null);
-                }}
-              />
-            ))}
+            
+            <div className="flex flex-col gap-2.5 max-h-[calc(100vh-310px)] min-h-[400px] overflow-y-auto pr-2 pb-4 scrollbar-thin scrollbar-thumb-border">
+              {stackSorted.length === 0 && (
+                <div className="rounded-xl border border-border bg-card/50 backdrop-blur-sm p-10 text-center text-xs text-muted-foreground space-y-3 shadow-sm">
+                  <p>
+                    {chipFilter !== "all" ||
+                    query.trim() ||
+                    areaFilter !== "all" ||
+                    typeFilter !== "all" ||
+                    roomFilter !== "all" ||
+                    needFilter !== "all"
+                      ? "No leads match your filters."
+                      : "Queue clear. Add a lead or relax 🌱"}
+                  </p>
+                  {(chipFilter !== "all" ||
+                    query.trim() ||
+                    areaFilter !== "all" ||
+                    typeFilter !== "all" ||
+                    roomFilter !== "all" ||
+                    needFilter !== "all") && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 text-[10px] rounded-full"
+                      onClick={() => {
+                        setChipFilter("all");
+                        setAreaFilter("all");
+                        setTypeFilter("all");
+                        setRoomFilter("all");
+                        setNeedFilter("all");
+                        setQuery("");
+                      }}
+                    >
+                      Show all leads
+                    </Button>
+                  )}
+                </div>
+              )}
+              {stackSorted.map((e, i) => (
+                <LeadRow
+                  key={e.lead.id}
+                  rank={i + 1}
+                  enriched={e}
+                  tcms={tcms}
+                  tcmOptions={tcmOptions}
+                  properties={properties}
+                  autoOpen={focusLeadId === e.lead.id}
+                  focusAction={focusLeadId === e.lead.id ? focusAction : null}
+                  keyboardHighlight={keyboardLeadId === e.lead.id}
+                  onAutoOpenConsumed={() => {
+                    setFocusLeadId(null);
+                    setFocusAction(null);
+                  }}
+                />
+              ))}
+            </div>
           </div>
         ) : (
           <div className="w-full min-w-0 overflow-x-auto pb-1">
@@ -1315,25 +1343,25 @@ export function ImpactQueue() {
                 >
                   <div
                     className={cn(
-                      "flex h-11 shrink-0 items-center justify-between gap-2 border-b px-3",
+                      "flex shrink-0 items-center justify-between gap-2 border-b px-3 py-2.5",
                       COLUMN_HEADER_TONE[c.key],
                     )}
                     title={COLUMN_HELP[c.key]}
                   >
-                    <div className="flex min-w-0 items-center gap-2">
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-background/80">
-                        <c.icon className="h-3.5 w-3.5" />
+                    <div className="flex min-w-0 items-center gap-2.5">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-current/15 shadow-sm border border-current/20">
+                        <c.icon className="h-4 w-4 text-current" style={{ strokeWidth: 2.5 }} />
                       </span>
                       <div className="min-w-0">
-                        <div className="truncate text-[12px] font-semibold text-foreground">
+                        <div className="truncate text-[13px] font-bold text-foreground">
                           {c.label}
                         </div>
-                        <div className="truncate text-[9px] text-muted-foreground">
+                        <div className="truncate text-[10px] text-muted-foreground font-medium">
                           {COLUMN_HELP[c.key]}
                         </div>
                       </div>
                     </div>
-                    <span className="shrink-0 rounded-full border border-border bg-background px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                    <span className="shrink-0 rounded-full border border-border bg-background/80 px-2.5 py-0.5 text-[11px] font-bold text-foreground shadow-sm">
                       {boardBuckets[c.key].length}
                     </span>
                   </div>
@@ -1830,83 +1858,82 @@ function LeadRow({
           }
         }}
         className={cn(
-          "relative w-full cursor-pointer text-left rounded-md border bg-card hover:border-accent/60 hover:bg-muted/30 transition-colors px-3 py-2 pr-12 group",
-          keyboardHighlight && "ring-2 ring-accent border-accent",
-          staleQuote && "border-danger/40",
+          "relative w-full cursor-pointer text-left rounded-xl border border-border bg-card hover:bg-muted/40 transition-colors p-3 group space-y-2",
+          keyboardHighlight && "ring-2 ring-accent border-accent shadow-sm",
+          staleQuote && "border-danger/40 bg-danger/5 hover:bg-danger/10",
         )}
       >
-        {rank !== undefined && (
-          <div className="absolute left-3 top-2 w-7 h-7 rounded-md bg-muted text-[11px] font-mono font-semibold flex items-center justify-center group-hover:bg-accent/20">
-            #{rank}
-          </div>
-        )}
-        <div className={cn("min-w-0", rank !== undefined && "pl-9")}>
-          <div className="flex items-center gap-1.5 flex-wrap">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            {rank !== undefined && (
+              <div className="w-5 h-5 rounded bg-muted/60 text-[10px] font-mono font-bold flex items-center justify-center group-hover:bg-accent group-hover:text-accent-foreground transition-colors shrink-0">
+                {rank}
+              </div>
+            )}
             <span
-              className={`h-2 w-2 rounded-full shrink-0 ${priorityMeta.dot}`}
+              className={`h-2.5 w-2.5 rounded-full shrink-0 ${priorityMeta.dot}`}
               title={priorityMeta.hint}
             />
-            <span className="text-xs font-semibold truncate">{lead.name}</span>
-          </div>
-          <div className="mt-1 grid gap-1 text-[10px] text-muted-foreground">
-            <span className="inline-flex items-center gap-1 min-w-0">
-              <Phone className="h-2.5 w-2.5 shrink-0" />
-              <span className="truncate">{lead.phone}</span>
-            </span>
-            {areaText && (
-              <span className="inline-flex min-w-0 items-center gap-1">
-                <MapPin className="h-2.5 w-2.5 shrink-0" />
-                <span className="truncate">{areaText}</span>
-              </span>
-            )}
-            <span>{blrText}</span>
-            <span className="inline-flex items-center gap-1">
-              <Calendar className="h-2.5 w-2.5 shrink-0" />
-              Move-in: {fmtDate(lead.moveInDate)}
-            </span>
-            <span className="truncate">
-              Assigned by {assignedByName} → {assignedToName}
-            </span>
-            {openTour && (
-              <span className="text-[10px] font-semibold text-accent flex items-center gap-1">
-                <Calendar className="h-2.5 w-2.5 shrink-0" />
-                Tour: {fmtTourScheduleLabel(openTour.scheduledAt)} ·{" "}
-                {TOUR_TYPE_LABELS[openTourType] ?? openTourType}
-              </span>
+            <span className="text-[13px] font-bold text-foreground truncate">{lead.name}</span>
+            {staleQuote && (
+              <Badge
+                variant="outline"
+                className="text-[9px] border-danger/50 text-danger bg-danger/10 px-1 py-0 rounded-sm uppercase tracking-wider ml-auto"
+              >
+                Quote 24h+
+              </Badge>
             )}
           </div>
-          {(pickedProperty || latestObjection) && (
-            <div className="mt-1 flex flex-wrap gap-1">
-              {pickedProperty && (
-                <Badge
-                  variant="outline"
-                  className="text-[9px] bg-success/10 text-success border-success/40"
-                >
-                  {pickedProperty.name}
-                </Badge>
-              )}
-              {latestObjection && (
-                <Badge
-                  variant="outline"
-                  className="text-[9px] bg-warning/10 text-warning border-warning/40"
-                >
-                  Objection:{" "}
-                  {latestObjection.code === "none"
-                    ? "None"
-                    : latestObjection.code.replace(/-/g, " ")}
-                </Badge>
-              )}
+        </div>
+
+        <div className="flex flex-col gap-1 text-[11px] text-muted-foreground mt-1">
+          <div className="flex items-center gap-1.5">
+            <Phone className="h-3 w-3 shrink-0 opacity-70" />
+            <span className="truncate">{lead.phone}</span>
+          </div>
+          {areaText && (
+            <div className="flex items-center gap-1.5">
+              <MapPin className="h-3 w-3 shrink-0 opacity-70" />
+              <span className="truncate">{areaText}</span>
             </div>
           )}
-          {staleQuote && (
-            <Badge
-              variant="outline"
-              className="mt-1 text-[9px] border-danger/50 text-danger bg-danger/10"
-            >
-              Quote 24h+ · follow up
-            </Badge>
+          <div className="truncate opacity-90">{blrText}</div>
+          <div className="flex items-center gap-1.5">
+            <Calendar className="h-3 w-3 shrink-0 opacity-70" />
+            <span className="truncate">Move-in: {fmtDate(lead.moveInDate)}</span>
+          </div>
+          <div className="truncate opacity-90">
+            Assigned by {assignedByName} {assignedByName !== assignedToName ? `→ ${assignedToName}` : ""}
+          </div>
+          
+          {openTour && (
+            <div className="mt-0.5 text-[11px] font-medium text-accent flex items-center gap-1.5">
+              <Calendar className="h-3 w-3 shrink-0" />
+              Tour: {fmtTourScheduleLabel(openTour.scheduledAt)} · {TOUR_TYPE_LABELS[openTourType] ?? openTourType}
+            </div>
           )}
         </div>
+
+        {(pickedProperty || latestObjection) && (
+          <div className="flex flex-wrap gap-1.5 mt-2.5">
+            {pickedProperty && (
+              <Badge
+                variant="outline"
+                className="text-[10px] bg-success/5 text-success border-success/30 font-medium px-2 py-0.5 rounded-full"
+              >
+                {pickedProperty.name}
+              </Badge>
+            )}
+            {latestObjection && (
+              <Badge
+                variant="outline"
+                className="text-[10px] bg-warning/5 text-warning-foreground border-warning/40 font-medium px-2 py-0.5 rounded-full"
+              >
+                Objection: {latestObjection.code === "none" ? "None" : latestObjection.code.replace(/-/g, " ")}
+              </Badge>
+            )}
+          </div>
+        )}
       </div>
     </>
   );

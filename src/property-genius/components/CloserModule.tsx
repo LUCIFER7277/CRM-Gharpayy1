@@ -29,6 +29,7 @@ import {
 } from "@/property-genius/lib/messages";
 import { waLink, telLink } from "@/property-genius/lib/wa";
 import { CopyButton } from "./CopyButton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Tab = "instant" | "send3" | "objection" | "reengage";
 
@@ -55,17 +56,20 @@ export function CloserModule({ onOpen }: { onOpen: (pg: PG) => void }) {
 
   return (
     <div className="space-y-4 sm:space-y-5">
-      <div>
-        <div className="flex items-center gap-2">
-          <span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/15 text-primary"><Zap className="h-4 w-4" /></span>
-          <h1 className="font-display text-2xl sm:text-3xl font-bold">The Closer</h1>
+      <header className="relative flex flex-col gap-3 rounded-2xl border border-border/60 bg-card p-6 shadow-sm overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent pointer-events-none" />
+        <div className="relative z-10">
+          <div className="flex items-center gap-2">
+            <span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/15 text-primary"><Zap className="h-4 w-4" /></span>
+            <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-primary to-orange-400 bg-clip-text text-transparent pb-1">The Closer</h1>
+          </div>
+          <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
+            One screen. Four moves. Built for the 60-second call. {seasonalNudge()}
+          </p>
         </div>
-        <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
-          One screen. Four moves. Built for the 60-second call. {seasonalNudge()}
-        </p>
-      </div>
+      </header>
 
-      <div className="flex overflow-x-auto rounded-lg border border-border bg-surface-1 p-1 scrollbar-none">
+      <div className="flex overflow-x-auto rounded-full bg-muted/60 p-1 scrollbar-none self-start w-fit">
         {([
           { k: "instant",   l: "Instant Match", I: Zap },
           { k: "send3",     l: "Send 3",        I: Send },
@@ -74,10 +78,10 @@ export function CloserModule({ onOpen }: { onOpen: (pg: PG) => void }) {
         ] as const).map(({ k, l, I }) => (
           <button key={k} onClick={() => setTab(k)}
             className={cn(
-              "flex shrink-0 items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition-smooth",
-              tab === k ? "bg-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground"
+              "flex shrink-0 items-center gap-2 rounded-full px-4 py-1.5 text-[13px] font-medium transition-all",
+              tab === k ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
             )}>
-            <I className="h-3.5 w-3.5" /> {l}
+            <I className={cn("h-3.5 w-3.5", tab === k ? "text-primary" : "")} /> {l}
           </button>
         ))}
       </div>
@@ -165,11 +169,11 @@ function InstantMatch({ onOpen }: { onOpen: (pg: PG) => void }) {
         </Field>
 
         <Field label="Gender">
-          <div className="grid grid-cols-4 gap-1">
+          <div className="flex gap-1 rounded-full bg-muted/60 p-1">
             {(["Any", "Boys", "Girls", "Co-live"] as const).map((g) => (
               <button key={g} onClick={() => setGender(g)}
-                className={cn("rounded-md border px-2 py-1.5 text-[11px] font-medium transition-smooth",
-                  gender === g ? "border-primary bg-primary text-primary-foreground" : "border-border bg-surface-1 hover:border-primary/40")}>
+                className={cn("flex-1 rounded-full px-2 py-1.5 text-[11px] font-medium transition-all",
+                  gender === g ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
                 {g}
               </button>
             ))}
@@ -215,14 +219,14 @@ function InstantMatch({ onOpen }: { onOpen: (pg: PG) => void }) {
               )}
 
               <div className="mt-4 flex flex-wrap gap-2">
-                <button onClick={() => onOpen(pick.pg)} className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground hover:opacity-90">
+                <button onClick={() => onOpen(pick.pg)} className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-medium text-primary-foreground shadow-sm hover:opacity-90 transition-all">
                   <Sparkles className="h-3.5 w-3.5" /> Open Playbook
                 </button>
-                <a href={wa} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-md border border-emerald-400/40 bg-emerald-400/10 px-3 py-2 text-xs font-medium text-emerald-300 hover:bg-emerald-400/20">
+                <a href={wa} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-400/10 px-4 py-2 text-xs font-medium text-emerald-500 dark:text-emerald-300 shadow-sm hover:bg-emerald-400/20 transition-all">
                   <MessageCircle className="h-3.5 w-3.5" /> Send WhatsApp
                 </a>
                 {telLink(pick.pg.manager.phone) && (
-                  <a href={telLink(pick.pg.manager.phone)!} className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-2 text-xs font-medium hover:border-primary/40">
+                  <a href={telLink(pick.pg.manager.phone)!} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-4 py-2 text-xs font-medium hover:bg-muted shadow-sm transition-all">
                     <Phone className="h-3.5 w-3.5" /> Call manager
                   </a>
                 )}
@@ -280,29 +284,37 @@ function SendThree({ onOpen }: { onOpen: (pg: PG) => void }) {
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-3 rounded-lg border border-border bg-card p-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 rounded-2xl border border-border/60 bg-card p-5 shadow-sm sm:grid-cols-2 lg:grid-cols-4">
         <Field label="Lead name">
           <input value={leadName} onChange={(e) => setLeadName(e.target.value)} placeholder="Optional"
-            className="w-full rounded-md border border-input bg-surface-1 px-3 py-2 text-sm outline-none" />
+            className="w-full rounded-xl border border-input bg-surface-1 px-4 py-2.5 text-sm outline-none focus:border-primary/50 transition-colors" />
         </Field>
         <Field label="Area">
-          <select value={area} onChange={(e) => setArea(e.target.value)}
-            className="w-full rounded-md border border-input bg-surface-1 px-3 py-2 text-sm outline-none cursor-pointer">
-            {allAreas.map((a) => <option key={a} value={a} className="bg-card">{a}</option>)}
-          </select>
+          <Select value={area} onValueChange={setArea}>
+            <SelectTrigger className="w-full rounded-xl border border-input bg-surface-1 px-4 py-2.5 text-sm focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-colors">
+              <SelectValue placeholder="Select Area" />
+            </SelectTrigger>
+            <SelectContent>
+              {allAreas.map((a) => <SelectItem key={a} value={a}>{a}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </Field>
         <Field label="Gender">
-          <select value={gender} onChange={(e) => setGender(e.target.value as Gender | "Any")}
-            className="w-full rounded-md border border-input bg-surface-1 px-3 py-2 text-sm outline-none cursor-pointer">
-            {["Any", "Boys", "Girls", "Co-live"].map((g) => <option key={g} value={g} className="bg-card">{g}</option>)}
-          </select>
+          <Select value={gender} onValueChange={(v) => setGender(v as Gender | "Any")}>
+            <SelectTrigger className="w-full rounded-xl border border-input bg-surface-1 px-4 py-2.5 text-sm focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-colors">
+              <SelectValue placeholder="Select Gender" />
+            </SelectTrigger>
+            <SelectContent>
+              {["Any", "Boys", "Girls", "Co-live"].map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </Field>
         <Field label={`Budget ₹${(budgetMin/1000).toFixed(0)}k–${(budgetMax/1000).toFixed(0)}k`}>
-          <div className="grid grid-cols-2 gap-1">
+          <div className="grid grid-cols-2 gap-2">
             <input type="number" value={budgetMin} onChange={(e) => setBudgetMin(+e.target.value || 0)}
-              className="w-full rounded-md border border-input bg-surface-1 px-2 py-2 text-sm outline-none font-mono" />
+              className="w-full rounded-xl border border-input bg-surface-1 px-3 py-2.5 text-sm outline-none font-mono focus:border-primary/50 transition-colors" />
             <input type="number" value={budgetMax} onChange={(e) => setBudgetMax(+e.target.value || 0)}
-              className="w-full rounded-md border border-input bg-surface-1 px-2 py-2 text-sm outline-none font-mono" />
+              className="w-full rounded-xl border border-input bg-surface-1 px-3 py-2.5 text-sm outline-none font-mono focus:border-primary/50 transition-colors" />
           </div>
         </Field>
       </div>
@@ -311,41 +323,41 @@ function SendThree({ onOpen }: { onOpen: (pg: PG) => void }) {
         <EmptyState message="No 3 options match. Widen budget or pick a different area." />
       ) : (
         <div className="grid gap-3 lg:grid-cols-[1fr_360px]">
-          <div className="space-y-2.5">
+          <div className="space-y-3">
             {picks.map((p, i) => (
               <button key={p.pg.id} onClick={() => onOpen(p.pg)}
-                className="block w-full rounded-lg border border-border bg-card p-3 text-left transition-smooth hover:border-primary/40">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/15 font-mono text-sm font-bold text-primary">
+                className="block w-full rounded-2xl border border-border/60 bg-card p-4 text-left shadow-sm transition-all hover:shadow-md hover:border-primary/40 group">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-primary/10 font-mono text-sm font-bold text-primary group-hover:bg-primary/20 transition-colors">
                     {i + 1}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="font-display text-sm font-semibold truncate">{p.pg.name}</div>
-                    <div className="text-xs text-muted-foreground truncate">
+                    <div className="font-display text-[15px] font-semibold truncate group-hover:text-primary transition-colors">{p.pg.name}</div>
+                    <div className="mt-0.5 text-xs text-muted-foreground truncate">
                       {p.pg.area} · ₹{(p.cheap / 1000).toFixed(0)}k (₹{perDay(p.cheap)}/day)
                       {p.pg.nearbyLandmarks?.[0] && ` · ${p.pg.nearbyLandmarks[0].w <= 0 ? "<1m" : p.pg.nearbyLandmarks[0].w + "m"} to ${p.pg.nearbyLandmarks[0].n}`}
                     </div>
                   </div>
                   <div className="shrink-0 text-right">
-                    <div className="font-mono text-sm font-bold tabular-nums text-emerald-400">{p.value}</div>
-                    <div className="text-[9px] uppercase tracking-widest text-muted-foreground">Value</div>
+                    <div className="font-mono text-base font-bold tabular-nums text-emerald-400">{p.value}</div>
+                    <div className="text-[9px] uppercase tracking-widest text-muted-foreground mt-0.5">Value</div>
                   </div>
                 </div>
               </button>
             ))}
           </div>
 
-          <div className="rounded-lg border border-border bg-card p-3">
-            <div className="mb-2 flex items-center justify-between">
+          <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm h-fit">
+            <div className="mb-4 flex items-center justify-between">
               <h4 className="text-sm font-semibold flex items-center gap-2">
-                <MessageCircle className="h-3.5 w-3.5 text-primary" /> Forwardable message
+                <MessageCircle className="h-4 w-4 text-primary" /> Forwardable message
               </h4>
-              <CopyButton text={message} label="Copy" />
+              <CopyButton text={message} label="Copy" className="rounded-full shadow-sm" size="md" />
             </div>
-            <pre className="max-h-96 overflow-y-auto whitespace-pre-wrap rounded bg-surface-2 p-3 text-[11px] leading-relaxed">{message}</pre>
+            <pre className="max-h-96 overflow-y-auto whitespace-pre-wrap rounded-xl border border-border/40 bg-surface-2/50 p-4 text-[11.5px] leading-relaxed">{message}</pre>
             <a href={waLink(undefined, message)} target="_blank" rel="noreferrer"
-              className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-md bg-emerald-500/15 border border-emerald-400/40 px-3 py-2 text-xs font-medium text-emerald-300 hover:bg-emerald-500/25">
-              <MessageCircle className="h-3.5 w-3.5" /> Send via WhatsApp
+              className="mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-emerald-500/15 border border-emerald-400/40 px-4 py-2.5 text-xs font-semibold text-emerald-500 dark:text-emerald-300 shadow-sm hover:bg-emerald-500/25 transition-all">
+              <MessageCircle className="h-4 w-4" /> Send via WhatsApp
             </a>
           </div>
         </div>
@@ -381,19 +393,23 @@ function ObjectionPivot({ onOpen }: { onOpen: (pg: PG) => void }) {
     <div className="space-y-4">
       <div className="rounded-lg border border-border bg-card p-4 space-y-3">
         <Field label="Property the lead is hesitating on">
-          <select value={pgId} onChange={(e) => setPgId(e.target.value)}
-            className="w-full rounded-md border border-input bg-surface-1 px-3 py-2 text-sm outline-none cursor-pointer">
-            {PGS.map((p) => <option key={p.id} value={p.id} className="bg-card">{p.name} — {p.area}</option>)}
-          </select>
+          <Select value={pgId} onValueChange={setPgId}>
+            <SelectTrigger className="w-full rounded-xl border border-input bg-surface-1 px-4 py-2.5 text-sm focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-colors">
+              <SelectValue placeholder="Select Property" />
+            </SelectTrigger>
+            <SelectContent>
+              {PGS.map((p) => <SelectItem key={p.id} value={p.id}>{p.name} — {p.area}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </Field>
 
         <div>
           <div className="mb-2 text-[10px] uppercase tracking-widest text-muted-foreground">Lead's objection</div>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-6">
+          <div className="grid grid-cols-2 gap-1 sm:grid-cols-3 md:grid-cols-6 rounded-2xl bg-muted/60 p-1.5">
             {objections.map((o) => (
               <button key={o.k} onClick={() => setObjection(o.k)}
-                className={cn("rounded-md border px-2 py-2 text-xs font-medium transition-smooth",
-                  objection === o.k ? "border-primary bg-primary/15 text-primary" : "border-border bg-surface-1 hover:border-primary/40")}>
+                className={cn("rounded-xl px-2 py-2 text-xs font-medium transition-all",
+                  objection === o.k ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
                 <span className="mr-1">{o.emoji}</span>{o.l}
               </button>
             ))}
@@ -474,17 +490,21 @@ function ReEngage({ onOpen }: { onOpen: (pg: PG) => void }) {
             className="w-full rounded-md border border-input bg-surface-1 px-3 py-2 text-sm outline-none" />
         </Field>
         <Field label="Which property did they engage with?">
-          <select value={pgId} onChange={(e) => setPgId(e.target.value)}
-            className="w-full rounded-md border border-input bg-surface-1 px-3 py-2 text-sm outline-none cursor-pointer">
-            {PGS.map((p) => <option key={p.id} value={p.id} className="bg-card">{p.name} — {p.area}</option>)}
-          </select>
+          <Select value={pgId} onValueChange={setPgId}>
+            <SelectTrigger className="w-full rounded-xl border border-input bg-surface-1 px-4 py-2.5 text-sm focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-colors">
+              <SelectValue placeholder="Select Property" />
+            </SelectTrigger>
+            <SelectContent>
+              {PGS.map((p) => <SelectItem key={p.id} value={p.id}>{p.name} — {p.area}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </Field>
         <Field label="What stage did they reach?">
-          <div className="grid grid-cols-3 gap-2">
+          <div className="flex gap-1 rounded-full bg-muted/60 p-1">
             {(["visited", "got_price", "browsed"] as const).map((s) => (
               <button key={s} onClick={() => setStage(s)}
-                className={cn("rounded-md border px-2 py-2 text-xs font-medium transition-smooth",
-                  stage === s ? "border-primary bg-primary/15 text-primary" : "border-border bg-surface-1 hover:border-primary/40")}>
+                className={cn("flex-1 rounded-full px-2 py-2 text-xs font-medium transition-all",
+                  stage === s ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
                 {s === "visited" ? "Visited" : s === "got_price" ? "Got price" : "Just browsed"}
               </button>
             ))}
@@ -508,10 +528,10 @@ function ReEngage({ onOpen }: { onOpen: (pg: PG) => void }) {
           <pre className="max-h-72 overflow-y-auto whitespace-pre-wrap rounded bg-surface-2 p-3 text-xs leading-relaxed">{personalised}</pre>
           <div className="mt-3 flex flex-wrap gap-2">
             <a href={waLink(pg.manager.phone, personalised)} target="_blank" rel="noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-md bg-emerald-500/15 border border-emerald-400/40 px-3 py-2 text-xs font-medium text-emerald-300 hover:bg-emerald-500/25">
+              className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 border border-emerald-400/40 px-4 py-2 text-xs font-medium text-emerald-500 dark:text-emerald-300 shadow-sm hover:bg-emerald-500/25 transition-all">
               <MessageCircle className="h-3.5 w-3.5" /> Send WhatsApp
             </a>
-            <button onClick={() => onOpen(pg)} className="inline-flex items-center gap-1.5 rounded-md border border-border bg-surface-1 px-3 py-2 text-xs font-medium hover:border-primary/40">
+            <button onClick={() => onOpen(pg)} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-4 py-2 text-xs font-medium hover:bg-muted shadow-sm transition-all">
               <Sparkles className="h-3.5 w-3.5" /> Open property
             </button>
           </div>
