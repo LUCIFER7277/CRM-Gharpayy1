@@ -146,7 +146,15 @@ export function registerDashboardRoutes(app: FastifyInstance) {
 
       const actorName = actorId === "flow-ops" ? "Flow Ops" : (userMap.get(actorId) || (a.actor === "system" ? "Gharpayy" : "System"));
       const actorRole = actorId === "flow-ops" ? "flow-ops" : (roleMap.get(actorId) || "system");
-      const leadDetails = leadMap.get(a.entityId) || { name: "Unknown Lead", propertyName: "Unknown Property", assigneeId: undefined };
+      const leadDetails = leadMap.get(a.entityId) || { 
+        name: "Unknown Lead", 
+        propertyName: "Unknown Property", 
+        phone: undefined,
+        stage: undefined,
+        budget: undefined,
+        preferredArea: undefined,
+        assigneeId: undefined 
+      };
 
       const propertyInfo = a.meta?.propertyId ? propertyMap.get(a.meta.propertyId) : undefined;
       const tourInfo = a.meta?.tourId ? tourMap.get(a.meta.tourId) : undefined;
