@@ -12,7 +12,7 @@ const ListQuery = z.object({
 });
 
 export function registerTodosRoutes(app: FastifyInstance) {
-  app.get("/api/todos", { preHandler: [requireAuth, requireScope("todo.read")] }, async (req, reply) => {
+  app.get("/api/v1/todos", { preHandler: [requireAuth, requireScope("todo.read")] }, async (req, reply) => {
     const q = ListQuery.parse(req.query);
     const filter: Record<string, unknown> = { tenantId: req.user!.tenantId };
     if (q.entityType) filter.entityType = q.entityType;

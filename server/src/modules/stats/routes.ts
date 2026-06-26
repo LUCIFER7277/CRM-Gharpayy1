@@ -33,7 +33,7 @@ async function getScopedMemberIdsForAdmin(tenantId: string, adminId: string) {
 }
 
 export function registerStatsRoutes(app: FastifyInstance) {
-  app.get("/api/stats/daily-progress", { preHandler: [requireAuth] }, async (req, reply) => {
+  app.get("/api/v1/stats/daily-progress", { preHandler: [requireAuth] }, async (req, reply) => {
     const role = req.user!.role;
     if (!STAFF_ROLES.includes(role as (typeof STAFF_ROLES)[number])) {
       return reply.code(403).send({ code: "FORBIDDEN", message: "Forbidden" });
@@ -194,7 +194,7 @@ export function registerStatsRoutes(app: FastifyInstance) {
     });
   });
 
-  app.get("/api/stats/leaderboard", { preHandler: [requireAuth] }, async (req, reply) => {
+  app.get("/api/v1/stats/leaderboard", { preHandler: [requireAuth] }, async (req, reply) => {
     const role = req.user!.role;
     if (!STAFF_ROLES.includes(role as (typeof STAFF_ROLES)[number])) {
       return reply.code(403).send({ code: "FORBIDDEN", message: "Forbidden" });

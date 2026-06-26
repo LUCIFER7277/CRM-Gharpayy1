@@ -16,7 +16,7 @@ export function registerActivityFeedRoutes(app: FastifyInstance) {
   const events = () => col<EventDoc>("entity_event");
 
   // Login/logout audit feed (super_admin)
-  app.get("/api/activity/login", { preHandler: [requireAuth, requireScope("user.admin")] }, async (req, reply) => {
+  app.get("/api/v1/activity/login", { preHandler: [requireAuth, requireScope("user.admin")] }, async (req, reply) => {
     const q = z.object({ limit: z.coerce.number().min(1).max(500).default(100) }).parse(req.query);
     const items = await events()
       .find({ tenantId: req.user!.tenantId, type: { $in: ["evt.user.login", "evt.user.logout"] } })
@@ -27,7 +27,7 @@ export function registerActivityFeedRoutes(app: FastifyInstance) {
   });
 
   // System-wide event feed (super_admin)
-  app.get("/api/activity/all", { preHandler: [requireAuth, requireScope("user.admin")] }, async (req, reply) => {
+  app.get("/api/v1/activity/all", { preHandler: [requireAuth, requireScope("user.admin")] }, async (req, reply) => {
     const q = z.object({ limit: z.coerce.number().min(1).max(500).default(200) }).parse(req.query);
     const items = await events()
       .find({ tenantId: req.user!.tenantId })
@@ -38,7 +38,7 @@ export function registerActivityFeedRoutes(app: FastifyInstance) {
   });
 
   // Per-lead activity stream
-  app.get("/api/activity/lead", { preHandler: [requireAuth, requireScope("activity.read")] }, async (req, reply) => {
+  app.get("/api/v1/activity/lead", { preHandler: [requireAuth, requireScope("activity.read")] }, async (req, reply) => {
     const q = z.object({
       leadId: z.string(),
       limit: z.coerce.number().min(1).max(500).default(200),

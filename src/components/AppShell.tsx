@@ -165,7 +165,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const navByRole: Record<typeof role, NavItem[]> = {
     hr: withTailNav([
-      { to: "/", label: "Arena Home", icon: Home },
+      { to: "/", label: "Live Dashboard", icon: LayoutDashboard },
+      { to: "/arena", label: "Arena Home", icon: Home },
       { to: "/today", label: "Today", icon: Sun, badge: queue.length },
       { to: "/leads", label: "Leads", icon: Target },
       { to: "/myt/tours", label: "Tours", icon: CalendarPlus },
@@ -182,7 +183,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       { to: "/my-tasks", label: "My Tasks", icon: ListTodo },
     ]),
     "flow-ops": withTailNav([
-      { to: "/", label: "Arena Home", icon: Home },
+      { to: "/", label: "Live Dashboard", icon: LayoutDashboard },
+      { to: "/arena", label: "Arena Home", icon: Home },
       { to: "/today", label: "Today", icon: Sun, badge: queue.length },
       { to: "/inbox", label: "Inbox", icon: Inbox },
       { to: "/leads", label: "Leads", icon: Target },
@@ -198,7 +200,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       { to: "/my-tasks", label: "My Tasks", icon: ListTodo },
     ]),
     tcm: withTailNav([
-      { to: "/", label: "Arena Home", icon: Home },
+      { to: "/", label: "Live Dashboard", icon: LayoutDashboard },
+      { to: "/arena", label: "Arena Home", icon: Home },
       { to: "/today", label: "Today", icon: Sun, badge: queue.length },
       { to: "/impact", label: "Impact Queue", icon: HeartPulse },
       { to: "/property-hub", label: "Property Hub", icon: Building2 },
@@ -209,6 +212,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       { to: "/myt/schedule", label: "Schedule Tour", icon: CalendarPlus },
     ]),
     "super-admin": [
+      { to: "/", label: "Live Dashboard", icon: LayoutDashboard },
       { to: "/admin", label: "Cockpit", icon: Gauge },
       { to: "/admin/supreme", label: "Supreme \u00B7 God Mode", icon: Zap },
       { to: "/admin/command", label: "Command Bridge", icon: Swords },
@@ -470,7 +474,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
 
         <PipMount>
-          <main className="flex-1 flex flex-col min-h-0 w-full max-w-350 mx-auto p-4 pb-24 md:p-6 md:pb-6">{children}</main>
+          <main className="flex-1 flex flex-col min-w-0 min-h-0 w-full max-w-[1600px] mx-auto p-4 pb-24 md:p-6 md:pb-6">{children}</main>
         </PipMount>
       </div>
 

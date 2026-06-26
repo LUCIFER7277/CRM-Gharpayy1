@@ -40,6 +40,7 @@ import { Route as ExecutionRouteImport } from './routes/execution'
 import { Route as DailyProgressRouteImport } from './routes/daily-progress'
 import { Route as CoachRouteImport } from './routes/coach'
 import { Route as CalendarRouteImport } from './routes/calendar'
+import { Route as ArenaRouteImport } from './routes/arena'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as ActivityRouteImport } from './routes/activity'
 import { Route as IndexRouteImport } from './routes/index'
@@ -259,6 +260,11 @@ const CoachRoute = CoachRouteImport.update({
 const CalendarRoute = CalendarRouteImport.update({
   id: '/calendar',
   path: '/calendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ArenaRoute = ArenaRouteImport.update({
+  id: '/arena',
+  path: '/arena',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -595,6 +601,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/activity': typeof ActivityRoute
   '/admin': typeof AdminRouteWithChildren
+  '/arena': typeof ArenaRoute
   '/calendar': typeof CalendarRoute
   '/coach': typeof CoachRoute
   '/daily-progress': typeof DailyProgressRoute
@@ -692,6 +699,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/activity': typeof ActivityRoute
+  '/arena': typeof ArenaRoute
   '/calendar': typeof CalendarRoute
   '/coach': typeof CoachRoute
   '/daily-progress': typeof DailyProgressRoute
@@ -791,6 +799,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/activity': typeof ActivityRoute
   '/admin': typeof AdminRouteWithChildren
+  '/arena': typeof ArenaRoute
   '/calendar': typeof CalendarRoute
   '/coach': typeof CoachRoute
   '/daily-progress': typeof DailyProgressRoute
@@ -891,6 +900,7 @@ export interface FileRouteTypes {
     | '/'
     | '/activity'
     | '/admin'
+    | '/arena'
     | '/calendar'
     | '/coach'
     | '/daily-progress'
@@ -988,6 +998,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/activity'
+    | '/arena'
     | '/calendar'
     | '/coach'
     | '/daily-progress'
@@ -1086,6 +1097,7 @@ export interface FileRouteTypes {
     | '/'
     | '/activity'
     | '/admin'
+    | '/arena'
     | '/calendar'
     | '/coach'
     | '/daily-progress'
@@ -1185,6 +1197,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ActivityRoute: typeof ActivityRoute
   AdminRoute: typeof AdminRouteWithChildren
+  ArenaRoute: typeof ArenaRoute
   CalendarRoute: typeof CalendarRoute
   CoachRoute: typeof CoachRoute
   DailyProgressRoute: typeof DailyProgressRoute
@@ -1462,6 +1475,13 @@ declare module '@tanstack/react-router' {
       path: '/calendar'
       fullPath: '/calendar'
       preLoaderRoute: typeof CalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/arena': {
+      id: '/arena'
+      path: '/arena'
+      fullPath: '/arena'
+      preLoaderRoute: typeof ArenaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -2077,6 +2097,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ActivityRoute: ActivityRoute,
   AdminRoute: AdminRouteWithChildren,
+  ArenaRoute: ArenaRoute,
   CalendarRoute: CalendarRoute,
   CoachRoute: CoachRoute,
   DailyProgressRoute: DailyProgressRoute,

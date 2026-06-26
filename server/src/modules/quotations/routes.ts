@@ -36,9 +36,7 @@ export function registerQuotationsRoutes(app: FastifyInstance) {
     return reply.send(items);
   };
 
-  app.get("/api/quotations", { preHandler: [requireAuth] }, listHandler);
   app.get("/api/v1/quotations", { preHandler: [requireAuth] }, listHandler);
-  
 
   // Add quotation
   const postHandler = async (req: any, reply: any) => {
@@ -60,9 +58,7 @@ export function registerQuotationsRoutes(app: FastifyInstance) {
     return reply.code(201).send(created);
   };
 
-  app.post("/api/quotations", { preHandler: [requireAuth] }, postHandler);
   app.post("/api/v1/quotations", { preHandler: [requireAuth] }, postHandler);
-  
 
   // Update status
   const putHandler = async (req: any, reply: any) => {
@@ -79,6 +75,5 @@ export function registerQuotationsRoutes(app: FastifyInstance) {
     return reply.send(updated);
   };
 
-  app.put("/api/quotations/:id/status", { preHandler: [requireAuth] }, putHandler);
   app.put("/api/v1/quotations/:id/status", { preHandler: [requireAuth] }, putHandler);
 }

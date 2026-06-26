@@ -18,7 +18,7 @@ const ListQuery = z.object({
 
 export function registerLeadsRoutes(app: FastifyInstance) {
   // POST /api/commands — single command bus endpoint.
-  app.post("/api/commands", { preHandler: [requireAuth] }, async (req, reply) => {
+  app.post("/api/v1/commands", { preHandler: [requireAuth] }, async (req, reply) => {
     const idem = req.headers["idempotency-key"];
     if (typeof idem !== "string" || idem.length < 10) {
       return reply.code(400).send({ code: "VALIDATION_FAILED", message: "Idempotency-Key header required" });
@@ -73,7 +73,7 @@ export function registerLeadsRoutes(app: FastifyInstance) {
   });
 
   // GET /api/leads — list + filter, with role-based visibility.
-  app.get("/api/leads", { preHandler: [requireAuth, requireScope("lead.read")] }, async (req, reply) => {
+  app.get("/api/v1/leads", { preHandler: [requireAuth, requireScope("lead.read")] }, async (req, reply) => {
     const q = ListQuery.parse(req.query);
     const filter: Record<string, unknown> = { tenantId: req.user!.tenantId };
     if (q.stage) filter.stage = q.stage;
@@ -155,7 +155,7 @@ export function registerLeadsRoutes(app: FastifyInstance) {
     return reply.send({ items, nextCursor: items.length === q.limit ? items[items.length - 1]._id : null });
   });
 
-  app.get("/api/leads/:id", { preHandler: [requireAuth, requireScope("lead.read")] }, async (req, reply) => {
+  app.get("/api/v1/leads/:id", { preHandler: [requireAuth, requireScope("lead.read")] }, async (req, reply) => {
     const { id } = req.params as { id: string };
     const lead = await col<Lead>("leads").findOne({ _id: id, tenantId: req.user!.tenantId });
     if (!lead) return reply.code(404).send({ code: "NOT_FOUND", message: "Lead not found" });
@@ -184,7 +184,7 @@ export function registerLeadsRoutes(app: FastifyInstance) {
   });
 
   // GET /api/leads/check-duplicate?phone=9876543210
-  app.get("/api/leads/check-duplicate", { preHandler: [requireAuth] }, async (req, reply) => {
+  app.get("/api/v1/leads/check-duplicate", { preHandler: [requireAuth] }, async (req, reply) => {
     const q = z.object({ phone: z.string() }).parse(req.query);
     const cleanPhone = q.phone.replace(/\D/g, "").slice(-10);
     if (!cleanPhone) return reply.send({ exists: false });
@@ -214,7 +214,7 @@ export function registerLeadsRoutes(app: FastifyInstance) {
   });
 
   // POST /api/leads/parse
-  app.post("/api/leads/parse", { preHandler: [requireAuth] }, async (req, reply) => {
+  app.post("/api/v1/leads/parse", { preHandler: [requireAuth] }, async (req, reply) => {
     req.log.info("[AI] Parse request received");
     const body = z.object({ text: z.string().min(3) }).parse(req.body);
     
@@ -301,13 +301,13 @@ Output ONLY a JSON object (no markdown, no backticks, no other text) with this e
   // ---------- Assignment Notifications ----------
 
   // GET /api/assignment-notifications — pending assignments for the current user
-  app.get("/api/assignment-notifications", { preHandler: [requireAuth] }, async (req, reply) => {
+  app.get("/api/v1/assignment-notifications", { preHandler: [requireAuth] }, async (req, reply) => {
     const pending = await getPendingAssignmentsForUser(req.user!.sub, req.user!.tenantId);
     return reply.send({ items: pending });
   });
 
   // GET /api/assignment-notifications/passed — recently passed assignments (so assigner is informed)
-  app.get("/api/assignment-notifications/passed", { preHandler: [requireAuth] }, async (req, reply) => {
+  app.get("/api/v1/assignment-notifications/passed", { preHandler: [requireAuth] }, async (req, reply) => {
     const passed = await getPassedNotificationsForUser(req.user!.sub, req.user!.tenantId);
     return reply.send({ items: passed });
   });

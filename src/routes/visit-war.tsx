@@ -618,32 +618,47 @@ function VisitWarRoom() {
   return (
     <div className="flex min-h-svh flex-col bg-background text-foreground">
       <main className="container py-4 sm:py-6 pb-24 space-y-6">
-        <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2.5 mb-1">
-              <span className="flex h-7 w-7 items-center justify-center rounded-md bg-destructive/10 border border-destructive/20 text-destructive">
-                <Radio className="h-4 w-4 animate-pulse" />
-              </span>
-              <h1 className="font-display text-2xl font-semibold tracking-tight">Visit Command Center</h1>
+        {/* Cinematic Hero Header */}
+        <header className="relative flex flex-col md:flex-row md:items-end justify-between gap-4 p-6 rounded-3xl overflow-hidden mb-2 bg-card border shadow-sm group">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-[url('/bg-grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))] opacity-10" />
+          
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-destructive/10 border border-destructive/30 text-destructive shadow-[0_0_15px_rgba(var(--color-destructive),0.2)]">
+                <span className="absolute inset-0 rounded-xl bg-destructive/20 animate-ping opacity-75" />
+                <Radio className="h-5 w-5 animate-pulse relative z-10" />
+              </div>
+              <div>
+                <h1 className="font-display text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                  Visit Command Center
+                </h1>
+                <p className="text-sm text-muted-foreground font-medium tracking-wide uppercase mt-0.5">
+                  Gharpayy <span className="opacity-50 mx-1">•</span> Mission Control
+                </p>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
-              <p className="text-sm text-muted-foreground">
-                Gharpayy · Visit OS
-              </p>
-              <Badge variant="outline" className="border-border bg-card text-foreground rounded-full text-[10px] font-mono px-2 py-0.5 gap-1.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
+            
+            <div className="flex items-center gap-3 mt-4">
+              <Badge variant="outline" className="border-success/30 bg-success/10 text-success rounded-full text-[11px] font-mono px-3 py-1 gap-2 shadow-[0_0_10px_rgba(var(--color-success),0.1)] backdrop-blur-md">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-success"></span>
+                </span>
                 {liveTours.length} LIVE
               </Badge>
               {intervention.length > 0 && (
-                <Badge variant="outline" className="border-destructive/40 bg-destructive/10 text-destructive rounded-full text-[10px] font-mono px-2 py-0.5 gap-1.5">
-                  <Siren className="h-3 w-3" /> {intervention.length} INTERVENTION
+                <Badge variant="outline" className="border-destructive/40 bg-destructive/10 text-destructive rounded-full text-[11px] font-mono px-3 py-1 gap-2 shadow-[0_0_10px_rgba(var(--color-destructive),0.2)] backdrop-blur-md">
+                  <Siren className="h-3.5 w-3.5 animate-pulse" /> {intervention.length} INTERVENTION
                 </Badge>
               )}
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
+          
+          <div className="relative z-10 flex flex-col items-end gap-3 self-end">
             <RoleLensSwitcher value={lens} onChange={setLens} />
-            <div className="text-sm tabular-nums font-mono text-muted-foreground bg-muted/50 border border-border px-3 py-1.5 rounded-md">
+            <div className="flex items-center gap-2 text-sm tabular-nums font-mono text-primary shadow-[0_0_15px_rgba(var(--color-primary),0.15)] bg-primary/10 border border-primary/20 px-4 py-2 rounded-xl backdrop-blur-md">
+              <Clock className="h-4 w-4" />
               {mounted ? new Date(now).toLocaleTimeString("en-IN", { hour12: false }) : "--:--:--"}
             </div>
           </div>
@@ -708,29 +723,35 @@ function VisitWarRoom() {
         <section className="rounded-2xl bg-card shadow-sm ring-1 ring-black/5 dark:ring-white/10 overflow-hidden">
           <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)} className="w-full">
             <header className="flex flex-wrap items-center gap-3 px-5 py-4 border-b border-border/40 bg-muted/10">
-              <TabsList className="h-9 justify-start self-start bg-muted/30 rounded-full p-1 border-none shadow-inner">
-                <TabsTrigger value="live" className="text-xs gap-1.5 h-7 px-2.5">
-                  <Activity className="h-3.5 w-3.5" /> Live ({liveTours.length})
+              <TabsList className="h-11 justify-start self-start bg-muted/40 rounded-xl p-1 shadow-inner gap-1 overflow-x-auto overflow-y-hidden">
+                <TabsTrigger value="live" className="text-sm gap-2 h-9 px-4 rounded-lg data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all relative">
+                  {tab === "live" && <div className="absolute -bottom-1 left-4 right-4 h-0.5 bg-primary rounded-t-full shadow-[0_-2px_8px_rgba(var(--color-primary),0.5)]" />}
+                  <Activity className={cn("h-4 w-4", tab === "live" && "text-primary")} /> Live ({liveTours.length})
                 </TabsTrigger>
-                <TabsTrigger value="upcoming" className="text-xs gap-1.5 h-7 px-2.5">
-                  <CalendarClock className="h-3.5 w-3.5" /> Upcoming ({upcomingTours.length})
+                <TabsTrigger value="upcoming" className="text-sm gap-2 h-9 px-4 rounded-lg data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all relative">
+                  {tab === "upcoming" && <div className="absolute -bottom-1 left-4 right-4 h-0.5 bg-info rounded-t-full shadow-[0_-2px_8px_rgba(var(--color-info),0.5)]" />}
+                  <CalendarClock className={cn("h-4 w-4", tab === "upcoming" && "text-info")} /> Upcoming ({upcomingTours.length})
                 </TabsTrigger>
-                <TabsTrigger value="hot" className="text-xs gap-1.5 h-7 px-2.5">
-                  <Flame className="h-3.5 w-3.5 text-accent" /> Hot ({hotTours.length})
+                <TabsTrigger value="hot" className="text-sm gap-2 h-9 px-4 rounded-lg data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all relative">
+                  {tab === "hot" && <div className="absolute -bottom-1 left-4 right-4 h-0.5 bg-accent rounded-t-full shadow-[0_-2px_8px_rgba(var(--color-accent),0.5)]" />}
+                  <Flame className={cn("h-4 w-4", tab === "hot" ? "text-accent animate-pulse" : "text-muted-foreground")} /> Hot ({hotTours.length})
                 </TabsTrigger>
-                <TabsTrigger value="map" className="text-xs gap-1.5 h-7 px-2.5">
-                  <MapIcon className="h-3.5 w-3.5 text-muted-foreground" /> Map
+                <TabsTrigger value="map" className="text-sm gap-2 h-9 px-4 rounded-lg data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all relative">
+                  {tab === "map" && <div className="absolute -bottom-1 left-4 right-4 h-0.5 bg-foreground rounded-t-full" />}
+                  <MapIcon className={cn("h-4 w-4", tab === "map" ? "text-foreground" : "text-muted-foreground")} /> Map
                 </TabsTrigger>
-                <TabsTrigger value="stats" className="text-xs gap-1.5 h-7 px-2.5">
-                  <BarChart3 className="h-3.5 w-3.5 text-muted-foreground" /> Stats
+                <TabsTrigger value="stats" className="text-sm gap-2 h-9 px-4 rounded-lg data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm transition-all relative">
+                  {tab === "stats" && <div className="absolute -bottom-1 left-4 right-4 h-0.5 bg-foreground rounded-t-full" />}
+                  <BarChart3 className={cn("h-4 w-4", tab === "stats" ? "text-foreground" : "text-muted-foreground")} /> Stats
                 </TabsTrigger>
               </TabsList>
 
               {tab === "live" && (
-                <div className="ml-auto flex items-center gap-1.5">
-                  <span className="text-[10px] text-muted-foreground font-medium uppercase mr-1">Sort</span>
+                <div className="ml-auto flex items-center gap-1.5 bg-card border rounded-lg p-1 shadow-sm">
+                  <span className="text-[10px] text-muted-foreground font-semibold uppercase px-2">Sort</span>
+                  <div className="h-4 w-px bg-border mx-1" />
                   {(["prob", "dur", "obj", "update"] as const).map((m) => (
-                    <Button key={m} size="sm" variant={sortMode === m ? "default" : "outline"} className="h-7 px-2 text-[10px] uppercase font-mono border-border" onClick={() => setSortMode(m)}>
+                    <Button key={m} size="sm" variant={sortMode === m ? "secondary" : "ghost"} className={cn("h-7 px-2.5 text-[11px] uppercase font-mono rounded-md", sortMode === m && "bg-muted shadow-sm")} onClick={() => setSortMode(m)}>
                       {m === "prob" ? "Prob" : m === "dur" ? "Dur" : m === "obj" ? "Obj" : "Upd"}
                     </Button>
                   ))}
@@ -896,15 +917,22 @@ function DayPlanner({
   };
 
   return (
-    <div className="rounded-2xl bg-card shadow-sm ring-1 ring-black/5 dark:ring-white/10 p-5 overflow-hidden">
-      <div className="flex items-center justify-between mb-5">
-        <div className="flex items-center gap-2">
-          <CalendarClock className="h-4 w-4 text-muted-foreground" />
-          <h2 className="font-display text-sm font-semibold">Day Planner</h2>
-          <Badge variant="secondary" className="font-mono text-[10px] ml-2">{new Date(today).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}</Badge>
+    <div className="rounded-3xl bg-card border shadow-sm p-6 overflow-hidden relative">
+      {/* Background grid effect */}
+      <div className="absolute inset-0 bg-grid opacity-[0.03] pointer-events-none" />
+      
+      <div className="flex items-center justify-between mb-6 relative z-10">
+        <div className="flex items-center gap-3">
+          <div className="h-8 w-8 rounded-lg bg-info/10 flex items-center justify-center border border-info/20 shadow-[0_0_10px_rgba(var(--color-info),0.1)]">
+            <CalendarClock className="h-4 w-4 text-info" />
+          </div>
+          <h2 className="font-display text-lg font-bold">Day Planner</h2>
+          <Badge variant="secondary" className="font-mono text-[11px] ml-1 bg-muted/50 backdrop-blur-sm border-border/50">
+            {new Date(today).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}
+          </Badge>
         </div>
-        <div className="text-[10px] text-muted-foreground font-mono bg-surface-2 px-2 py-0.5 rounded-md">
-          10:00 - 20:00 · {todayVisits.length} visits
+        <div className="text-xs text-muted-foreground font-mono bg-muted/40 backdrop-blur-sm border border-border/50 px-3 py-1.5 rounded-lg shadow-inner">
+          10:00 - 20:00 <span className="opacity-50 mx-1.5">•</span> <span className="font-semibold text-foreground">{todayVisits.length}</span> visits
         </div>
       </div>
 
@@ -933,26 +961,39 @@ function DayPlanner({
           </div>
         )}
 
-        <div className="space-y-1">
+        <div className="space-y-1.5">
           {lanes.map(([tcmId, lane]) => (
-            <div key={tcmId} className="relative h-7 rounded bg-muted/30">
-              <div className="absolute inset-y-0 left-1 flex items-center text-[10px] font-semibold text-muted-foreground truncate z-[5] pointer-events-none max-w-[60px]">
-                {lane.tcmName.split(" ")[0]}
+            <div key={tcmId} className="relative h-10 rounded-xl bg-muted/20 border border-border/30 backdrop-blur-sm hover:bg-muted/40 transition-colors group">
+              <div className="absolute inset-y-0 left-2 flex items-center z-[5] pointer-events-none">
+                <div className="h-6 min-w-6 px-1.5 rounded bg-card border shadow-sm flex items-center justify-center text-[10px] font-bold text-foreground font-display tracking-tight group-hover:scale-110 transition-transform">
+                  {lane.tcmName.split(" ")[0].slice(0, 2).toUpperCase()}
+                </div>
               </div>
               {lane.visits.map((v) => {
                 const startH = (v.scheduledAt - today) / 3600_000;
                 const left = ((startH - startHour) / span) * 100;
                 const width = Math.max(2, (1 / span) * 100);
                 const focused = focusTourId === v.tourId;
+                
+                // Get gradient class based on stage
+                let gradCls = "";
+                if (v.stage === "started") gradCls = "bg-gradient-to-r from-success/80 to-success hover:from-success hover:to-success/90 text-white shadow-[0_0_10px_rgba(var(--color-success),0.3)]";
+                else if (v.stage === "at-property") gradCls = "bg-gradient-to-r from-amber-500/80 to-amber-500 hover:from-amber-500 hover:to-amber-500/90 text-white shadow-[0_0_10px_rgba(245,158,11,0.3)]";
+                else if (v.stage === "tour-ongoing") gradCls = "bg-gradient-to-r from-orange-500/80 to-orange-500 hover:from-orange-500 hover:to-orange-500/90 text-white shadow-[0_0_10px_rgba(249,115,22,0.3)]";
+                else if (v.stage === "completed") gradCls = "bg-gradient-to-r from-info/80 to-info hover:from-info hover:to-info/90 text-white shadow-[0_0_10px_rgba(var(--color-info),0.3)]";
+                else if (v.stage === "booked") gradCls = "bg-gradient-to-r from-success/90 to-emerald-500 hover:from-success hover:to-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.4)] ring-1 ring-emerald-300/50";
+                else if (v.stage === "lost") gradCls = "bg-gradient-to-r from-destructive/80 to-destructive hover:from-destructive hover:to-destructive/90 text-white shadow-[0_0_10px_rgba(var(--color-destructive),0.3)]";
+                else gradCls = "bg-card border border-border text-foreground hover:bg-muted shadow-sm";
+
                 return (
                   <button
                     key={v.tourId}
                     onClick={() => onFocus(v.tourId)}
                     className={cn(
-                      "absolute top-0.5 bottom-0.5 rounded text-[9px] font-semibold text-white px-1 truncate transition",
-                      STAGE_BG[v.stage],
-                      focused && "ring-2 ring-accent",
-                      v.escalated && "ring-2 ring-destructive animate-pulse",
+                      "absolute top-1 bottom-1 rounded-md text-[10px] font-semibold px-1.5 truncate transition-all duration-200 transform",
+                      gradCls,
+                      focused && "ring-2 ring-primary ring-offset-1 ring-offset-background scale-[1.02] z-10",
+                      v.escalated && "ring-2 ring-destructive animate-pulse ring-offset-1 ring-offset-background z-10",
                     )}
                     style={{ left: `${Math.max(0, left)}%`, width: `${width}%` }}
                     title={`${v.leadName} · ${propName(v)} · ${new Date(v.scheduledAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}`}
@@ -1015,15 +1056,32 @@ function Metric({
           : tone === "accent"
             ? "text-accent bg-accent/10"
             : "text-foreground bg-muted";
+  const toneBorder =
+    tone === "info"
+      ? "border-l-info shadow-[0_4px_24px_rgba(var(--color-info),0.1)]"
+      : tone === "warning"
+        ? "border-l-warning shadow-[0_4px_24px_rgba(var(--color-warning),0.1)]"
+        : tone === "success"
+          ? "border-l-success shadow-[0_4px_24px_rgba(var(--color-success),0.1)]"
+          : tone === "accent"
+            ? "border-l-accent shadow-[0_4px_24px_rgba(var(--color-accent),0.1)]"
+            : "border-l-border shadow-sm";
+            
   return (
-    <div className="bg-card shadow-sm ring-1 ring-black/5 dark:ring-white/10 p-5 rounded-2xl flex flex-col justify-between transition-all hover:shadow-md">
-      <div className="flex items-center gap-2">
-        <div className={cn("h-7 w-7 flex items-center justify-center rounded-md", toneCls)}>
+    <div className={cn("bg-card border border-border/50 border-l-4 p-5 rounded-2xl flex flex-col justify-between transition-all hover:-translate-y-1 hover:shadow-md group relative overflow-hidden", toneBorder)}>
+      {/* Decorative background glow */}
+      <div className={cn(
+        "absolute -bottom-8 -right-8 w-32 h-32 rounded-full blur-3xl opacity-20 pointer-events-none group-hover:opacity-40 transition-opacity",
+        tone === "info" ? "bg-info" : tone === "warning" ? "bg-warning" : tone === "success" ? "bg-success" : tone === "accent" ? "bg-accent" : "bg-primary"
+      )} />
+      
+      <div className="flex items-center gap-3 relative z-10">
+        <div className={cn("h-8 w-8 flex items-center justify-center rounded-xl", toneCls)}>
           <Icon className="h-4 w-4" />
         </div>
-        <div className="text-xs text-muted-foreground font-medium">{label}</div>
+        <div className="text-xs text-muted-foreground font-semibold tracking-wide uppercase">{label}</div>
       </div>
-      <div className="mt-3 text-2xl font-bold tabular-nums font-mono">{value}</div>
+      <div className="mt-4 text-3xl font-bold tabular-nums font-mono relative z-10 tracking-tight">{value}</div>
     </div>
   );
 }
@@ -1133,20 +1191,26 @@ function UpcomingPanel({
             key={v.tourId}
             onClick={() => onFocus(v.tourId)}
             className={cn(
-              "p-5 rounded-2xl bg-card shadow-sm ring-1 ring-black/5 dark:ring-white/10 border-l-4 cursor-pointer transition-all hover:shadow-md hover:ring-black/10 dark:hover:ring-white/20",
+              "p-5 rounded-2xl bg-card border border-border/50 border-l-4 cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-md group relative overflow-hidden",
               riskCls,
             )}
           >
-            <div className="flex items-center gap-4 flex-wrap">
+            {/* Hover subtle glow */}
+            <div className={cn(
+              "absolute inset-0 opacity-0 group-hover:opacity-5 transition-opacity",
+              risk === "high" ? "bg-destructive" : risk === "med" ? "bg-warning" : "bg-info"
+            )} />
+            
+            <div className="flex items-center gap-4 flex-wrap relative z-10">
               <div className="min-w-0 flex-1">
-                <div className="font-semibold truncate">{v.leadName}</div>
-                <div className="text-[11px] text-muted-foreground">
-                  {prop?.name || v.propertyName || "No property"} ·{" "}
-                  {prop?.area || v.propertyArea || "—"} · {v.tcmName}
+                <div className="font-semibold truncate text-foreground group-hover:text-primary transition-colors">{v.leadName}</div>
+                <div className="text-[11px] text-muted-foreground mt-0.5">
+                  {prop?.name || v.propertyName || "No property"} <span className="opacity-50 mx-1">•</span>{" "}
+                  {prop?.area || v.propertyArea || "—"} <span className="opacity-50 mx-1">•</span> <span className="font-medium text-foreground/80">{v.tcmName}</span>
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-xs font-mono tabular-nums text-muted-foreground">
+                <div className="text-xs font-mono tabular-nums text-foreground/90 font-medium">
                   {mounted
                     ? new Date(v.scheduledAt).toLocaleTimeString("en-IN", {
                         hour: "2-digit",
@@ -1159,17 +1223,17 @@ function UpcomingPanel({
               <Badge
                 variant="outline"
                 className={cn(
-                  "uppercase",
+                  "uppercase backdrop-blur-sm",
                   risk === "high"
-                    ? "border-destructive/40 bg-destructive/10 text-destructive"
+                    ? "border-destructive/40 bg-destructive/10 text-destructive shadow-[0_0_10px_rgba(var(--color-destructive),0.2)]"
                     : risk === "med"
-                      ? "border-warning/40 bg-warning/15 text-warning-foreground"
-                      : "border-info/40 bg-info/10 text-info",
+                      ? "border-warning/40 bg-warning/15 text-warning-foreground shadow-[0_0_10px_rgba(var(--color-warning),0.1)]"
+                      : "border-info/40 bg-info/10 text-info"
                 )}
               >
                 {risk === "high" ? "Imminent" : risk === "med" ? "Soon" : "Scheduled"}
               </Badge>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors group-hover:translate-x-0.5" />
             </div>
           </div>
         );
@@ -1238,22 +1302,31 @@ function LiveBoard({
             key={v.tourId}
             onClick={() => onFocus(v.tourId)}
             className={cn(
-              "p-5 rounded-2xl bg-card shadow-sm ring-1 ring-black/5 dark:ring-white/10 border-l-4 cursor-pointer transition-all hover:shadow-md hover:ring-black/10 dark:hover:ring-white/20",
+              "p-5 rounded-2xl bg-card border border-border/50 border-l-4 cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-md group relative overflow-hidden",
               leftTint,
-              isFocus && "ring-2 ring-accent/50 bg-accent/5",
+              isFocus && "ring-2 ring-primary ring-offset-2 ring-offset-background bg-primary/5",
             )}
           >
-            <div className="flex flex-col md:flex-row md:items-center gap-3">
-              <div className="flex-1 min-w-0 flex flex-col md:flex-row md:items-center md:flex-wrap gap-3 md:gap-4">
-                <div className="md:w-[220px] shrink-0">
-                  <div className="font-semibold truncate flex items-center gap-1.5">
+            {/* Subtle stage-based hover background */}
+            <div className={cn(
+              "absolute inset-0 opacity-0 group-hover:opacity-[0.03] transition-opacity pointer-events-none",
+              v.escalated ? "bg-destructive" : "bg-foreground"
+            )} />
+            
+            <div className="flex flex-col md:flex-row md:items-center gap-4 relative z-10">
+              <div className="flex-1 min-w-0 flex flex-col md:flex-row md:items-center md:flex-wrap gap-4 md:gap-5">
+                <div className="md:w-[240px] shrink-0">
+                  <div className="font-semibold truncate flex items-center gap-2 group-hover:text-primary transition-colors">
+                    <div className="h-6 min-w-6 px-1.5 rounded bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground border">
+                      {v.leadName.slice(0, 2).toUpperCase()}
+                    </div>
                     {v.leadName}
                     {lead?.intent && (
                       <span
                         className={cn(
-                          "text-[9px] uppercase font-bold tracking-wider px-1 rounded-sm",
+                          "text-[9px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded-sm ml-auto backdrop-blur-sm",
                           lead.intent === "hot"
-                            ? "bg-success/20 text-success"
+                            ? "bg-success/20 text-success shadow-[0_0_8px_rgba(var(--color-success),0.2)]"
                             : lead.intent === "cold"
                               ? "bg-destructive/15 text-destructive"
                               : "bg-warning/15 text-warning-foreground",
@@ -1263,49 +1336,55 @@ function LiveBoard({
                       </span>
                     )}
                   </div>
-                  <div className="text-[11px] text-muted-foreground font-mono leading-tight">
-                    {v.leadPhone} · {v.tcmName}
+                  <div className="text-[11px] text-muted-foreground font-mono mt-1.5 flex items-center gap-2">
+                    {v.leadPhone} <span className="h-1 w-1 rounded-full bg-border" /> {v.tcmName}
                   </div>
                   {(lead?.source || lead?.budget) && (
-                    <div className="text-[10px] text-muted-foreground truncate">
-                      {lead?.source && <>{lead.source}</>}
-                      {lead?.budget ? <> · ₹{(lead.budget / 1000).toFixed(0)}k</> : null}
-                      {lead?.preferredArea ? <> · {lead.preferredArea}</> : null}
+                    <div className="text-[10px] text-muted-foreground truncate mt-0.5">
+                      {lead?.source && <span className="bg-muted px-1.5 rounded">{lead.source}</span>}
+                      {lead?.budget ? <span className="ml-1.5">₹{(lead.budget / 1000).toFixed(0)}k</span> : null}
+                      {lead?.preferredArea ? <span className="ml-1.5">in {lead.preferredArea}</span> : null}
                     </div>
                   )}
                 </div>
-                <div className="md:w-[180px] shrink-0 min-w-0">
-                  <div className="text-xs truncate font-medium">
+                
+                <div className="md:w-[180px] shrink-0 min-w-0 border-l border-border/50 pl-4">
+                  <div className="text-xs truncate font-medium text-foreground/90">
                     {prop?.name || v.propertyName || "No property"}
                   </div>
-                  <div className="text-[11px] text-muted-foreground">
+                  <div className="text-[11px] text-muted-foreground mt-0.5">
                     {prop?.area || v.propertyArea || "—"}
                   </div>
                   {prop && (
-                    <div className="text-[10px] text-muted-foreground truncate">
-                      ₹{(prop.pricePerBed / 1000).toFixed(0)}k/bed · {prop.vacantBeds}/
-                      {prop.totalBeds} beds
+                    <div className="text-[10px] text-muted-foreground truncate mt-1">
+                      ₹{(prop.pricePerBed / 1000).toFixed(0)}k/bed <span className="opacity-50 mx-1">•</span> <span className={cn("font-medium", prop.vacantBeds < 5 ? "text-warning-foreground" : "")}>{prop.vacantBeds}/{prop.totalBeds} beds</span>
                     </div>
                   )}
                 </div>
-                <div className="md:w-[70px] shrink-0 text-[11px] font-mono text-muted-foreground tabular-nums">
-                  {mounted
-                    ? new Date(v.scheduledAt).toLocaleTimeString("en-IN", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: false,
-                      })
-                    : "--:--"}
+                
+                <div className="md:w-[80px] shrink-0 text-center">
+                  <div className="text-xs font-mono font-medium text-foreground/90 tabular-nums">
+                    {mounted
+                      ? new Date(v.scheduledAt).toLocaleTimeString("en-IN", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: false,
+                        })
+                      : "--:--"}
+                  </div>
+                  <div className="flex justify-center mt-1.5">
+                    <StagePill stage={v.stage} />
+                  </div>
                 </div>
-                <div className="flex items-center gap-1.5 flex-wrap shrink-0">
-                  <StagePill stage={v.stage} />
+                
+                <div className="flex-1 flex items-center justify-end gap-3 shrink-0">
                   {outcomeLabel && (
                     <Badge
                       variant="outline"
                       className={cn(
-                        "text-[9px] px-1.5",
+                        "text-[10px] px-2",
                         v.outcome === "booked"
-                          ? "border-success/40 bg-success/10 text-success"
+                          ? "border-success/40 bg-success/10 text-success shadow-[0_0_10px_rgba(var(--color-success),0.2)]"
                           : v.outcome === "lost"
                             ? "border-destructive/40 bg-destructive/10 text-destructive"
                             : "border-warning/40 bg-warning/15 text-warning-foreground",
@@ -1314,38 +1393,32 @@ function LiveBoard({
                       {outcomeLabel}
                     </Badge>
                   )}
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  {v.startedAt && !v.completedAt && (
-                    <span
-                      className={cn("font-mono text-xs tabular-nums font-semibold", timerTone(sec))}
-                    >
-                      {fmtElapsed(now - v.startedAt)}
-                    </span>
-                  )}
-                  {v.completedAt && (
-                    <span
-                      className={cn(
-                        "font-mono text-xs tabular-nums font-semibold",
-                        postSec < 4 * 3600
-                          ? "text-success"
-                          : postSec < 12 * 3600
-                            ? "text-warning-foreground"
-                            : "text-destructive",
+                  
+                  <div className="flex flex-col items-end gap-1">
+                    <div className="flex items-center gap-2">
+                      {v.startedAt && !v.completedAt && (
+                        <span className={cn("font-mono text-xs tabular-nums font-bold", timerTone(sec))}>
+                          {fmtElapsed(now - v.startedAt)}
+                        </span>
                       )}
-                    >
-                      {fmtElapsed(now - v.completedAt)}
-                    </span>
-                  )}
-                  <Badge
-                    variant="outline"
-                    className={cn("font-mono font-bold tabular-nums", probTone(prob))}
-                  >
-                    {prob}%
-                  </Badge>
+                      {v.completedAt && (
+                        <span className={cn("font-mono text-xs tabular-nums font-bold", postSec < 4 * 3600 ? "text-success" : postSec < 12 * 3600 ? "text-warning-foreground" : "text-destructive")}>
+                          {fmtElapsed(now - v.completedAt)}
+                        </span>
+                      )}
+                      <span className={cn("font-mono font-bold tabular-nums text-xs", probTone(prob).replace("bg-", "text-").split(" ")[1] || "text-foreground")}>
+                        {prob}%
+                      </span>
+                    </div>
+                    {/* Visual Probability Bar */}
+                    <div className="h-1.5 w-24 bg-muted rounded-full overflow-hidden">
+                      <div className={cn("h-full rounded-full", prob >= 75 ? "bg-success shadow-[0_0_8px_rgba(var(--color-success),0.5)]" : prob >= 45 ? "bg-warning" : "bg-destructive")} style={{ width: `${prob}%` }} />
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="shrink-0 self-end md:self-center">
+              
+              <div className="shrink-0 self-end md:self-center ml-2 border-l pl-4 border-border/50">
                 <NextActionButton
                   v={v}
                   onPatch={(p) => patch(v.tourId, p)}
@@ -1362,28 +1435,34 @@ function LiveBoard({
                 />
               </div>
             </div>
+            
             {v.escalated && (
-              <div className="mt-2 pt-2 border-t border-border/60">
-                <Badge variant="destructive" className="text-[9px] h-4 px-1 animate-pulse">
-                  ESCALATED
+              <div className="mt-4 pt-3 border-t border-border/40 relative">
+                <div className="absolute inset-0 bg-destructive/5 rounded-b-xl pointer-events-none" />
+                <Badge variant="destructive" className="text-[10px] h-5 px-2 animate-pulse relative z-10 shadow-[0_0_10px_rgba(var(--color-destructive),0.4)]">
+                  <Siren className="h-3 w-3 mr-1" /> ESCALATED
                 </Badge>
               </div>
             )}
+            
             {latestObj && (
-              <div className="mt-2 pt-2 border-t border-border/60 flex items-center gap-2 text-[11px]">
-                <AlertTriangle className="h-3 w-3 text-warning-foreground shrink-0" />
-                <span className="text-warning-foreground font-semibold uppercase">
-                  {latestObj.category} · {latestObj.subType}
-                </span>
-                {latestObj.customerSaid && (
-                  <span className="text-muted-foreground italic truncate">
-                    "{latestObj.customerSaid}"
+              <div className="mt-4 pt-3 border-t border-border/40 flex items-start gap-2 text-[11px] bg-warning/5 -mx-5 px-5 pb-1">
+                <AlertTriangle className="h-3.5 w-3.5 text-warning-foreground shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <span className="text-warning-foreground font-bold uppercase tracking-wide">
+                    {latestObj.category} <span className="opacity-50 mx-1">•</span> {latestObj.subType}
                   </span>
-                )}
+                  {latestObj.customerSaid && (
+                    <span className="text-foreground/80 italic line-clamp-1 mt-0.5">
+                      "{latestObj.customerSaid}"
+                    </span>
+                  )}
+                </div>
               </div>
             )}
+            
             <div
-              className="mt-2 pt-2 border-t border-border/60"
+              className={cn("mt-3 pt-3 border-t border-border/40", latestObj && "border-t-0 mt-1 pt-1")}
               onClick={(e) => e.stopPropagation()}
             >
               <VisitCopyChips v={v} layout="inline" />
@@ -1503,68 +1582,75 @@ function HotRoom({
             <div
               key={v.tourId}
               onClick={() => onFocus(v.tourId)}
-              className="p-5 rounded-2xl bg-card shadow-sm ring-1 ring-black/5 dark:ring-white/10 border-l-4 border-l-accent cursor-pointer transition-all hover:shadow-md hover:ring-black/10 dark:hover:ring-white/20"
+              className="p-5 rounded-2xl bg-card border border-border/50 border-l-4 border-l-accent cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-md group relative overflow-hidden"
             >
-              <div className="flex items-center gap-4 flex-wrap">
-                <div className="h-10 w-10 rounded-xl bg-accent/15 text-accent flex items-center justify-center shrink-0">
-                  <Flame className="h-5 w-5" />
+              {/* Flame background glow */}
+              <div className="absolute -bottom-8 -right-8 w-32 h-32 rounded-full bg-accent/20 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+              <div className="absolute inset-0 bg-accent/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+              
+              <div className="flex items-center gap-4 flex-wrap relative z-10">
+                <div className="h-10 w-10 rounded-xl bg-accent/15 text-accent flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(var(--color-accent),0.2)]">
+                  <Flame className="h-5 w-5 animate-pulse" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="font-semibold truncate">{v.leadName}</div>
-                  <div className="text-[11px] text-muted-foreground">
-                    {prop?.name || v.propertyName || "No property"} ·{" "}
+                  <div className="font-semibold truncate text-foreground group-hover:text-accent transition-colors">{v.leadName}</div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">
+                    {prop?.name || v.propertyName || "No property"} <span className="opacity-50 mx-1">•</span>{" "}
                     {prop?.area || v.propertyArea || "—"}
                   </div>
                   {v.objections[0] && (
-                    <div className="text-[11px] mt-0.5 text-warning-foreground">
-                      Latest: {v.objections[0].subType} — "
-                      {v.objections[0].customerSaid.slice(0, 60)}"
+                    <div className="text-[11px] mt-1 text-warning-foreground font-medium flex items-center gap-1.5 bg-warning/10 px-2 py-0.5 rounded-sm w-fit">
+                      <AlertTriangle className="h-3 w-3" />
+                      <span>{v.objections[0].subType}</span>
                     </div>
                   )}
                 </div>
                 <div className="text-right">
-                  <div className="text-[9px] uppercase text-muted-foreground tracking-wider">
+                  <div className="text-[9px] uppercase text-muted-foreground tracking-wider font-semibold">
                     Window
                   </div>
                   <div
                     className={cn(
                       "font-mono text-sm font-bold",
-                      hrsLeft < 6 ? "text-destructive" : "text-warning-foreground",
+                      hrsLeft < 6 ? "text-destructive drop-shadow-[0_0_5px_rgba(var(--color-destructive),0.5)]" : "text-warning-foreground"
                     )}
                   >
                     {hrsLeft}h left
                   </div>
                 </div>
-                <Badge variant="outline" className={cn("font-mono font-bold", probTone(prob))}>
-                  {prob}%
-                </Badge>
-                <div className="flex gap-1.5">
-                  <Button
-                    asChild
-                    size="icon"
-                    variant="default"
-                    className="h-8 w-8"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <a href={`tel:${v.leadPhone}`}>
-                      <Phone className="h-3.5 w-3.5" />
-                    </a>
-                  </Button>
-                  <Button
-                    asChild
-                    size="icon"
-                    variant="outline"
-                    className="h-8 w-8 border-success/40 text-success hover:bg-success/10"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <a
-                      href={`https://wa.me/${v.leadPhone.replace(/\D/g, "")}`}
-                      target="_blank"
-                      rel="noreferrer"
+                
+                <div className="flex flex-col items-end gap-1.5 ml-2 border-l border-border/50 pl-4">
+                  <Badge variant="outline" className={cn("font-mono font-bold backdrop-blur-sm border-transparent shadow-sm", probTone(prob).replace("text-", "bg-").replace("-foreground", "") + "/10", probTone(prob))}>
+                    {prob}%
+                  </Badge>
+                  <div className="flex gap-1.5">
+                    <Button
+                      asChild
+                      size="icon"
+                      variant="secondary"
+                      className="h-7 w-7 rounded-md hover:bg-foreground hover:text-background"
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      <MessageCircle className="h-3.5 w-3.5" />
-                    </a>
-                  </Button>
+                      <a href={`tel:${v.leadPhone}`}>
+                        <Phone className="h-3 w-3" />
+                      </a>
+                    </Button>
+                    <Button
+                      asChild
+                      size="icon"
+                      variant="outline"
+                      className="h-7 w-7 rounded-md border-success/40 text-success hover:bg-success hover:text-success-foreground"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <a
+                        href={`https://wa.me/${v.leadPhone.replace(/\D/g, "")}`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        <MessageCircle className="h-3 w-3" />
+                      </a>
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1728,12 +1814,18 @@ function StatCard({
               ? "text-accent"
               : "text-foreground";
   return (
-    <Card className="p-3">
-      <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-        {label}
+    <Card className="p-4 rounded-2xl border border-border/50 relative overflow-hidden group hover:border-border transition-colors">
+      <div className={cn(
+        "absolute -inset-1 opacity-0 group-hover:opacity-10 blur-xl transition-opacity",
+        tone === "info" ? "bg-info" : tone === "warning" ? "bg-warning" : tone === "success" ? "bg-success" : tone === "destructive" ? "bg-destructive" : tone === "accent" ? "bg-accent" : "bg-primary"
+      )} />
+      <div className="relative z-10">
+        <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+          {label}
+        </div>
+        <div className={cn("text-3xl font-bold tabular-nums mt-1 truncate tracking-tight", valCls)}>{value}</div>
+        {sub && <div className="text-[10px] text-muted-foreground mt-1 bg-muted/50 px-1.5 py-0.5 rounded-sm w-fit">{sub}</div>}
       </div>
-      <div className={cn("text-2xl font-bold tabular-nums mt-1 truncate", valCls)}>{value}</div>
-      {sub && <div className="text-[10px] text-muted-foreground mt-0.5">{sub}</div>}
     </Card>
   );
 }
@@ -1794,30 +1886,47 @@ function AlertFeed() {
           ? "text-success"
           : "text-info";
   return (
-    <div className="space-y-1.5">
-      {alerts.map((a) => (
-        <Card
-          key={a.id}
-          className={cn("p-2.5 border-l-4 flex items-center gap-3", tone(a.severity))}
-        >
-          <span className="font-mono text-[11px] w-20 text-muted-foreground tabular-nums">
-            {new Date(a.ts).toLocaleTimeString("en-IN", {
-              hour: "2-digit",
-              minute: "2-digit",
-              second: "2-digit",
-              hour12: false,
-            })}
-          </span>
-          <span
-            className={cn("text-[10px] font-bold uppercase tracking-wider", tagTone(a.severity))}
-          >
-            {a.kind}
-          </span>
-          <span className="text-xs flex-1">
-            <b className="text-foreground">{a.leadName}</b> —{" "}
-            <span className="text-muted-foreground">{a.message}</span>
-          </span>
-        </Card>
+    <div className="space-y-0 p-2">
+      {alerts.map((a, i) => (
+        <div key={a.id} className="relative pl-6 pb-4 group">
+          {/* Timeline line */}
+          {i !== alerts.length - 1 && (
+            <div className="absolute left-[11px] top-4 bottom-0 w-px bg-border group-hover:bg-primary/30 transition-colors" />
+          )}
+          
+          {/* Timeline dot */}
+          <div className={cn(
+            "absolute left-2 top-1.5 h-2 w-2 rounded-full ring-4 ring-card",
+            a.severity === "risk" ? "bg-destructive" : a.severity === "warn" ? "bg-warning" : a.severity === "win" ? "bg-success" : "bg-info"
+          )} />
+          
+          <div className={cn(
+            "p-3 rounded-xl border flex items-start gap-3 transition-colors",
+            tone(a.severity),
+            "group-hover:border-foreground/20 group-hover:shadow-sm"
+          )}>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <span
+                  className={cn("text-[10px] font-bold uppercase tracking-wider", tagTone(a.severity))}
+                >
+                  {a.kind}
+                </span>
+                <span className="font-mono text-[10px] text-muted-foreground tabular-nums">
+                  {new Date(a.ts).toLocaleTimeString("en-IN", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: false,
+                  })}
+                </span>
+              </div>
+              <div className="text-xs leading-relaxed">
+                <b className="text-foreground">{a.leadName}</b> <span className="opacity-50 mx-1">•</span>{" "}
+                <span className="text-muted-foreground">{a.message}</span>
+              </div>
+            </div>
+          </div>
+        </div>
       ))}
     </div>
   );
@@ -2379,12 +2488,39 @@ function VisitDetailPanel({
 type ToneKey = "info" | "success" | "warning" | "destructive";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  const isNumbered = title.match(/^\d+\s·/);
+  
+  if (isNumbered) {
+    const [num, ...rest] = title.split(" · ");
+    const label = rest.join(" · ");
+    return (
+      <div className="relative pl-8 pb-2">
+        {/* Stepper Line */}
+        <div className="absolute left-[15px] top-8 bottom-0 w-px bg-border/60" />
+        
+        {/* Stepper Circle */}
+        <div className="absolute left-0 top-0 h-8 w-8 rounded-full bg-muted border border-border shadow-sm flex items-center justify-center font-display font-bold text-foreground z-10 text-xs">
+          {num}
+        </div>
+        
+        <div className="pt-1.5 pb-2">
+          <div className="text-xs uppercase tracking-wider font-bold text-foreground mb-3">
+            {label}
+          </div>
+          <div className="bg-card rounded-xl border shadow-sm p-4">
+            {children}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="border border-border rounded-xl bg-card overflow-hidden shadow-sm">
-      <div className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground bg-muted/20 px-3 py-2 border-b border-border">
+    <div className="border border-border/60 rounded-xl bg-card overflow-hidden shadow-sm">
+      <div className="text-[10px] uppercase tracking-wider font-bold text-foreground bg-muted/40 px-4 py-2.5 border-b border-border/60 flex items-center gap-2">
         {title}
       </div>
-      <div className="p-3">{children}</div>
+      <div className="p-4">{children}</div>
     </div>
   );
 }

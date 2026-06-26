@@ -1,22 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
-import { useApp } from "@/lib/store";
-import type { Lead } from "@/lib/types";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api/client";
 import { useMountedNow } from "@/hooks/use-now";
-import {
-  buildDoNextQueue,
-  computeTcmPerformance,
-  liveConfidence,
-  intentFor,
-  type NextAction,
-} from "@/lib/engine";
 import { useMemo } from "react";
 import { QuickActionRow } from "@/components/QuickActionRow";
 import { StageBadge } from "@/components/atoms";
 import { format, formatDistanceToNow } from "date-fns";
-import { Sun, Flame, AlertTriangle, Phone, Trophy, Zap, ArrowUpRight, CheckCircle2 } from "lucide-react";
-import { isLeadActive, resolveBestLeadName } from "@/lib/lead-helpers";
-import { useAuthUser } from "@/lib/auth-store";
+import { Sun, Flame, AlertTriangle, Phone, Trophy, Zap, ArrowUpRight, CheckCircle2, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/today")({
   head: () => ({
@@ -32,38 +23,17 @@ export const Route = createFileRoute("/today")({
 });
 
 function TodayPage() {
-  const { role, currentTcmId, leads, tours, followUps, tcms, completeFollowUp } = useApp();
-  const authUser = useAuthUser((s) => s.user);
   const [now, mounted] = useMountedNow(15_000);
-  const canSeeAll =
-    authUser?.role === "super_admin" || authUser?.role === "manager" || authUser?.role === "admin";
-  const selfId = authUser?.id || (role === "tcm" ? currentTcmId : "");
-  const scopedLeads = useMemo(() => {
-    if (canSeeAll || !selfId) return leads;
-    return leads.filter((lead) => {
-      const assignedTo = (lead.assignedTcmId || lead.assigneeId || "").trim();
-      return assignedTo === selfId;
-    });
-  }, [canSeeAll, selfId, leads]);
+  
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["arena-today"],
+    queryFn: () => api.arena.today(),
+    refetchInterval: 10000,
+  });
 
-  const scopedTours = useMemo(() => {
-    if (canSeeAll || !selfId) return tours;
-    return tours.filter((tour) => tour.tcmId === selfId || tour.assignedTo === selfId);
-  }, [canSeeAll, selfId, tours]);
-
-  const scopedFollowUps = useMemo(() => {
-    if (canSeeAll || !selfId) return followUps;
-    return followUps.filter((followUp) => followUp.tcmId === selfId);
-  }, [canSeeAll, selfId, followUps]);
-
-  const queue = useMemo(
-    () => buildDoNextQueue(scopedLeads, scopedTours, scopedFollowUps, now || Date.now()),
-    [scopedLeads, scopedTours, scopedFollowUps, now],
-  );
-
-  const me = !canSeeAll && selfId ? tcms.find((t) => t.id === selfId) : null;
-  const perf = me ? computeTcmPerformance(me.id, scopedLeads, scopedTours, scopedFollowUps, now || Date.now()) : null;
-
+  const queue = data?.queue || [];
+  const scheduledTours = data?.scheduledTours || [];
+  
   const visibleQueue = useMemo(() => uniqueByLead(queue), [queue]);
   const top = visibleQueue.slice(0, 10);
   const grouped = groupByKind(queue);
@@ -71,7 +41,7 @@ function TodayPage() {
   const criticalItems = useMemo(
     () =>
       queue
-        .filter((a) => a.kind === "post-tour-overdue" || a.kind === "first-response")
+        .filter((a: any) => a.kind === "post-tour-overdue" || a.kind === "first-response")
         .filter(uniqueLeadActionFilter()),
     [queue]
   );
@@ -79,16 +49,31 @@ function TodayPage() {
   const hotItems = useMemo(
     () =>
       queue
-        .filter((a) => {
-          const lead = scopedLeads.find((l) => l.id === a.leadId);
-          if (!lead || !isLeadActive(lead)) return false;
-          const nowTs = now || Date.now();
-          const conf = liveConfidence(lead, scopedTours, nowTs);
-          return intentFor(conf) === "hot";
-        })
+        .filter((a: any) => a.confidence && a.confidence >= 75)
         .filter(uniqueLeadActionFilter()),
-    [queue, scopedLeads, scopedTours, now]
+    [queue]
   );
+
+  if (isLoading) {
+    return (
+      <AppShell>
+        <div className="flex items-center justify-center h-[calc(100vh-100px)]">
+          <Loader2 className="w-8 h-8 animate-spin text-accent" />
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (error) {
+    return (
+      <AppShell>
+        <div className="p-8 text-center text-destructive">
+          <AlertTriangle className="w-8 h-8 mx-auto mb-2 opacity-80" />
+          <p className="font-mono text-sm">Failed to sync with Arena infrastructure.</p>
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>
@@ -98,54 +83,17 @@ function TodayPage() {
             <div className="inline-flex items-center gap-2 text-[11px] font-medium text-primary px-3 py-1 rounded-full bg-primary/10 border border-primary/20 backdrop-blur-sm">
               <Sun className="h-3.5 w-3.5 animate-pulse" />
               <span className="min-h-[1em]">
-                {mounted ? format(new Date(now), "EEEE, MMMM d · h:mm a") : "\u00a0"}
+                {mounted ? format(new Date(now), "EEEE, MMM do") : "\u00a0"}
               </span>
             </div>
-            <h1 className="font-display text-4xl font-extrabold tracking-tight bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent drop-shadow-sm">
-              {mounted ? greeting(now) : "Hello"}
-              {me ? `, ${me.name.split(" ")[0]}` : ""}.
+            <h1 className="font-display text-2xl font-semibold tracking-tight">
+              {mounted ? greeting(now) : "Loading"}
             </h1>
             <p className="text-sm text-muted-foreground">
-              {top.length === 0
-                ? "Inbox zero. Nothing pending right now."
-                : `${queue.length} action${queue.length > 1 ? "s" : ""} ranked. Start at the top.`}
+              Here is your ranked execution queue. Focus on the red items first.
             </p>
           </div>
-          <Link to="/leads" className="text-sm font-medium text-primary inline-flex items-center gap-1.5 hover:text-primary/80 transition-all bg-primary/10 hover:bg-primary/20 border border-primary/20 px-4 py-2 rounded-full backdrop-blur-sm hover:shadow-md hover:shadow-primary/5">
-            All leads <ArrowUpRight className="h-4 w-4" />
-          </Link>
         </header>
-
-        {/* Personal KPIs for TCM */}
-        {perf && (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <GlassKpiCard label="My leads" value={perf.leadCount} sub={`${perf.toursDone} tours done`} />
-            <GlassKpiCard
-              label="My conversion"
-              value={`${perf.conversion}%`}
-              sub={`${perf.bookings} booked`}
-              tone="success"
-            />
-            <GlassKpiCard
-              label="Pending post-tour"
-              value={perf.pendingPostTour}
-              sub="Fill now"
-              tone={perf.pendingPostTour ? "destructive" : "default"}
-            />
-            <GlassKpiCard
-              label="Discipline score"
-              value={`${perf.discipline}`}
-              sub="0–100"
-              tone={
-                perf.discipline >= 75
-                  ? "success"
-                  : perf.discipline >= 50
-                    ? "warning"
-                    : "destructive"
-              }
-            />
-          </div>
-        )}
 
         {/* The Queue */}
         <section className="rounded-xl border border-border bg-card overflow-hidden flex flex-col">
@@ -177,17 +125,8 @@ function TodayPage() {
             </div>
           ) : (
             <div className="divide-y divide-border/50 max-h-[400px] overflow-y-auto scrollbar-none">
-              {top.map((a) => {
-                const lead = scopedLeads.find((l) => l.id === a.leadId);
-                if (!lead) return null;
+              {top.map((a: any) => {
                 const tone = toneFor(a);
-                const onDone =
-                  a.kind === "follow-up-overdue" || a.kind === "follow-up-today"
-                    ? () => {
-                        const f = followUps.find((x) => x.leadId === a.leadId && !x.done);
-                        if (f) completeFollowUp(f.id);
-                      }
-                    : undefined;
                 const dueLabel =
                   mounted && a.dueAt
                     ? formatDistanceToNow(new Date(a.dueAt), { addSuffix: true })
@@ -195,11 +134,10 @@ function TodayPage() {
                 return (
                   <QuickActionRow
                     key={`${a.leadId}-${a.kind}`}
-                    lead={lead}
+                    lead={{ id: a.leadId, name: a.leadName, stage: a.leadStage, phone: a.leadPhone, assignedTcmId: a.leadTcmId }}
                     reason={a.reason}
                     accent={tone}
                     dueLabel={dueLabel}
-                    onDone={onDone}
                   />
                 );
               })}
@@ -215,7 +153,6 @@ function TodayPage() {
             accent="destructive"
             count={criticalItems.length}
             items={criticalItems.slice(0, 10)}
-            leads={scopedLeads}
             action={<Link to="/leads" className="text-xs font-medium text-primary hover:text-primary/80 transition-colors inline-flex items-center gap-1">All leads <ArrowUpRight className="h-3 w-3" /></Link>}
           />
           <Mini
@@ -224,7 +161,6 @@ function TodayPage() {
             accent="accent"
             count={hotItems.length}
             items={hotItems.slice(0, 10)}
-            leads={scopedLeads}
             action={<Link to="/leads" className="text-xs font-medium text-primary hover:text-primary/80 transition-colors inline-flex items-center gap-1">All leads <ArrowUpRight className="h-3 w-3" /></Link>}
           />
         </section>
@@ -268,18 +204,15 @@ function Mini({
   accent,
   count,
   items,
-  leads,
   action,
 }: {
   title: string;
   icon: typeof Flame;
   accent: "destructive" | "accent";
   count: number;
-  items: NextAction[];
-  leads: Lead[];
+  items: any[];
   action?: React.ReactNode;
 }) {
-  const { selectLead } = useApp();
   const cls = accent === "destructive" ? "text-destructive" : "text-primary";
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden flex flex-col">
@@ -300,13 +233,11 @@ function Mini({
               : "No hot leads right now."}
           </div>
         )}
-        {items.map((a) => {
-          const lead = leads.find((l) => l.id === a.leadId);
-          if (!lead) return null;
+        {items.map((a: any) => {
           return (
             <QuickActionRow
               key={`${a.leadId}-${a.kind}`}
-              lead={lead}
+              lead={{ id: a.leadId, name: a.leadName, stage: a.leadStage, phone: a.leadPhone, assignedTcmId: a.leadTcmId }}
               reason={a.reason}
               accent={accent}
               compact={true}
@@ -333,7 +264,7 @@ function greeting(ts: number) {
   return "Good evening";
 }
 
-function toneFor(a: NextAction): "destructive" | "warning" | "accent" | "default" {
+function toneFor(a: any): "destructive" | "warning" | "accent" | "default" {
   if (
     a.kind === "post-tour-overdue" ||
     a.kind === "first-response" ||
@@ -345,7 +276,7 @@ function toneFor(a: NextAction): "destructive" | "warning" | "accent" | "default
   return "default";
 }
 
-function groupByKind(queue: NextAction[]) {
+function groupByKind(queue: any[]) {
   return {
     urgent: queue.filter(
       (a) =>
@@ -358,11 +289,11 @@ function groupByKind(queue: NextAction[]) {
   };
 }
 
-function uniqueByLead(actions: NextAction[]): NextAction[] {
+function uniqueByLead(actions: any[]): any[] {
   return actions.filter(uniqueLeadActionFilter());
 }
 
-function uniqueLeadActionFilter(): (action: NextAction) => boolean {
+function uniqueLeadActionFilter(): (action: any) => boolean {
   const seen = new Set<string>();
   return (action) => {
     if (seen.has(action.leadId)) return false;

@@ -42,7 +42,7 @@ function verify(secret: string | undefined, signature: string | null, body: stri
 }
 
 export function registerWebhookRoutes(app: FastifyInstance) {
-  app.post("/api/webhooks/:vendor", {
+  app.post("/api/v1/webhooks/:vendor", {
     config: { rawBody: true },
     bodyLimit: 1024 * 256,                   // 256KB cap — vendors don't need more
   }, async (req, reply) => {

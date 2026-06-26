@@ -83,12 +83,25 @@ export async function applyBookingCommand(cmd: Command, user: JwtClaims) {
         payload: { booking },
       });
 
+      const { autoLogActivity } = await import("../activities/command-handlers.js");
+      await autoLogActivity({
+        entityType: "lead",
+        entityId: p.leadId,
+        kind: "created",
+        subject: `Booking created`,
+        body: `Booking created for property ${p.propertyId} with deposit ₹${p.deposit}`,
+        meta: { bookingId: booking._id, propertyId: p.propertyId },
+        user,
+        correlationId,
+      });
+
       return { ok: true, eventIds: [evtId], data: { booking } };
     }
 
     case "cmd.booking.update": {
       const p = UpdateBookingCmd.parse(cmd).payload;
       const patch = { ...p.patch, updatedAt: now };
+      const bookingBefore = await col(BOOKINGS).findOne({ _id: p.bookingId, tenantId: user.tenantId });
       const r = await col(BOOKINGS).updateOne(
         { _id: p.bookingId, tenantId: user.tenantId },
         {
@@ -104,11 +117,25 @@ export async function applyBookingCommand(cmd: Command, user: JwtClaims) {
         actor: user.sub, tenantId: user.tenantId, correlationId, causationId: null,
         version: 1, payload: { bookingId: p.bookingId, patch },
       });
+
+      const { autoLogActivity } = await import("../activities/command-handlers.js");
+      await autoLogActivity({
+        entityType: "lead",
+        entityId: (bookingBefore as any)?.leadId || p.bookingId,
+        kind: "field_changed",
+        subject: `Booking updated`,
+        body: `Updated fields: ${Object.keys(p.patch).join(", ")}`,
+        meta: { bookingId: p.bookingId, patch: p.patch },
+        user,
+        correlationId,
+      });
+
       return { ok: true, eventIds: [evtId] };
     }
 
     case "cmd.booking.cancel": {
       const p = CancelBookingCmd.parse(cmd).payload;
+      const cancelledBooking = await col(BOOKINGS).findOne({ _id: p.bookingId, tenantId: user.tenantId });
       const r = await col(BOOKINGS).updateOne(
         { _id: p.bookingId, tenantId: user.tenantId },
         {
@@ -124,11 +151,25 @@ export async function applyBookingCommand(cmd: Command, user: JwtClaims) {
         actor: user.sub, tenantId: user.tenantId, correlationId, causationId: null,
         version: 1, payload: { bookingId: p.bookingId },
       });
+
+      const { autoLogActivity: logCancel } = await import("../activities/command-handlers.js");
+      await logCancel({
+        entityType: "lead",
+        entityId: (cancelledBooking as any)?.leadId || p.bookingId,
+        kind: "stage_changed",
+        subject: `Booking cancelled`,
+        body: `Booking ${p.bookingId} was cancelled`,
+        meta: { bookingId: p.bookingId, propertyId: (cancelledBooking as any)?.propertyId },
+        user,
+        correlationId,
+      });
+
       return { ok: true, eventIds: [evtId] };
     }
 
     case "cmd.booking.approve": {
       const p = ApproveBookingCmd.parse(cmd).payload;
+      const approvedBooking = await col(BOOKINGS).findOne({ _id: p.bookingId, tenantId: user.tenantId });
       const r = await col(BOOKINGS).updateOne(
         { _id: p.bookingId, tenantId: user.tenantId },
         {
@@ -144,6 +185,19 @@ export async function applyBookingCommand(cmd: Command, user: JwtClaims) {
         actor: user.sub, tenantId: user.tenantId, correlationId, causationId: null,
         version: 1, payload: { bookingId: p.bookingId },
       });
+
+      const { autoLogActivity: logApprove } = await import("../activities/command-handlers.js");
+      await logApprove({
+        entityType: "lead",
+        entityId: (approvedBooking as any)?.leadId || p.bookingId,
+        kind: "stage_changed",
+        subject: `Booking approved`,
+        body: `Booking ${p.bookingId} approved`,
+        meta: { bookingId: p.bookingId, propertyId: (approvedBooking as any)?.propertyId },
+        user,
+        correlationId,
+      });
+
       return { ok: true, eventIds: [evtId] };
     }
 
@@ -165,6 +219,19 @@ export async function applyBookingCommand(cmd: Command, user: JwtClaims) {
         actor: user.sub, tenantId: user.tenantId, correlationId, causationId: null,
         version: 1, payload: { bookingId: p.bookingId, paidRef: p.paidRef },
       });
+
+      const { autoLogActivity: logPaid } = await import("../activities/command-handlers.js");
+      await logPaid({
+        entityType: "lead",
+        entityId: (booking as any)?.leadId || p.bookingId,
+        kind: "payment_recorded",
+        subject: `Booking payment received`,
+        body: `Payment ref: ${p.paidRef} for booking ${p.bookingId}`,
+        meta: { bookingId: p.bookingId, paidRef: p.paidRef, propertyId: (booking as any)?.propertyId },
+        user,
+        correlationId,
+      });
+
       return { ok: true, eventIds: [evtId], data: { booking: { ...booking, status: "active", paidRef: p.paidRef } } };
     }
   }

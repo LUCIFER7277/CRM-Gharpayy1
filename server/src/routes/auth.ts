@@ -63,7 +63,7 @@ export function registerAuthRoutes(app: FastifyInstance) {
   // First request after boot triggers the bootstrap. Idempotent.
   let bootstrapped = false;
   app.addHook("preHandler", async (req) => {
-    if (!bootstrapped && req.url.startsWith("/api/auth/")) {
+    if (!bootstrapped && req.url.startsWith("/api/v1/auth/")) {
       try {
         await ensureDefaultSuperAdmin();
       } catch (err) {
@@ -74,7 +74,7 @@ export function registerAuthRoutes(app: FastifyInstance) {
   });
 
   // ---------- LOGIN ----------
-  app.post("/api/auth/login", async (req, reply) => {
+  app.post("/api/v1/auth/login", async (req, reply) => {
     const body = LoginBody.parse(req.body);
     const identifier = (body.email ?? body.username ?? "").trim();
     try {
@@ -122,7 +122,7 @@ export function registerAuthRoutes(app: FastifyInstance) {
   });
 
   // ---------- SIGNUP (kept; super_admin path requires existing super_admin token to use; otherwise rejects) ----------
-  app.post("/api/auth/signup", async (req, reply) => {
+  app.post("/api/v1/auth/signup", async (req, reply) => {
     const body = SignupBody.parse(req.body);
     try {
       const role = body.role ?? "member";
@@ -144,7 +144,7 @@ export function registerAuthRoutes(app: FastifyInstance) {
   });
 
   // ---------- LOGOUT ----------
-  app.post("/api/auth/logout", { preHandler: [requireAuth] }, async (req, reply) => {
+  app.post("/api/v1/auth/logout", { preHandler: [requireAuth] }, async (req, reply) => {
     reply.clearCookie("access_token", { path: "/" });
     if (req.user) {
       await auditAuthEvent({
@@ -158,7 +158,7 @@ export function registerAuthRoutes(app: FastifyInstance) {
   });
 
   // ---------- ME ----------
-  app.get("/api/auth/me", { preHandler: [requireAuth] }, async (req, reply) => {
+  app.get("/api/v1/auth/me", { preHandler: [requireAuth] }, async (req, reply) => {
     const u = await getUserById(req.user!.sub);
     if (!u) return reply.code(404).send({ code: "NOT_FOUND", message: "User not found" });
     return reply.send({
@@ -178,7 +178,7 @@ export function registerAuthRoutes(app: FastifyInstance) {
   });
 
   // ---------- UPDATE ME ----------
-  app.patch("/api/auth/update", { preHandler: [requireAuth] }, async (req, reply) => {
+  app.patch("/api/v1/auth/update", { preHandler: [requireAuth] }, async (req, reply) => {
     const body = UpdateMeBody.parse(req.body);
     const patch: Partial<UserDoc> = { updatedAt: new Date().toISOString() };
     if (body.phone !== undefined) patch.phone = body.phone.trim();

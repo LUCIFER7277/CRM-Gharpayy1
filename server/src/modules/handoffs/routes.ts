@@ -33,7 +33,7 @@ const ListQuery = z.object({
 });
 
 export function registerHandoffsRoutes(app: FastifyInstance) {
-  app.get("/api/handoffs", { preHandler: [requireAuth] }, async (req, reply) => {
+  app.get("/api/v1/handoffs", { preHandler: [requireAuth] }, async (req, reply) => {
     const q = ListQuery.parse(req.query);
     const filter: Record<string, unknown> = { tenantId: req.user!.tenantId };
     if (q.leadId) filter.leadId = q.leadId;
@@ -45,7 +45,7 @@ export function registerHandoffsRoutes(app: FastifyInstance) {
     return reply.send({ items });
   });
 
-  app.post("/api/handoffs", { preHandler: [requireAuth] }, async (req, reply) => {
+  app.post("/api/v1/handoffs", { preHandler: [requireAuth] }, async (req, reply) => {
     const body = CreateBody.parse(req.body);
     const doc = {
       _id: ulid(),
@@ -74,7 +74,7 @@ export function registerHandoffsRoutes(app: FastifyInstance) {
     return reply.status(201).send(doc);
   });
 
-  app.post("/api/handoffs/mark-read", { preHandler: [requireAuth] }, async (req, reply) => {
+  app.post("/api/v1/handoffs/mark-read", { preHandler: [requireAuth] }, async (req, reply) => {
     const { leadId } = req.body as { leadId: string };
     if (!leadId) return reply.status(400).send({ error: "leadId required" });
     const unread = await col("handoffs").find({ tenantId: req.user!.tenantId, leadId, read: false }).toArray();

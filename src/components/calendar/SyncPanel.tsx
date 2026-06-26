@@ -59,7 +59,7 @@ export function SyncPanel({ open, onOpenChange, eventsOverride }: Props) {
   const subscribeUrl =
     typeof window !== "undefined"
       ? `${window.location.origin}/api/ics/${publishedIcsToken}.ics`
-      : `/api/ics/${publishedIcsToken}.ics`;
+      : `/api/v1/ics/${publishedIcsToken}.ics`;
 
   const findConn = (p: SyncProvider) => connections.find((c) => c.provider === p);
 

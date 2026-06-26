@@ -29,7 +29,7 @@ const Env = z.object({
   // Super Admin bootstrap credentials (override in .env for production)
   SUPER_ADMIN_EMAIL: z.string().default("superadmin@gharpayy.com"),
   SUPER_ADMIN_PASSWORD: z.string().default("superadmin#gharpayy"),
-  SUPER_ADMIN_NAME: z.string().default("Gharpayy Super Admin"),
+  SUPER_ADMIN_NAME: z.string().default("Gharpayy Super Admin"), 
   GEMINI_API_KEY: z.string().optional(),
 });
 

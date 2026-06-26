@@ -12,7 +12,7 @@ const ListQuery = z.object({
 });
 
 export function registerActivitiesRoutes(app: FastifyInstance) {
-  app.get("/api/activities", { preHandler: [requireAuth, requireScope("activity.read")] }, async (req, reply) => {
+  app.get("/api/v1/activities", { preHandler: [requireAuth, requireScope("activity.read")] }, async (req, reply) => {
     const q = ListQuery.parse(req.query);
     const filter: Record<string, unknown> = {
       tenantId: req.user!.tenantId,

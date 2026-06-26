@@ -32,7 +32,7 @@ const ListQuery = z.object({
 });
 
 export function registerSequencesRoutes(app: FastifyInstance) {
-  app.get("/api/sequences", { preHandler: [requireAuth] }, async (req, reply) => {
+  app.get("/api/v1/sequences", { preHandler: [requireAuth] }, async (req, reply) => {
     const q = ListQuery.parse(req.query);
     const filter: Record<string, unknown> = { tenantId: req.user!.tenantId };
     if (q.leadId) filter.leadId = q.leadId;
@@ -46,7 +46,7 @@ export function registerSequencesRoutes(app: FastifyInstance) {
     return reply.send({ items });
   });
 
-  app.post("/api/sequences", { preHandler: [requireAuth] }, async (req, reply) => {
+  app.post("/api/v1/sequences", { preHandler: [requireAuth] }, async (req, reply) => {
     const body = CreateBody.parse(req.body);
     const now = new Date().toISOString();
     const doc = {
@@ -76,7 +76,7 @@ export function registerSequencesRoutes(app: FastifyInstance) {
     return reply.status(201).send(doc);
   });
 
-  app.patch("/api/sequences/:id", { preHandler: [requireAuth] }, async (req, reply) => {
+  app.patch("/api/v1/sequences/:id", { preHandler: [requireAuth] }, async (req, reply) => {
     const { id } = req.params as { id: string };
     const body = req.body as Record<string, unknown>;
     const update: Record<string, unknown> = { updatedAt: new Date().toISOString() };

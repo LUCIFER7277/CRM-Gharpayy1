@@ -17,7 +17,7 @@ const ListQuery = z.object({
 export function registerBookingsRoutes(app: FastifyInstance) {
 
   // ── GET /api/bookings ────────────────────────────────────────────────────
-  app.get("/api/bookings", { preHandler: [requireAuth, requireScope("booking.read")] }, async (req, reply) => {
+  app.get("/api/v1/bookings", { preHandler: [requireAuth, requireScope("booking.read")] }, async (req, reply) => {
     const q = ListQuery.parse(req.query);
     const filter: Record<string, unknown> = { tenantId: req.user!.tenantId };
     if (q.status) filter.status = q.status;
@@ -35,7 +35,7 @@ export function registerBookingsRoutes(app: FastifyInstance) {
   });
 
   // ── GET /api/bookings/:id ────────────────────────────────────────────────
-  app.get("/api/bookings/:id", { preHandler: [requireAuth, requireScope("booking.read")] }, async (req, reply) => {
+  app.get("/api/v1/bookings/:id", { preHandler: [requireAuth, requireScope("booking.read")] }, async (req, reply) => {
     const { id } = req.params as { id: string };
     const booking = await col<BookingEntity>("bookings").findOne({ _id: id, tenantId: req.user!.tenantId });
     if (!booking) return reply.code(404).send({ code: "NOT_FOUND", message: "Booking not found" });
@@ -46,7 +46,7 @@ export function registerBookingsRoutes(app: FastifyInstance) {
   // Sales / admin marks a booking as shared with the owner, advancing the
   // owner lifecycle so the owner can see it in their portal.
   app.post(
-    "/api/bookings/:id/share-with-owner",
+    "/api/v1/bookings/:id/share-with-owner",
     { preHandler: [requireAuth, requireScope("booking.update")] },
     async (req, reply) => {
       const { id } = req.params as { id: string };
@@ -90,6 +90,18 @@ export function registerBookingsRoutes(app: FastifyInstance) {
         causationId: null,
         version: 1,
         payload: { bookingId: id, ownerId: (booking as any).ownerId },
+      });
+
+      const { autoLogActivity } = await import("../activities/command-handlers.js");
+      await autoLogActivity({
+        entityType: "lead",
+        entityId: (booking as any).leadId || id,
+        kind: "stage_changed",
+        subject: `Booking shared with owner`,
+        body: `Booking ${id} shared with property owner`,
+        meta: { bookingId: id, ownerId: (booking as any).ownerId, propertyId: (booking as any).propertyId },
+        user: req.user!,
+        correlationId: evtId,
       });
 
       return reply.send({ ok: true, ownerLifecycle: "shared_with_owner" });

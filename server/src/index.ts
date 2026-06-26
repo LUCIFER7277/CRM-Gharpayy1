@@ -28,6 +28,7 @@ import { registerTenantsRoutes } from "./modules/tenants/routes.js";
 import { registerOwnerRoutes } from "./modules/owner/routes.js";
 import { registerDashboardRoutes } from "./modules/dashboard/routes.js";
 import { registerInventoryRoutes } from "./modules/inventory/routes.js";
+import { registerArenaRoutes } from "./modules/arena/routes.js";
 import { ensureDefaultSuperAdmin } from "./auth/auth.js";
 
 async function main() {
@@ -105,7 +106,7 @@ h1{margin:0 0 .5rem;font-size:1.5rem;color:#34d399}p{margin:.25rem 0;color:#94a3
 
   // Health/metrics first — MUST work even before everything else is wired.
   registerHealthRoutes(app);
-  app.get("/api/health", async () => ({ ok: true, ts: new Date().toISOString() }));
+  app.get("/api/v1/health", async () => ({ ok: true, ts: new Date().toISOString() }));
 
   registerAuthRoutes(app);
   registerWebhookRoutes(app);
@@ -127,6 +128,7 @@ h1{margin:0 0 .5rem;font-size:1.5rem;color:#34d399}p{margin:.25rem 0;color:#94a3
   registerOwnerRoutes(app);
   registerDashboardRoutes(app);
   registerInventoryRoutes(app);
+  registerArenaRoutes(app);
 
   // Idempotent — bootstraps the canonical Super Admin if missing.
   await ensureDefaultSuperAdmin().catch((err) =>

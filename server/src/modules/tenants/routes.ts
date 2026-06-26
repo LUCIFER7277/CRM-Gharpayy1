@@ -12,7 +12,7 @@ const ListQuery = z.object({
 });
 
 export function registerTenantsRoutes(app: FastifyInstance) {
-  app.get("/api/tenants", { preHandler: [requireAuth, requireScope("tenant.read")] }, async (req, reply) => {
+  app.get("/api/v1/tenants", { preHandler: [requireAuth, requireScope("tenant.read")] }, async (req, reply) => {
     const q = ListQuery.parse(req.query);
     const filter: Record<string, unknown> = { tenantId: req.user!.tenantId };
     if (q.status) filter.status = q.status;
@@ -27,7 +27,7 @@ export function registerTenantsRoutes(app: FastifyInstance) {
     return reply.send({ items, nextCursor: items.length === q.limit ? items[items.length - 1]._id : null });
   });
 
-  app.get("/api/tenants/:id", { preHandler: [requireAuth, requireScope("tenant.read")] }, async (req, reply) => {
+  app.get("/api/v1/tenants/:id", { preHandler: [requireAuth, requireScope("tenant.read")] }, async (req, reply) => {
     const { id } = req.params as { id: string };
     const tenant = await col<TenantEntity>("tenants").findOne({ _id: id, tenantId: req.user!.tenantId });
     if (!tenant) return reply.code(404).send({ code: "NOT_FOUND", message: "Tenant not found" });

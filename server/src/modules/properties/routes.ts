@@ -58,7 +58,7 @@ export function registerPropertyRoutes(app: FastifyInstance) {
   const properties = () => col<PropertyDoc>("properties");
 
   // List properties
-  app.get("/api/properties", { preHandler: [requireAuth] }, async (req, reply) => {
+  app.get("/api/v1/properties", { preHandler: [requireAuth] }, async (req, reply) => {
     const list = await properties()
       .find({ tenantId: req.user!.tenantId })
       .sort({ name: 1 })
@@ -67,7 +67,7 @@ export function registerPropertyRoutes(app: FastifyInstance) {
   });
 
   // Create property
-  app.post("/api/properties", { preHandler: [requireAuth, requireScope("inventory.block")] }, async (req, reply) => {
+  app.post("/api/v1/properties", { preHandler: [requireAuth, requireScope("inventory.block")] }, async (req, reply) => {
     try {
       const body = CreateBody.parse(req.body);
       const name = body.name.trim();
@@ -109,6 +109,19 @@ export function registerPropertyRoutes(app: FastifyInstance) {
         version: 1,
         payload: { propertyId: doc._id },
       });
+
+      const { autoLogActivity } = await import("../activities/command-handlers.js");
+      await autoLogActivity({
+        entityType: "unit",
+        entityId: doc._id,
+        kind: "created",
+        subject: `Property Created`,
+        body: `Property ${name} created in zone ${body.zoneId}`,
+        meta: { propertyId: doc._id },
+        user: req.user!,
+        correlationId: req.id,
+      });
+
       return reply.code(201).send(propertyOut(doc));
     } catch (e) {
       const err = e as Error;
@@ -117,7 +130,7 @@ export function registerPropertyRoutes(app: FastifyInstance) {
   });
 
   // Update property
-  app.put("/api/properties/:id", { preHandler: [requireAuth, requireScope("inventory.block")] }, async (req, reply) => {
+  app.put("/api/v1/properties/:id", { preHandler: [requireAuth, requireScope("inventory.block")] }, async (req, reply) => {
     try {
       const { id } = req.params as { id: string };
       const body = UpdateBody.parse(req.body);
@@ -169,6 +182,19 @@ export function registerPropertyRoutes(app: FastifyInstance) {
         version: 1,
         payload: { propertyId: r._id },
       });
+
+      const { autoLogActivity } = await import("../activities/command-handlers.js");
+      await autoLogActivity({
+        entityType: "unit",
+        entityId: r._id,
+        kind: "field_changed",
+        subject: `Property Updated`,
+        body: `Property ${name} updated (beds: ${body.totalBeds}, vacant: ${body.vacantBeds}, price: ₹${body.pricePerBed})`,
+        meta: { propertyId: r._id, totalBeds: body.totalBeds, vacantBeds: body.vacantBeds, pricePerBed: body.pricePerBed },
+        user: req.user!,
+        correlationId: req.id,
+      });
+
       return reply.send(propertyOut(r));
     } catch (e) {
       const err = e as Error;
@@ -177,7 +203,7 @@ export function registerPropertyRoutes(app: FastifyInstance) {
   });
 
   // Assign owner to property (admin shortcut endpoint)
-  app.patch("/api/properties/:id/owner", { preHandler: [requireAuth, requireScope("inventory.block")] }, async (req, reply) => {
+  app.patch("/api/v1/properties/:id/owner", { preHandler: [requireAuth, requireScope("inventory.block")] }, async (req, reply) => {
     const { id } = req.params as { id: string };
     const { ownerId } = req.body as { ownerId: string | null };
 
@@ -205,11 +231,24 @@ export function registerPropertyRoutes(app: FastifyInstance) {
       version: 1,
       payload: { propertyId: r._id },
     });
+
+    const { autoLogActivity } = await import("../activities/command-handlers.js");
+    await autoLogActivity({
+      entityType: "unit",
+      entityId: r._id,
+      kind: "assigned",
+      subject: ownerId ? `Property Assigned` : `Property Unassigned`,
+      body: ownerId ? `Property assigned to owner: ${ownerName || ownerId}` : `Property unassigned from owner`,
+      meta: { propertyId: r._id, ownerId },
+      user: req.user!,
+      correlationId: req.id,
+    });
+
     return reply.send(propertyOut(r));
   });
 
   // Delete property
-  app.delete("/api/properties/:id", { preHandler: [requireAuth, requireScope("inventory.block")] }, async (req, reply) => {
+  app.delete("/api/v1/properties/:id", { preHandler: [requireAuth, requireScope("inventory.block")] }, async (req, reply) => {
     const { id } = req.params as { id: string };
     const r = await properties().deleteOne({ _id: id, tenantId: req.user!.tenantId });
     if (r.deletedCount === 0) return reply.code(404).send({ code: "NOT_FOUND", message: "Property not found" });
@@ -224,6 +263,19 @@ export function registerPropertyRoutes(app: FastifyInstance) {
       version: 1,
       payload: { propertyId: id },
     });
+
+    const { autoLogActivity: logDelete } = await import("../activities/command-handlers.js");
+    await logDelete({
+      entityType: "unit",
+      entityId: id,
+      kind: "stage_changed",
+      subject: `Property Deleted`,
+      body: `Property ${id} was deleted`,
+      meta: { propertyId: id },
+      user: req.user!,
+      correlationId: req.id,
+    });
+
     return reply.send({ ok: true });
   });
 }

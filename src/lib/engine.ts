@@ -71,7 +71,7 @@ export function liveConfidence(lead: Lead, tours: Tour[], now: number): number {
   else if (days >= 14) s -= 3;
 
   if (tours.some((t) => t.leadId === lead.id && t.status === "completed")) s += 8;
-  if (tours.some((t) => t.leadId === lead.id && t.decision === "booked")) s = 100;
+  if (tours.some((t) => t.leadId === lead.id && t.postTour?.outcome === "booked")) s = 100;
   if (lead.stage === "dropped") s = Math.min(s, 15);
   if (lead.stage === "booked") s = 100;
 

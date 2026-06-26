@@ -29,7 +29,7 @@ export const tokenStore = {
 
 const inFlightGetRequests = new Map<string, Promise<unknown>>();
 
-async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+export async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (!API_URL) throw new ApiError("NO_API_URL", "VITE_API_URL not configured", 0);
   const headers = new Headers(init.headers ?? {});
   if (init.body != null && !headers.has("Content-Type"))
@@ -178,16 +178,16 @@ export const api = {
   apiUrl: API_URL || "(local mode)",
   isLocalMode,
 
-  health: () => request<{ ok: true; ts: string }>("/api/health"),
+  health: () => request<{ ok: true; ts: string }>("/api/v1/health"),
 
   signup: (b: { email: string; password: string; name: string; role?: ManagedRole }) =>
-    request<{ ok: true; userId: string }>("/api/auth/signup", {
+    request<{ ok: true; userId: string }>("/api/v1/auth/signup", {
       method: "POST",
       body: JSON.stringify(b),
     }),
 
   login: async (identifier: string, password: string) => {
-    const r = await request<{ token: string; user: AuthUser }>("/api/auth/login", {
+    const r = await request<{ token: string; user: AuthUser }>("/api/v1/auth/login", {
       method: "POST",
       body: JSON.stringify({ email: identifier, username: identifier, password }),
     });
@@ -196,14 +196,14 @@ export const api = {
   },
 
   logout: async () => {
-    await request("/api/auth/logout", { method: "POST" }).catch(() => undefined);
+    await request("/api/v1/auth/logout", { method: "POST" }).catch(() => undefined);
     tokenStore.clear();
   },
 
   auth: {
-    me: () => request<{ user: AuthUser }>("/api/auth/me"),
+    me: () => request<{ user: AuthUser }>("/api/v1/auth/me"),
     update: (b: { password?: string; phone?: string; fullName?: string; isTcm?: boolean }) =>
-      request<{ ok: true }>("/api/auth/update", { method: "PATCH", body: JSON.stringify(b) }),
+      request<{ ok: true }>("/api/v1/auth/update", { method: "PATCH", body: JSON.stringify(b) }),
   },
 
   command: <R = unknown>(
@@ -211,13 +211,18 @@ export const api = {
   ) =>
     safe<R>(
       () =>
-        request<R>("/api/commands", {
+        request<R>("/api/v1/commands", {
           method: "POST",
           headers: { "Idempotency-Key": cmd._id },
           body: JSON.stringify(cmd),
         }),
       () => localAdapter.command(cmd) as unknown as R,
     ),
+
+  arena: {
+    home: () => request<any>("/api/v1/arena/home"),
+    today: () => request<any>("/api/v1/arena/today"),
+  },
 
   leads: {
     list: (q: Record<string, string | number> = {}) =>
@@ -227,7 +232,7 @@ export const api = {
             Object.entries(q).map(([k, v]) => [k, String(v)]),
           ).toString();
           return request<{ items: unknown[]; nextCursor: string | null }>(
-            `/api/leads${qs ? `?${qs}` : ""}`,
+            `/api/v1/leads${qs ? `?${qs}` : ""}`,
           );
         },
         () =>
@@ -235,8 +240,8 @@ export const api = {
             limit: typeof q.limit === "number" ? q.limit : Number(q.limit ?? 100),
           }),
       ),
-    get: (id: string) => request<unknown>(`/api/leads/${id}`),
-    checkDuplicate: (phone: string) => request<{ exists: boolean; leadId?: string; owner?: string; currentStage?: string; name?: string }>(`/api/leads/check-duplicate?phone=${phone}`),
+    get: (id: string) => request<unknown>(`/api/v1/leads/${id}`),
+    checkDuplicate: (phone: string) => request<{ exists: boolean; leadId?: string; owner?: string; currentStage?: string; name?: string }>(`/api/v1/leads/check-duplicate?phone=${phone}`),
     parseLead: async (text: string) => {
       if (isLocalMode()) {
         const t = tokenStore.get();
@@ -252,7 +257,7 @@ export const api = {
         if (!res.ok) throw new Error("Local backend unavailable or failed");
         return res.json();
       }
-      return request<any>("/api/leads/parse", { method: "POST", body: JSON.stringify({ text }) });
+      return request<any>("/api/v1/leads/parse", { method: "POST", body: JSON.stringify({ text }) });
     },
   },
 
@@ -261,7 +266,7 @@ export const api = {
       safe<{ items: T[] }>(
         () => {
           const qs = new URLSearchParams(q).toString();
-          return request<{ items: T[] }>(`/api/todos${qs ? `?${qs}` : ""}`);
+          return request<{ items: T[] }>(`/api/v1/todos${qs ? `?${qs}` : ""}`);
         },
         () => localAdapter.listTodos(q) as unknown as { items: T[] },
       ),
@@ -279,7 +284,7 @@ export const api = {
           const qs = new URLSearchParams(
             Object.entries(q).map(([k, v]) => [k, String(v)]),
           ).toString();
-          return request<{ items: T[] }>(`/api/activities?${qs}`);
+          return request<{ items: T[] }>(`/api/v1/activities?${qs}`);
         },
         () => localAdapter.listActivities(q) as unknown as { items: T[] },
       ),
@@ -293,13 +298,13 @@ export const api = {
             Object.entries(q).map(([k, v]) => [k, String(v)]),
           ).toString();
           return request<{ items: import("@/contracts").Tour[]; nextCursor: string | null }>(
-            `/api/tours${qs ? `?${qs}` : ""}`
+            `/api/v1/tours${qs ? `?${qs}` : ""}`
           );
         },
         () => localAdapter.listTours(q as any),
       ),
     update: (tourId: string, updates: Record<string, unknown>) =>
-      request<{ ok: boolean }>(`/api/tours/${tourId}`, {
+      request<{ ok: boolean }>(`/api/v1/tours/${tourId}`, {
         method: "PATCH",
         body: JSON.stringify(updates),
       }),
@@ -308,7 +313,7 @@ export const api = {
   // ---------- User management (super_admin) ----------
   users: {
     list: (status?: UserStatus) =>
-      request<ManagedUser[]>(`/api/users${status ? `?status=${status}` : ""}`),
+      request<ManagedUser[]>(`/api/v1/users${status ? `?status=${status}` : ""}`),
     listLite: () =>
       safe<{
         items: { _id: string; name: string; email: string; role: string; isTcm?: boolean }[];
@@ -316,16 +321,16 @@ export const api = {
         () =>
           request<{
             items: { _id: string; name: string; email: string; role: string; isTcm?: boolean }[];
-          }>("/api/users/list"),
+          }>("/api/v1/users/list"),
         () => localAdapter.listUsers(),
       ),
     impersonate: (id: string) =>
-      request<{ ok: true }>("/api/auth/impersonate", {
+      request<{ ok: true }>("/api/v1/auth/impersonate", {
         method: "POST",
         body: JSON.stringify({ id }),
       }),
-    returnToSelf: () => request<{ ok: true }>("/api/auth/return"),
-    get: (id: string) => request<ManagedUser>(`/api/users/${id}`),
+    returnToSelf: () => request<{ ok: true }>("/api/v1/auth/return"),
+    get: (id: string) => request<ManagedUser>(`/api/v1/users/${id}`),
     create: (b: {
       fullName: string;
       email: string;
@@ -333,63 +338,63 @@ export const api = {
       password: string;
       role: ManagedRole;
       zones?: string[];
-    }) => request<ManagedUser>("/api/users", { method: "POST", body: JSON.stringify(b) }),
+    }) => request<ManagedUser>("/api/v1/users", { method: "POST", body: JSON.stringify(b) }),
     update: (id: string, b: Record<string, unknown>) =>
-      request<ManagedUser>(`/api/users/${id}`, { method: "PUT", body: JSON.stringify(b) }),
+      request<ManagedUser>(`/api/v1/users/${id}`, { method: "PUT", body: JSON.stringify(b) }),
     resetPassword: (id: string, password: string) =>
-      request<{ ok: true }>(`/api/users/${id}`, {
+      request<{ ok: true }>(`/api/v1/users/${id}`, {
         method: "PATCH",
         body: JSON.stringify({ password }),
       }),
     setStatus: (id: string, action: "activate" | "deactivate" | "delete") =>
-      request<{ ok: true }>(`/api/users/${id}/status`, {
+      request<{ ok: true }>(`/api/v1/users/${id}/status`, {
         method: "PATCH",
         body: JSON.stringify({ action }),
       }),
   },
 
   managers: {
-    list: () => request<(ManagedUser & { admins: ManagedUser[] })[]>("/api/managers"),
+    list: () => request<(ManagedUser & { admins: ManagedUser[] })[]>("/api/v1/managers"),
   },
   admins: {
-    list: () => request<ManagedUser[]>("/api/admins"),
+    list: () => request<ManagedUser[]>("/api/v1/admins"),
   },
   members: {
-    list: () => request<ManagedUser[]>("/api/members"),
+    list: () => request<ManagedUser[]>("/api/v1/members"),
   },
   tcms: {
-    list: () => request<ManagedUser[]>("/api/tcms"),
+    list: () => request<ManagedUser[]>("/api/v1/tcms"),
   },
   owners: {
-    list: () => request<ManagedUser[]>("/api/owners"),
+    list: () => request<ManagedUser[]>("/api/v1/owners"),
   },
   zones: {
-    list: () => request<Zone[]>("/api/zones"),
+    list: () => request<Zone[]>("/api/v1/zones"),
     create: (input: ZoneInput) =>
-      request<Zone>("/api/zones", { method: "POST", body: JSON.stringify(input) }),
+      request<Zone>("/api/v1/zones", { method: "POST", body: JSON.stringify(input) }),
     update: (id: string, input: ZoneInput) =>
-      request<Zone>(`/api/zones/${id}`, { method: "PUT", body: JSON.stringify(input) }),
-    remove: (id: string) => request<{ ok: true }>(`/api/zones/${id}`, { method: "DELETE" }),
+      request<Zone>(`/api/v1/zones/${id}`, { method: "PUT", body: JSON.stringify(input) }),
+    remove: (id: string) => request<{ ok: true }>(`/api/v1/zones/${id}`, { method: "DELETE" }),
   },
   properties: {
-    list: () => request<import("@/lib/types").Property[]>("/api/properties"),
+    list: () => request<import("@/lib/types").Property[]>("/api/v1/properties"),
     create: (input: any) =>
-      request<import("@/lib/types").Property>("/api/properties", {
+      request<import("@/lib/types").Property>("/api/v1/properties", {
         method: "POST",
         body: JSON.stringify(input),
       }),
     update: (id: string, input: any) =>
-      request<import("@/lib/types").Property>(`/api/properties/${id}`, {
+      request<import("@/lib/types").Property>(`/api/v1/properties/${id}`, {
         method: "PUT",
         body: JSON.stringify(input),
       }),
-    remove: (id: string) => request<{ ok: true }>(`/api/properties/${id}`, { method: "DELETE" }),
+    remove: (id: string) => request<{ ok: true }>(`/api/v1/properties/${id}`, { method: "DELETE" }),
   },
 
   followUps: {
     list: (q: { leadId?: string; done?: boolean; limit?: number } = {}) =>
       request<{ items: Record<string, unknown>[] }>(
-        `/api/follow-ups?${new URLSearchParams(
+        `/api/v1/follow-ups?${new URLSearchParams(
           Object.entries(q).map(([k, v]) => [k, String(v)]),
         ).toString()}`,
       ),
@@ -401,12 +406,12 @@ export const api = {
       priority: "high" | "medium" | "low" | "urgent";
       reason?: string;
     }) =>
-      request<Record<string, unknown>>("/api/follow-ups", {
+      request<Record<string, unknown>>("/api/v1/follow-ups", {
         method: "POST",
         body: JSON.stringify(input),
       }),
     update: (id: string, patch: Record<string, unknown>) =>
-      request<Record<string, unknown>>(`/api/follow-ups/${id}`, {
+      request<Record<string, unknown>>(`/api/v1/follow-ups/${id}`, {
         method: "PATCH",
         body: JSON.stringify(patch),
       }),
@@ -414,7 +419,7 @@ export const api = {
   handoffs: {
     list: (q: { leadId?: string; limit?: number } = {}) =>
       request<{ items: Record<string, unknown>[] }>(
-        `/api/handoffs?${new URLSearchParams(
+        `/api/v1/handoffs?${new URLSearchParams(
           Object.entries(q).map(([k, v]) => [k, String(v)]),
         ).toString()}`,
       ),
@@ -426,12 +431,12 @@ export const api = {
       text: string;
       priority: "normal" | "urgent";
     }) =>
-      request<Record<string, unknown>>("/api/handoffs", {
+      request<Record<string, unknown>>("/api/v1/handoffs", {
         method: "POST",
         body: JSON.stringify(input),
       }),
     markRead: (leadId: string) =>
-      request<{ modifiedCount: number }>("/api/handoffs/mark-read", {
+      request<{ modifiedCount: number }>("/api/v1/handoffs/mark-read", {
         method: "POST",
         body: JSON.stringify({ leadId }),
       }),
@@ -439,17 +444,17 @@ export const api = {
   sequences: {
     list: (q: { leadId?: string; active?: boolean; limit?: number } = {}) =>
       request<{ items: Record<string, unknown>[] }>(
-        `/api/sequences?${new URLSearchParams(
+        `/api/v1/sequences?${new URLSearchParams(
           Object.entries(q).map(([k, v]) => [k, String(v)]),
         ).toString()}`,
       ),
     create: (input: { leadId: string; kind: string }) =>
-      request<Record<string, unknown>>("/api/sequences", {
+      request<Record<string, unknown>>("/api/v1/sequences", {
         method: "POST",
         body: JSON.stringify(input),
       }),
     update: (id: string, patch: Record<string, unknown>) =>
-      request<Record<string, unknown>>(`/api/sequences/${id}`, {
+      request<Record<string, unknown>>(`/api/v1/sequences/${id}`, {
         method: "PATCH",
         body: JSON.stringify(patch),
       }),
@@ -458,7 +463,7 @@ export const api = {
     dailyProgress: (date?: string) => {
       const qs = date ? `?date=${encodeURIComponent(date)}` : "";
       return request<import("@/lib/stats-types").LeadsDailyProgressResponse>(
-        `/api/stats/daily-progress${qs}`,
+        `/api/v1/stats/daily-progress${qs}`,
       );
     },
     leaderboard: (
@@ -473,7 +478,7 @@ export const api = {
         params.set("to", customRange.to);
       }
       return request<import("@/lib/stats-types").CreatorLeaderboardResponse>(
-        `/api/stats/leaderboard?${params.toString()}`,
+        `/api/v1/stats/leaderboard?${params.toString()}`,
       );
     },
   },
@@ -487,7 +492,7 @@ export const api = {
           occurredAt: string;
           payload: Record<string, unknown>;
         }[];
-      }>(`/api/activity/login?limit=${limit}`),
+      }>(`/api/v1/activity/login?limit=${limit}`),
     all: (limit = 200) =>
       request<{
         items: {
@@ -496,7 +501,7 @@ export const api = {
           occurredAt: string;
           payload: Record<string, unknown>;
         }[];
-      }>(`/api/activity/all?limit=${limit}`),
+      }>(`/api/v1/activity/all?limit=${limit}`),
     lead: (leadId: string, limit = 200) =>
       request<{
         items: {
@@ -505,7 +510,7 @@ export const api = {
           occurredAt: string;
           payload: Record<string, unknown>;
         }[];
-      }>(`/api/activity/lead?leadId=${encodeURIComponent(leadId)}&limit=${limit}`),
+      }>(`/api/v1/activity/lead?leadId=${encodeURIComponent(leadId)}&limit=${limit}`),
   },
 
   bookings: {
@@ -516,13 +521,13 @@ export const api = {
             Object.entries(q).map(([k, v]) => [k, String(v)]),
           ).toString();
           return request<{ items: import("@/contracts").BookingEntity[]; nextCursor: string | null }>(
-            `/api/bookings${qs ? `?${qs}` : ""}`,
+            `/api/v1/bookings${qs ? `?${qs}` : ""}`,
           );
         },
         () => ({ items: [], nextCursor: null }),
       ),
     get: (id: string) =>
-      request<import("@/contracts").BookingEntity>(`/api/bookings/${id}`),
+      request<import("@/contracts").BookingEntity>(`/api/v1/bookings/${id}`),
   },
 
   tenants: {
@@ -533,27 +538,27 @@ export const api = {
             Object.entries(q).map(([k, v]) => [k, String(v)]),
           ).toString();
           return request<{ items: import("@/contracts").TenantEntity[]; nextCursor: string | null }>(
-            `/api/tenants${qs ? `?${qs}` : ""}`,
+            `/api/v1/tenants${qs ? `?${qs}` : ""}`,
           );
         },
         () => ({ items: [], nextCursor: null }),
       ),
     get: (id: string) =>
-      request<import("@/contracts").TenantEntity>(`/api/tenants/${id}`),
+      request<import("@/contracts").TenantEntity>(`/api/v1/tenants/${id}`),
   },
 
   assignmentNotifications: {
     /** Fetch pending assignment notifications addressed to the current user */
     listPending: () =>
       safe<{ items: AssignmentNotificationItem[] }>(
-        () => request<{ items: AssignmentNotificationItem[] }>("/api/assignment-notifications"),
+        () => request<{ items: AssignmentNotificationItem[] }>("/api/v1/assignment-notifications"),
         () => ({ items: [] }),
       ),
     /** Fetch notifications that were passed on (so the original assigner is informed) */
     listPassed: () =>
       safe<{ items: AssignmentNotificationItem[] }>(
         () =>
-          request<{ items: AssignmentNotificationItem[] }>("/api/assignment-notifications/passed"),
+          request<{ items: AssignmentNotificationItem[] }>("/api/v1/assignment-notifications/passed"),
         () => ({ items: [] }),
       ),
   },

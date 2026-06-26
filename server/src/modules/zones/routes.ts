@@ -61,7 +61,7 @@ export function registerZoneRoutes(app: FastifyInstance) {
   const zones = () => col<ZoneDoc>("zones");
 
   // List zones — any authed user (forms need them)
-  app.get("/api/zones", { preHandler: [requireAuth] }, async (req, reply) => {
+  app.get("/api/v1/zones", { preHandler: [requireAuth] }, async (req, reply) => {
     await ensureSeedZones(req.user!.tenantId);
     const list = await zones()
       .find({ tenantId: req.user!.tenantId })
@@ -71,7 +71,7 @@ export function registerZoneRoutes(app: FastifyInstance) {
   });
 
   // Create zone — super_admin only
-  app.post("/api/zones", { preHandler: [requireAuth, requireScope("user.admin")] }, async (req, reply) => {
+  app.post("/api/v1/zones", { preHandler: [requireAuth, requireScope("user.admin")] }, async (req, reply) => {
     try {
       const body = CreateBody.parse(req.body);
       const name = body.name.trim();
@@ -97,7 +97,7 @@ export function registerZoneRoutes(app: FastifyInstance) {
   });
 
   // Update zone — super_admin
-  app.put("/api/zones/:id", { preHandler: [requireAuth, requireScope("user.admin")] }, async (req, reply) => {
+  app.put("/api/v1/zones/:id", { preHandler: [requireAuth, requireScope("user.admin")] }, async (req, reply) => {
     try {
       const { id } = req.params as { id: string };
       const body = UpdateBody.parse(req.body);
@@ -126,7 +126,7 @@ export function registerZoneRoutes(app: FastifyInstance) {
   });
 
   // Delete zone — super_admin
-  app.delete("/api/zones/:id", { preHandler: [requireAuth, requireScope("user.admin")] }, async (req, reply) => {
+  app.delete("/api/v1/zones/:id", { preHandler: [requireAuth, requireScope("user.admin")] }, async (req, reply) => {
     const { id } = req.params as { id: string };
     const r = await zones().deleteOne({ _id: id, tenantId: req.user!.tenantId });
     if (r.deletedCount === 0) return reply.code(404).send({ code: "NOT_FOUND", message: "Zone not found" });

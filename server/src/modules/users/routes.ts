@@ -60,7 +60,7 @@ export function registerUserRoutes(app: FastifyInstance) {
   const users = () => col<UserDoc>("users");
 
   // ---------- LIST USERS (super_admin) ----------
-  app.get("/api/users", { preHandler: [requireAuth, requireScope("user.admin")] }, async (req, reply) => {
+  app.get("/api/v1/users", { preHandler: [requireAuth, requireScope("user.admin")] }, async (req, reply) => {
     const q = z.object({ status: z.enum(["active", "inactive", "invited", "deleted"]).optional() }).parse(req.query);
     const filter: Record<string, unknown> = { tenantId: req.user!.tenantId, role: { $ne: "super_admin" } };
     if (q.status) filter.status = q.status;
@@ -69,7 +69,7 @@ export function registerUserRoutes(app: FastifyInstance) {
   });
 
   // Lightweight list for in-app consumers (e.g. assignment dropdowns)
-  app.get("/api/users/list", { preHandler: [requireAuth] }, async (req, reply) => {
+  app.get("/api/v1/users/list", { preHandler: [requireAuth] }, async (req, reply) => {
     const list = await users()
       .find({ tenantId: req.user!.tenantId, status: "active" })
       .project({ _id: 1, fullName: 1, email: 1, role: 1, isTcm: 1 })
@@ -85,7 +85,7 @@ export function registerUserRoutes(app: FastifyInstance) {
       .toArray();
   };
 
-  app.get("/api/managers", { preHandler: [requireAuth, requireScope("user.read")] }, async (req, reply) => {
+  app.get("/api/v1/managers", { preHandler: [requireAuth, requireScope("user.read")] }, async (req, reply) => {
     const managers = await roleList(req, "manager");
     const admins = await roleList(req, "admin");
     const out = managers.map((m) => ({
@@ -95,17 +95,17 @@ export function registerUserRoutes(app: FastifyInstance) {
     return reply.send(out);
   });
 
-  app.get("/api/admins", { preHandler: [requireAuth, requireScope("user.read")] }, async (req, reply) => {
+  app.get("/api/v1/admins", { preHandler: [requireAuth, requireScope("user.read")] }, async (req, reply) => {
     const list = await roleList(req, "admin");
     return reply.send(list.map(userOut));
   });
 
-  app.get("/api/members", { preHandler: [requireAuth, requireScope("user.read")] }, async (req, reply) => {
+  app.get("/api/v1/members", { preHandler: [requireAuth, requireScope("user.read")] }, async (req, reply) => {
     const list = await roleList(req, "member");
     return reply.send(list.map(userOut));
   });
 
-  app.get("/api/tcms", { preHandler: [requireAuth, requireScope("user.read")] }, async (req, reply) => {
+  app.get("/api/v1/tcms", { preHandler: [requireAuth, requireScope("user.read")] }, async (req, reply) => {
     const list = await users()
       .find({
         tenantId: req.user!.tenantId,
@@ -117,13 +117,13 @@ export function registerUserRoutes(app: FastifyInstance) {
     return reply.send(list.map(userOut));
   });
 
-  app.get("/api/owners", { preHandler: [requireAuth, requireScope("user.read")] }, async (req, reply) => {
+  app.get("/api/v1/owners", { preHandler: [requireAuth, requireScope("user.read")] }, async (req, reply) => {
     const list = await roleList(req, "owner");
     return reply.send(list.map(userOut));
   });
 
   // ---------- CREATE USER (super_admin) ----------
-  app.post("/api/users", { preHandler: [requireAuth, requireScope("user.admin")] }, async (req, reply) => {
+  app.post("/api/v1/users", { preHandler: [requireAuth, requireScope("user.admin")] }, async (req, reply) => {
     try {
       const body = CreateBody.parse(req.body);
       if ((body.role === "admin" || body.role === "member" || body.role === "tcm") && (!body.zones || body.zones.length === 0)) {
@@ -150,7 +150,7 @@ export function registerUserRoutes(app: FastifyInstance) {
   });
 
   // ---------- GET SINGLE ----------
-  app.get("/api/users/:id", { preHandler: [requireAuth, requireScope("user.read")] }, async (req, reply) => {
+  app.get("/api/v1/users/:id", { preHandler: [requireAuth, requireScope("user.read")] }, async (req, reply) => {
     const { id } = req.params as { id: string };
     const u = await users().findOne({ _id: id, tenantId: req.user!.tenantId });
     if (!u) return reply.code(404).send({ code: "NOT_FOUND", message: "User not found" });
@@ -158,7 +158,7 @@ export function registerUserRoutes(app: FastifyInstance) {
   });
 
   // ---------- UPDATE PROFILE ----------
-  app.put("/api/users/:id", { preHandler: [requireAuth, requireScope("user.admin")] }, async (req, reply) => {
+  app.put("/api/v1/users/:id", { preHandler: [requireAuth, requireScope("user.admin")] }, async (req, reply) => {
     const { id } = req.params as { id: string };
     const body = UpdateBody.parse(req.body);
     const patch: Partial<UserDoc> = { updatedAt: new Date().toISOString() };
@@ -190,7 +190,7 @@ export function registerUserRoutes(app: FastifyInstance) {
   });
 
   // ---------- RESET PASSWORD ----------
-  app.patch("/api/users/:id", { preHandler: [requireAuth, requireScope("user.admin")] }, async (req, reply) => {
+  app.patch("/api/v1/users/:id", { preHandler: [requireAuth, requireScope("user.admin")] }, async (req, reply) => {
     const { id } = req.params as { id: string };
     const body = PatchBody.parse(req.body);
     if (!body.password) return reply.code(400).send({ code: "VALIDATION_FAILED", message: "password required" });
@@ -202,7 +202,7 @@ export function registerUserRoutes(app: FastifyInstance) {
   });
 
   // ---------- STATUS (activate/deactivate/delete) ----------
-  app.patch("/api/users/:id/status", { preHandler: [requireAuth, requireScope("user.admin")] }, async (req, reply) => {
+  app.patch("/api/v1/users/:id/status", { preHandler: [requireAuth, requireScope("user.admin")] }, async (req, reply) => {
     const { id } = req.params as { id: string };
     const { action } = StatusBody.parse(req.body);
     const target = await users().findOne({ _id: id, tenantId: req.user!.tenantId });

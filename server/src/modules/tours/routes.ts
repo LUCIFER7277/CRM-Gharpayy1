@@ -12,7 +12,7 @@ const ListQuery = z.object({
 });
 
 export function registerToursRoutes(app: FastifyInstance) {
-  app.get("/api/tours", { preHandler: [requireAuth, requireScope("tour.read")] }, async (req, reply) => {
+  app.get("/api/v1/tours", { preHandler: [requireAuth, requireScope("tour.read")] }, async (req, reply) => {
     const q = ListQuery.parse(req.query);
     const filter: Record<string, unknown> = { tenantId: req.user!.tenantId };
     const role = req.user!.role;
@@ -41,7 +41,7 @@ export function registerToursRoutes(app: FastifyInstance) {
     return reply.send({ items, nextCursor: items.length === q.limit ? items[items.length - 1]._id : null });
   });
 
-  app.patch("/api/tours/:id", { preHandler: [requireAuth, requireScope("tour.complete")] }, async (req, reply) => {
+  app.patch("/api/v1/tours/:id", { preHandler: [requireAuth, requireScope("tour.complete")] }, async (req, reply) => {
     const { id } = req.params as { id: string };
     const updates = req.body as Record<string, unknown>;
 
