@@ -265,7 +265,7 @@ export function computeTcmPerformance(
   const myLeads = leads.filter((l) => l.assignedTcmId === tcmId);
   const myTours = tours.filter((t) => t.tcmId === tcmId);
   const toursDone = myTours.filter((t) => t.status === "completed").length;
-  const bookings = myTours.filter((t) => t.decision === "booked").length;
+  const bookings = myTours.filter((t) => t.postTour?.outcome === "booked").length;
   const conversion = toursDone > 0 ? Math.round((bookings / toursDone) * 100) : 0;
   const pendingPostTour = myTours.filter(
     (t) => t.status === "completed" && !t.postTour.filledAt,

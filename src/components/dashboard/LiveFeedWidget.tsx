@@ -123,7 +123,7 @@ function EventCard({ event, colorClass, forceExpand = false }: { event: Activity
                 <>
                   <span className="text-muted-foreground/50 mx-0.5">•</span>
                   <span className="text-xs px-1.5 py-0.5 rounded-md bg-muted/50 border border-border/50 text-muted-foreground font-semibold flex items-center gap-1">
-                    TCM: {assignedToName}
+                    {event.meta?.assignedToRole === "flow-ops" ? "Flow Ops" : event.meta?.assignedToRole === "hr" ? "HR" : "TCM"}: {assignedToName}
                   </span>
                 </>
               )}

@@ -76,7 +76,13 @@ export function registerDashboardRoutes(app: FastifyInstance) {
     }, {});
 
     // Enrich Activities
-    const actorIds = [...new Set(rawActivities.map((a: any) => a.actor).filter(Boolean))];
+    const actorIds = [...new Set(rawActivities.map((a: any) => {
+      const actorId = a.actor;
+      if (typeof actorId === "string" && actorId.startsWith("sales:")) {
+        return actorId.replace("sales:", "");
+      }
+      return actorId;
+    }).filter(Boolean))];
     const leadIds = [...new Set(rawActivities.map((a: any) => a.entityId).filter(Boolean))];
     const tcmIds = [...new Set(tcmRankRaw.map((t: any) => t._id).filter(Boolean))];
     const zoneIds = [...new Set(zonePipelineRaw.map((z: any) => z._id?.zoneId).filter(Boolean))];
@@ -84,18 +90,29 @@ export function registerDashboardRoutes(app: FastifyInstance) {
     // Extract property and tour IDs from meta
     const propertyIds = [...new Set(rawActivities.map((a: any) => a.meta?.propertyId).filter(Boolean))];
     const tourIds = [...new Set(rawActivities.map((a: any) => a.meta?.tourId).filter(Boolean))];
-    const assignedUserIds = [...new Set(rawActivities.map((a: any) => a.meta?.ownerId || a.meta?.tcmId || a.meta?.assignedToId).filter(Boolean))];
+    const assignedUserIds = [...new Set(rawActivities.map((a: any) => {
+      let id = a.meta?.ownerId || a.meta?.tcmId || a.meta?.assignedToId;
+      if (typeof id === "string" && id.startsWith("sales:")) {
+        return id.replace("sales:", "");
+      }
+      return id;
+    }).filter(Boolean))];
 
-    // Combine all user IDs we need to fetch
-    const allUserIds = [...new Set([...actorIds, ...tcmIds, ...assignedUserIds])];
-
-    const [users, leads, zones, properties, tours] = await Promise.all([
-      col("users").find({ _id: { $in: allUserIds } }).project({ fullName: 1, email: 1, role: 1, isTcm: 1 }).toArray(),
-      col("leads").find({ _id: { $in: leadIds } }).project({ name: 1, propertyName: 1, phone: 1, stage: 1, budget: 1, preferredArea: 1 }).toArray(),
+    // Fetch most entities first
+    const [leads, zones, properties, tours] = await Promise.all([
+      col("leads").find({ _id: { $in: leadIds } }).project({ name: 1, propertyName: 1, phone: 1, stage: 1, budget: 1, preferredArea: 1, assignedTcmId: 1, assigneeId: 1 }).toArray(),
       col("zones").find({ _id: { $in: zoneIds } }).project({ name: 1 }).toArray(),
       col("properties").find({ _id: { $in: propertyIds } }).project({ name: 1, address: 1, area: 1 }).toArray(),
       col("tours").find({ _id: { $in: tourIds } }).project({ propertyId: 1, status: 1, scheduledAt: 1, completedAt: 1, outcome: 1 }).toArray(),
     ]);
+
+    const leadTcmIds = leads.map(l => l.assigneeId || l.assignedTcmId).filter(Boolean);
+
+    // Combine all user IDs we need to fetch
+    const allUserIds = [...new Set([...actorIds, ...tcmIds, ...assignedUserIds, ...leadTcmIds])];
+
+    // Fetch users now that we have all user IDs including from leads
+    const users = await col("users").find({ _id: { $in: allUserIds } }).project({ fullName: 1, email: 1, role: 1, isTcm: 1 }).toArray();
 
     const userMap = new Map(users.map(u => [u._id, u.fullName || u.email || "Unknown User"]));
     
@@ -114,7 +131,8 @@ export function registerDashboardRoutes(app: FastifyInstance) {
       phone: l.phone,
       stage: l.stage,
       budget: l.budget,
-      preferredArea: l.preferredArea
+      preferredArea: l.preferredArea,
+      assigneeId: l.assigneeId || l.assignedTcmId
     }]));
     const zoneMap = new Map(zones.map(z => [z._id, z.name || "Unknown Zone"]));
     const propertyMap = new Map(properties.map(p => [p._id, { name: p.name, area: p.area }]));
@@ -126,15 +144,16 @@ export function registerDashboardRoutes(app: FastifyInstance) {
         ? a.actor.replace("sales:", "") 
         : a.actor;
 
-      const actorName = userMap.get(actorId) || (a.actor === "system" ? "Gharpayy" : "System");
-      const actorRole = roleMap.get(actorId) || "system";
-      const leadDetails = leadMap.get(a.entityId) || { name: "Unknown Lead", propertyName: "Unknown Property" };
+      const actorName = actorId === "flow-ops" ? "Flow Ops" : (userMap.get(actorId) || (a.actor === "system" ? "Gharpayy" : "System"));
+      const actorRole = actorId === "flow-ops" ? "flow-ops" : (roleMap.get(actorId) || "system");
+      const leadDetails = leadMap.get(a.entityId) || { name: "Unknown Lead", propertyName: "Unknown Property", assigneeId: undefined };
 
       const propertyInfo = a.meta?.propertyId ? propertyMap.get(a.meta.propertyId) : undefined;
       const tourInfo = a.meta?.tourId ? tourMap.get(a.meta.tourId) : undefined;
       
-      const assignedToId = a.meta?.ownerId || a.meta?.tcmId || a.meta?.assignedToId;
+      const assignedToId = a.meta?.ownerId || a.meta?.tcmId || a.meta?.assignedToId || leadDetails.assigneeId;
       const assignedToName = assignedToId ? userMap.get(assignedToId) : undefined;
+      const assignedToRole = assignedToId ? roleMap.get(assignedToId) : undefined;
 
       return {
         id: a._id,
@@ -142,8 +161,10 @@ export function registerDashboardRoutes(app: FastifyInstance) {
         entityType: a.entityType,
         ts: a.occurredAt,
         kind: a.kind,
+        actorId,
         actorName,
         actorRole,
+        leadAssigneeId: leadDetails.assigneeId,
         leadName: leadDetails.name,
         leadPhone: leadDetails.phone,
         leadStage: leadDetails.stage,
@@ -156,16 +177,17 @@ export function registerDashboardRoutes(app: FastifyInstance) {
           ...a.meta,
           propertyDetails: propertyInfo,
           tourDetails: tourInfo,
-          assignedToName
+          assignedToName,
+          assignedToRole
         }
       };
     });
 
     const categorized = {
       flowOps: enrichedActivities.filter(a => a.actorRole === "flow-ops"),
-      tcm: enrichedActivities.filter(a => a.actorRole === "tcm"),
-      adminAndHr: enrichedActivities.filter(a => ["admin", "hr"].includes(a.actorRole)),
-      system: enrichedActivities.filter(a => a.actorRole === "system" || !["flow-ops", "tcm", "admin", "hr"].includes(a.actorRole))
+      tcm: enrichedActivities.filter(a => a.actorRole === "tcm" || (a.actorRole !== "flow-ops" && a.leadAssigneeId && a.actorId === a.leadAssigneeId)),
+      adminAndHr: enrichedActivities.filter(a => ["admin", "hr"].includes(a.actorRole) && a.actorId !== a.leadAssigneeId),
+      system: enrichedActivities.filter(a => (a.actorRole === "system" || !["flow-ops", "tcm", "admin", "hr"].includes(a.actorRole)) && a.actorId !== a.leadAssigneeId)
     };
 
     // Enrich tcmRank
