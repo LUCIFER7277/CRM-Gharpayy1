@@ -15,7 +15,7 @@ export const Route = createFileRoute("/")({
 });
 
 async function fetchDashboard() {
-  return request<any>("/api/v1/dashboard?limit=50");
+  return request<any>("/api/v1/dashboard?limit=300");
 }
 
 function MetricCard({ title, value, icon: Icon, trend, trendUp, colorClass, iconBg, iconColor, sparklineData, strokeColor }: any) {
@@ -68,7 +68,7 @@ function DashboardPage() {
   }, [user, authLoading, navigate]);
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["super-admin-dashboard"],
+    queryKey: ["super_admin_dashboard"],
     queryFn: fetchDashboard,
     refetchInterval: 10000, // Refresh every 10s for real-time feel
   });
@@ -209,9 +209,9 @@ function DashboardPage() {
                 </div>
                 <h3 className="text-xs uppercase tracking-wider font-bold text-muted-foreground">Zone Pipeline Activity</h3>
               </div>
-              <button className="text-[11px] font-semibold text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors">
+              <Link to="/zone-brain" className="text-[11px] font-semibold text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors">
                 View all zones <ArrowRight className="w-3 h-3" />
-              </button>
+              </Link>
             </div>
             <div className="p-4 grid grid-cols-2 gap-x-8 gap-y-4">
               {metrics.zonePipelineSummary?.slice(0, 4).map((zone: any, idx: number) => {
@@ -221,7 +221,7 @@ function DashboardPage() {
                 const isOrange = idx % 3 === 2;
                 
                 return (
-                  <div key={idx} className="flex justify-between items-center py-1">
+                  <div key={`${zone.zoneName}-${zone._id?.stage}`} className="flex justify-between items-center py-1">
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold text-foreground truncate max-w-[120px]" title={zone.zoneName}>{zone.zoneName}</span>
                       <span className="text-xs text-muted-foreground mt-0.5 capitalize">{zone._id?.stage}</span>

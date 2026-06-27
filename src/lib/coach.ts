@@ -444,7 +444,7 @@ function missionTargetFor(role: Role): number {
     case "flow-ops":     return 12;
     case "hr":           return 6;
     case "owner":        return 3;
-    case "super-admin":  return 10;
+    case "super_admin":  return 10;
     default:             return 6;
   }
 }

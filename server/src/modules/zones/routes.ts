@@ -70,6 +70,51 @@ export function registerZoneRoutes(app: FastifyInstance) {
     return reply.send(list.map(zoneOut));
   });
 
+  // Zone Brain endpoint — aggregates metrics and properties per zone
+  app.get("/api/v1/zones/brain", { preHandler: [requireAuth] }, async (req, reply) => {
+    const tenantId = req.user!.tenantId;
+    await ensureSeedZones(tenantId);
+    
+    const zonesList = await zones().find({ tenantId }).sort({ name: 1 }).toArray();
+    const properties = await col<any>("properties").find({ tenantId }).toArray();
+    const tcms = await col<any>("users").find({ tenantId, role: "tcm" }).toArray();
+    const leads = await col<any>("leads").find({ tenantId, stage: { $nin: ["booked", "dropped"] } }).toArray();
+    const bookings = await col<any>("bookings").find({ tenantId }).toArray();
+
+    const now = Date.now();
+    const DAY_MS = 24 * 3600 * 1000;
+
+    const result = zonesList.map((z) => {
+      const zoneTcms = tcms.filter(t => t.zones && t.zones.includes(z._id));
+      const tcmIds = new Set(zoneTcms.map(t => String(t._id)));
+
+      const zoneProps = properties.filter(p => p.zoneId === z._id).map(p => ({
+        id: p._id,
+        name: p.name
+      }));
+
+      const myLeads = leads.filter(l => l.assignedTcmId && tcmIds.has(String(l.assignedTcmId)));
+      const slaBreaches = myLeads.filter(l => l.stage === "new" && (now - new Date(l.createdAt).getTime()) > DAY_MS).length;
+
+      const myBookings = bookings.filter(b => b.tcmId && tcmIds.has(String(b.tcmId)));
+      const revenueINR = myBookings.reduce((sum, b) => sum + (Number(b.amount) || 0), 0);
+
+      return {
+        zoneId: z._id,
+        zoneName: z.name,
+        city: z.city || "",
+        tcmCount: zoneTcms.length,
+        propertiesCount: zoneProps.length,
+        properties: zoneProps,
+        activeLeads: myLeads.length,
+        revenueINR,
+        slaBreaches,
+      };
+    });
+
+    return reply.send(result);
+  });
+
   // Create zone — super_admin only
   app.post("/api/v1/zones", { preHandler: [requireAuth, requireScope("user.admin")] }, async (req, reply) => {
     try {

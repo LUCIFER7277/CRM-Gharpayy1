@@ -1,4 +1,4 @@
-export type Role = "flow-ops" | "tcm" | "hr" | "owner" | "super-admin";
+export type Role = "flow-ops" | "tcm" | "hr" | "owner" | "super_admin";
 export type Intent = "hot" | "warm" | "cold";
 export type TourStatus =
   | "scheduled"

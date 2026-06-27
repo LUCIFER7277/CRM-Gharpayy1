@@ -25,6 +25,30 @@ export function registerActivitiesRoutes(app: FastifyInstance) {
       .sort({ occurredAt: -1, _id: -1 })
       .limit(q.limit)
       .toArray();
-    return reply.send({ items });
+      
+    const actorIds = [...new Set(items.map((a: any) => {
+      const actorId = a.actor;
+      if (typeof actorId === "string" && actorId.startsWith("sales:")) {
+        return actorId.replace("sales:", "");
+      }
+      return actorId;
+    }).filter(Boolean))];
+
+    const users = await col("users").find({ _id: { $in: actorIds } }).project({ fullName: 1, email: 1 }).toArray();
+    const userMap = new Map(users.map(u => [u._id, u.fullName || u.email || "Unknown User"]));
+
+    const enrichedItems = items.map((a: any) => {
+      const actorId = (a.actor && typeof a.actor === "string" && a.actor.startsWith("sales:")) 
+        ? a.actor.replace("sales:", "") 
+        : a.actor;
+      const actorName = actorId === "flow-ops" ? "Flow Ops" : (userMap.get(actorId) || (a.actor === "system" ? "Gharpayy" : "System"));
+      
+      return {
+        ...a,
+        actorName
+      };
+    });
+
+    return reply.send({ items: enrichedItems });
   });
 }

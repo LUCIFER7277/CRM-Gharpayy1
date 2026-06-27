@@ -40,14 +40,14 @@ const ROLE_META = {
   tcm: { label: "TCM", dot: "bg-accent", initials: "TC", icon: Users },
   hr: { label: "HR / Leadership", dot: "bg-success", initials: "HR", icon: ShieldCheck },
   owner: { label: "Owner Portal", dot: "bg-warning", initials: "OW", icon: Building2 },
-  "super-admin": { label: "Super Admin", dot: "bg-destructive", initials: "SA", icon: ShieldCheck },
+  "super_admin": { label: "Super Admin", dot: "bg-destructive", initials: "SA", icon: ShieldCheck },
 } as const;
 
 export function ProfileMenu() {
   const navigate = useNavigate();
   const authUser = useAuthUser((s) => s.user);
   const meta =
-    ROLE_META[(authUser?.role ?? "flow-ops").replace(/_/g, "-") as keyof typeof ROLE_META] ??
+    ROLE_META[(authUser?.role ?? "flow-ops") as keyof typeof ROLE_META] ??
     ROLE_META["flow-ops"];
   const personName = authUser?.fullName ?? authUser?.username ?? authUser?.email ?? "Account";
   const computeInitials = (n: string) =>

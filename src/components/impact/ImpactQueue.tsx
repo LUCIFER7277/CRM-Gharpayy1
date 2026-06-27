@@ -451,7 +451,7 @@ export function ImpactQueue() {
   const selectedLeadId = useApp((s) => s.selectedLeadId);
   const authUser = useAuthUser((s) => s.user);
   const canSelectTcmScope =
-    authUser?.role === "super_admin" || authUser?.role === "super-admin" || authUser?.role === "manager" || authUser?.role === "admin" || role === "super-admin" || role === "super_admin";
+    authUser?.role === "super_admin" || authUser?.role === "manager" || authUser?.role === "admin" || role === "super_admin";
   const focusProps = useTcmContacts((s) => s.focusProps);
 
 

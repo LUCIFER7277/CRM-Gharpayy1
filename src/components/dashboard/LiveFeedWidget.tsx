@@ -1,14 +1,24 @@
 import React from "react";
 import { Link } from "@tanstack/react-router";
 import { formatDistanceToNow } from "date-fns";
-import { Activity, User, Building2, Calendar, ClipboardList, Filter, AlertTriangle } from "lucide-react";
+import { Activity, User, Building2, Calendar, ClipboardList, Filter, AlertTriangle, History } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { EntityTimelineDrawer } from "./EntityTimelineDrawer";
 
 // Types matching the backend response
 export type ActivityItem = {
   id: string;
+  entityId: string;
   ts: string;
   kind: string;
   actorName: string;
@@ -44,12 +54,24 @@ function EmptyState() {
   );
 }
 
-function formatBodyPart(part: string) {
+function formatBodyPart(part: string, event: ActivityItem) {
+  // Hide raw booking ULIDs and replace with context
+  let displayPart = part;
+  const bookingMatch = displayPart.match(/Booking ([0-9A-Z]{26})/);
+  if (bookingMatch) {
+    const contextName = event.meta?.propertyDetails?.name || event.propertyName || event.leadName;
+    if (contextName && contextName !== "Unknown Lead") {
+      displayPart = displayPart.replace(bookingMatch[1], `for ${contextName}`);
+    } else {
+      displayPart = displayPart.replace(` ${bookingMatch[1]}`, "");
+    }
+  }
+
   // If part looks like "key: value", style it
-  const splitIdx = part.indexOf(":");
+  const splitIdx = displayPart.indexOf(":");
   if (splitIdx > 0) {
-    const key = part.slice(0, splitIdx).trim();
-    const value = part.slice(splitIdx + 1).trim();
+    const key = displayPart.slice(0, splitIdx).trim();
+    const value = displayPart.slice(splitIdx + 1).trim();
     
     // Parse JSON arrays if it looks like one
     if (value.startsWith("[") && value.endsWith("]")) {
@@ -59,11 +81,17 @@ function formatBodyPart(part: string) {
           return (
             <div className="flex flex-wrap items-center gap-1.5 mt-1">
               <span className="font-medium text-foreground/80 capitalize">{key}:</span>
-              {arr.map((item, i) => (
-                <span key={i} className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-600 border border-blue-100">
-                  {String(item).replace("impact:", "")}
-                </span>
-              ))}
+              {arr.map((item, i) => {
+                let displayItem = String(item).replace("impact:", "");
+                if (displayItem === "qualification") {
+                  displayItem = "Verifying lead's requirements and budget";
+                }
+                return (
+                  <span key={i} className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-600 border border-blue-100">
+                    {displayItem}
+                  </span>
+                );
+              })}
             </div>
           );
         }
@@ -79,10 +107,34 @@ function formatBodyPart(part: string) {
       </span>
     );
   }
-  return <span className="inline-block mr-3 mt-1">{part}</span>;
+  return <span className="inline-block mr-3 mt-1">{displayPart}</span>;
 }
 
-function EventCard({ event, colorClass, forceExpand = false }: { event: ActivityItem, colorClass: string, forceExpand?: boolean }) {
+function formatTextWithLinks(text: string) {
+  if (!text) return text;
+  const URL_REGEX = /(https?:\/\/[^\s]+)/g;
+  const parts = text.split(URL_REGEX);
+  
+  return parts.map((part, i) => {
+    if (part.match(URL_REGEX)) {
+      return (
+        <a
+          key={i}
+          href={part}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-500 hover:text-blue-700 hover:underline break-all"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {part}
+        </a>
+      );
+    }
+    return part;
+  });
+}
+
+function EventCard({ event, colorClass, forceExpand = false, onViewHistory }: { event: ActivityItem, colorClass: string, forceExpand?: boolean, onViewHistory?: (id: string, name: string) => void }) {
   const [isExpandedLocal, setIsExpandedLocal] = React.useState(forceExpand);
   
   React.useEffect(() => {
@@ -195,7 +247,7 @@ function EventCard({ event, colorClass, forceExpand = false }: { event: Activity
             <div className="text-[11px] text-muted-foreground break-words leading-relaxed flex flex-wrap items-center mb-3">
               {event.body.split("·").map((part, i) => (
                 <React.Fragment key={i}>
-                  {formatBodyPart(part)}
+                  {formatBodyPart(part, event)}
                 </React.Fragment>
               ))}
             </div>
@@ -239,10 +291,26 @@ function EventCard({ event, colorClass, forceExpand = false }: { event: Activity
                 <div className="font-bold text-[10px] uppercase tracking-wider text-muted-foreground">Original Text</div>
                 <div className="relative p-3.5 rounded-lg bg-gradient-to-br from-muted/80 to-muted/30 border border-border/50 text-[11px]">
                   <p className="whitespace-pre-wrap break-words leading-loose font-medium text-foreground/90">
-                    {event.meta.rawSource}
+                    {formatTextWithLinks(event.meta.rawSource)}
                   </p>
                 </div>
               </div>
+            </div>
+          )}
+
+          {onViewHistory && event.entityId && (
+            <div className="mt-4 pt-3 border-t border-border/40 flex justify-end">
+              <button 
+                type="button" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onViewHistory(event.entityId, event.leadName !== "Unknown Lead" ? event.leadName : (event.meta?.propertyDetails?.name || "Timeline"));
+                }}
+                className="text-[11px] font-semibold text-primary/80 hover:text-primary bg-primary/5 hover:bg-primary/10 border border-primary/20 px-3 py-1.5 rounded flex items-center gap-1.5 transition-colors"
+              >
+                <History className="w-3.5 h-3.5" />
+                View Full History
+              </button>
             </div>
           )}
         </div>
@@ -305,11 +373,23 @@ function mergeAiEvents(activities: ActivityItem[]): ActivityItem[] {
 
 export function LiveFeedWidget({ feed }: LiveFeedProps) {
   const [expandFlowOps, setExpandFlowOps] = React.useState(false);
+  const [activeTab, setActiveTab] = React.useState<"all" | "flowOps" | "tcm" | "system">("all");
+  const [filterType, setFilterType] = React.useState<"all" | "alerts" | "tours" | "comms">("all");
+  const [timelineEntity, setTimelineEntity] = React.useState<{id: string, name: string} | null>(null);
 
   if (!feed || !feed.categorized) return null;
 
-  const adminAndSystem = [...feed.categorized.system, ...feed.categorized.adminAndHr].sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
-  const mergedFlowOps = React.useMemo(() => mergeAiEvents(feed.categorized.flowOps), [feed.categorized.flowOps]);
+  const filterEvents = (events: ActivityItem[]) => {
+    if (filterType === "all") return events;
+    if (filterType === "alerts") return events.filter(e => ["stale_alert", "escalation", "tour_cancelled"].includes(e.kind));
+    if (filterType === "tours") return events.filter(e => ["tour_scheduled", "tour_started", "tour_completed", "site_visit", "post_tour_filled"].includes(e.kind));
+    if (filterType === "comms") return events.filter(e => ["message_sent", "call_logged", "note_added", "follow_up_set", "follow_up_done"].includes(e.kind));
+    return events;
+  };
+
+  const adminAndSystem = filterEvents([...feed.categorized.system, ...feed.categorized.adminAndHr]).sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime());
+  const mergedFlowOps = React.useMemo(() => filterEvents(mergeAiEvents(feed.categorized.flowOps)), [feed.categorized.flowOps, filterType]);
+  const filteredTcm = filterEvents(feed.categorized.tcm);
 
   return (
     <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden flex flex-col mb-10 min-w-0">
@@ -321,18 +401,75 @@ export function LiveFeedWidget({ feed }: LiveFeedProps) {
           <h2 className="text-sm font-bold text-foreground truncate">Global Activity Feed</h2>
         </div>
         <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none min-w-0 w-full sm:w-auto">
-          <button type="button" className="text-xs font-semibold px-3 py-1.5 rounded-md bg-blue-50 text-blue-600 border border-blue-100 whitespace-nowrap">All Feeds</button>
-          <button type="button" className="text-xs font-semibold px-3 py-1.5 rounded-md bg-card border border-border text-muted-foreground hover:text-foreground whitespace-nowrap">FlowOps</button>
-          <button type="button" className="text-xs font-semibold px-3 py-1.5 rounded-md bg-card border border-border text-muted-foreground hover:text-foreground whitespace-nowrap">TCM</button>
-          <button type="button" className="text-xs font-semibold px-3 py-1.5 rounded-md bg-card border border-border text-muted-foreground hover:text-foreground whitespace-nowrap">System & Admin</button>
-          <button type="button" className="text-xs font-semibold px-3 py-1.5 rounded-md bg-card border border-border text-muted-foreground hover:text-foreground flex items-center gap-1.5 whitespace-nowrap ml-2">
-            <Filter className="w-3 h-3 shrink-0" /> Filters
+          <button 
+            type="button" 
+            onClick={() => setActiveTab("all")}
+            className={cn("text-xs font-semibold px-3 py-1.5 rounded-md whitespace-nowrap", activeTab === "all" ? "bg-blue-50 text-blue-600 border border-blue-100" : "bg-card border border-border text-muted-foreground hover:text-foreground")}
+          >
+            All Feeds
           </button>
+          <button 
+            type="button" 
+            onClick={() => setActiveTab("flowOps")}
+            className={cn("text-xs font-semibold px-3 py-1.5 rounded-md whitespace-nowrap", activeTab === "flowOps" ? "bg-blue-50 text-blue-600 border border-blue-100" : "bg-card border border-border text-muted-foreground hover:text-foreground")}
+          >
+            FlowOps
+          </button>
+          <button 
+            type="button" 
+            onClick={() => setActiveTab("tcm")}
+            className={cn("text-xs font-semibold px-3 py-1.5 rounded-md whitespace-nowrap", activeTab === "tcm" ? "bg-blue-50 text-blue-600 border border-blue-100" : "bg-card border border-border text-muted-foreground hover:text-foreground")}
+          >
+            TCM
+          </button>
+          <button 
+            type="button" 
+            onClick={() => setActiveTab("system")}
+            className={cn("text-xs font-semibold px-3 py-1.5 rounded-md whitespace-nowrap", activeTab === "system" ? "bg-blue-50 text-blue-600 border border-blue-100" : "bg-card border border-border text-muted-foreground hover:text-foreground")}
+          >
+            System & Admin
+          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button type="button" className={cn("text-xs font-semibold px-3 py-1.5 rounded-md flex items-center gap-1.5 whitespace-nowrap ml-2", filterType !== "all" ? "bg-blue-50 text-blue-600 border border-blue-100" : "bg-card border border-border text-muted-foreground hover:text-foreground")}>
+                <Filter className="w-3 h-3 shrink-0" /> {filterType === "all" ? "Filters" : "Filtered"}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuLabel>Filter Events</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuCheckboxItem
+                checked={filterType === "all"}
+                onCheckedChange={() => setFilterType("all")}
+              >
+                All Events
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={filterType === "alerts"}
+                onCheckedChange={() => setFilterType("alerts")}
+              >
+                Alerts & Escalations
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={filterType === "tours"}
+                onCheckedChange={() => setFilterType("tours")}
+              >
+                Tours & Visits
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={filterType === "comms"}
+                onCheckedChange={() => setFilterType("comms")}
+              >
+                Communications
+              </DropdownMenuCheckboxItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-border/50 min-w-0 w-full">
+      <div className={cn("grid divide-y lg:divide-y-0 lg:divide-x divide-border/50 min-w-0 w-full", activeTab === "all" ? "grid-cols-1 lg:grid-cols-3" : "grid-cols-1")}>
         {/* Column 1: FlowOps */}
+        {(activeTab === "all" || activeTab === "flowOps") && (
         <div className="flex flex-col h-[500px] min-w-0 w-full">
           <div className="flex items-center justify-between px-4 py-3 border-b border-border/50 bg-card min-w-0">
             <div className="flex items-center gap-2 min-w-0">
@@ -352,35 +489,39 @@ export function LiveFeedWidget({ feed }: LiveFeedProps) {
           <ScrollArea className="flex-1 bg-card min-w-0">
             <div className="flex flex-col min-w-0">
               {mergedFlowOps.length > 0 ? (
-                mergedFlowOps.map(e => <EventCard key={e.id} event={e} colorClass="bg-blue-500" forceExpand={expandFlowOps} />)
+                mergedFlowOps.map(e => <EventCard key={e.id} event={e} colorClass="bg-blue-500" forceExpand={expandFlowOps} onViewHistory={(id, name) => setTimelineEntity({id, name})} />)
               ) : (
                 <EmptyState />
               )}
             </div>
           </ScrollArea>
         </div>
+        )}
 
         {/* Column 2: TCM */}
+        {(activeTab === "all" || activeTab === "tcm") && (
         <div className="flex flex-col h-[500px] min-w-0 w-full">
           <div className="flex items-center justify-between px-4 py-3 border-b border-border/50 bg-card min-w-0">
             <div className="flex items-center gap-2 min-w-0">
               <div className="w-2 h-2 rounded-full bg-orange-500 shrink-0" />
               <h3 className="text-xs font-bold truncate">TCM Feed</h3>
             </div>
-            <span className="text-xs font-bold text-foreground shrink-0">{feed.categorized.tcm.length}</span>
+            <span className="text-xs font-bold text-foreground shrink-0">{filteredTcm.length}</span>
           </div>
           <ScrollArea className="flex-1 bg-card min-w-0">
             <div className="flex flex-col min-w-0">
-              {feed.categorized.tcm.length > 0 ? (
-                feed.categorized.tcm.map(e => <EventCard key={e.id} event={e} colorClass="bg-orange-500" />)
+              {filteredTcm.length > 0 ? (
+                filteredTcm.map(e => <EventCard key={e.id} event={e} colorClass="bg-orange-500" onViewHistory={(id, name) => setTimelineEntity({id, name})} />)
               ) : (
                 <EmptyState />
               )}
             </div>
           </ScrollArea>
         </div>
+        )}
 
         {/* Column 3: System & Admin */}
+        {(activeTab === "all" || activeTab === "system") && (
         <div className="flex flex-col h-[500px] min-w-0 w-full">
           <div className="flex items-center justify-between px-4 py-3 border-b border-border/50 bg-card min-w-0">
             <div className="flex items-center gap-2 min-w-0">
@@ -392,14 +533,22 @@ export function LiveFeedWidget({ feed }: LiveFeedProps) {
           <ScrollArea className="flex-1 bg-card min-w-0">
             <div className="flex flex-col min-w-0">
               {adminAndSystem.length > 0 ? (
-                adminAndSystem.map(e => <EventCard key={e.id} event={e} colorClass="bg-purple-500" />)
+                adminAndSystem.map(e => <EventCard key={e.id} event={e} colorClass="bg-purple-500" onViewHistory={(id, name) => setTimelineEntity({id, name})} />)
               ) : (
                 <EmptyState />
               )}
             </div>
           </ScrollArea>
         </div>
+        )}
       </div>
+
+      <EntityTimelineDrawer 
+        entityId={timelineEntity?.id || null} 
+        entityName={timelineEntity?.name} 
+        isOpen={!!timelineEntity} 
+        onClose={() => setTimelineEntity(null)} 
+      />
     </div>
   );
 }

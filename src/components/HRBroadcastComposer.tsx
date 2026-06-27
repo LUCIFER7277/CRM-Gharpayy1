@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 type AudienceMode = "role" | "people";
-const ALL_ROLES: Role[] = ["tcm", "flow-ops", "hr", "owner", "super-admin"];
+const ALL_ROLES: Role[] = ["tcm", "flow-ops", "hr", "owner", "super_admin"];
 
 export function HRBroadcastComposer({ defaultOpen = false }: { defaultOpen?: boolean }) {
   const role = useApp((s) => s.role);
@@ -34,7 +34,7 @@ export function HRBroadcastComposer({ defaultOpen = false }: { defaultOpen?: boo
   const [dueIn, setDueIn] = useState<string>("4");
 
   const peopleByRole = useMemo(() => {
-    const m: Record<Role, typeof PERSONAS> = { tcm: [], "flow-ops": [], hr: [], owner: [], "super-admin": [] };
+    const m: Record<Role, typeof PERSONAS> = { tcm: [], "flow-ops": [], hr: [], owner: [], "super_admin": [] };
     PERSONAS.forEach((p) => m[p.role].push(p));
     return m;
   }, []);

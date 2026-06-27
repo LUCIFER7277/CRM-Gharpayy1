@@ -77,7 +77,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   // The "owner" entry here is a safety fallback only — AuthGate redirects owners to
   // /property-owner/dashboard before they can reach AppShell.
   const allowedPersonas: Record<string, Array<typeof role>> = {
-    super_admin: ["super-admin"],
+    super_admin: ["super_admin"],
     manager:     ["hr"],
     admin:       ["hr"],
     member:      ["flow-ops"],
@@ -85,7 +85,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     owner:       ["flow-ops"], // fallback; owners are redirected by AuthGate before reaching here
   };
   const dbRole = authUser?.role;
-  const allowed = (dbRole && allowedPersonas[dbRole]) || ["super-admin"];
+  const allowed = (dbRole && allowedPersonas[dbRole]) || ["super_admin"];
 
   // On mount / role change, force the sidebar persona into the allowed set.
   useEffect(() => { if (!authUser) hydrateAuth(); }, [authUser, hydrateAuth]);
@@ -211,7 +211,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       { to: "/follow-ups", label: "Follow-ups", icon: ClipboardList, badge: overdueCount },
       { to: "/myt/schedule", label: "Schedule Tour", icon: CalendarPlus },
     ]),
-    "super-admin": [
+    "super_admin": [
       { to: "/", label: "Live Dashboard", icon: LayoutDashboard },
       { to: "/admin", label: "Cockpit", icon: Gauge },
       { to: "/admin/supreme", label: "Supreme \u00B7 God Mode", icon: Zap },
@@ -238,9 +238,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   };
 
   const [superAdminMode, setSuperAdminMode] = useState<"admin" | "manager">("manager");
-  const items = role === "super-admin" 
-    ? (superAdminMode === "admin" ? navByRole["super-admin"] : navByRole["hr"]) 
-    : [...navByRole[role]];
+  const items = role === "super_admin" 
+    ? (superAdminMode === "admin" ? navByRole["super_admin"] : navByRole["hr"]) 
+    : [...(navByRole[role] || navByRole["flow-ops"])];
   
 
   const isActive = (to: string) => (to === "/" ? path === "/" : path === to || path.startsWith(to + "/"));
@@ -306,7 +306,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             "flow-ops": { label: "Flow Ops", dot: "bg-info" },
             tcm: { label: "TCM Desk", dot: "bg-accent" },
             hr: { label: "HR / Leadership", dot: "bg-success" },
-            "super-admin": { label: "Super Admin", dot: "bg-destructive" },
+            "super_admin": { label: "Super Admin", dot: "bg-destructive" },
             owner: { label: "Property Owner", dot: "bg-primary" },
           } as const;
           const meta = roleMeta[role] ?? { label: role, dot: "bg-muted-foreground" };
@@ -358,7 +358,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           })}
         </nav>
 
-        {role === "super-admin" && (
+        {role === "super_admin" && (
           <div className="px-3 pt-3 pb-1 border-t border-sidebar-border">
             <div className="flex bg-sidebar-accent/50 rounded-md p-0.5 border border-border/50 max-w-[80px] mx-auto">
               <button
@@ -391,7 +391,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               tcm: "TCM",
               hr: "HR / Leadership",
               owner: "Property Owner",
-              "super-admin": "Super Admin",
+              "super_admin": "Super Admin",
             };
             const userName = authUser?.fullName || authUser?.username || authUser?.email || "";
             if (allowed.length <= 1) {

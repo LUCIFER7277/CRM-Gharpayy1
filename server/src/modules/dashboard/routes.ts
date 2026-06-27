@@ -5,7 +5,7 @@ import { col } from "../../db/mongo.js";
 export function registerDashboardRoutes(app: FastifyInstance) {
   app.get("/api/v1/dashboard", { preHandler: [requireAuth] }, async (req, reply) => {
     const tenantId = req.user!.tenantId;
-    const limit = parseInt((req.query as any).limit) || 50;
+    const limit = parseInt((req.query as any).limit) || 300;
     const now = new Date().toISOString();
     const todayStart = new Date();
     todayStart.setUTCHours(0, 0, 0, 0);
@@ -30,7 +30,7 @@ export function registerDashboardRoutes(app: FastifyInstance) {
 
       // 2. TCM Rank (Team performance)
       col("tours").aggregate([
-        { $match: { tenantId } },
+        { $match: { tenantId, assignedTo: { $ne: null } } },
         {
           $group: {
             _id: "$assignedTo",
@@ -118,7 +118,7 @@ export function registerDashboardRoutes(app: FastifyInstance) {
     
     // Exact mapping based on user role definitions
     const roleMap = new Map(users.map(u => {
-      if (u.role === "admin" || u.role === "super-admin") return [u._id, "admin"];
+      if (u.role === "admin" || u.role === "super_admin") return [u._id, "admin"];
       if (u.role === "manager") return [u._id, "hr"];
       if (u.role === "tcm" || (u.role === "member" && u.isTcm)) return [u._id, "tcm"];
       if (u.role === "member" && !u.isTcm) return [u._id, "flow-ops"];
