@@ -4234,134 +4234,152 @@ function TenXCommandBar({
         <Button
           size="sm"
           variant="outline"
-          className="h-8 gap-1.5 text-[11px] px-2.5 bg-background"
+          className="h-8 gap-1.5 text-[11px] px-2.5 bg-background shadow-sm hover:border-accent hover:text-accent transition-all duration-300"
         >
-          <Sunrise className="h-3.5 w-3.5" /> Daily digest
+          <Sunrise className="h-3.5 w-3.5 text-accent" /> Daily digest
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Sunrise className="h-4 w-4 text-accent" /> Today's digest
-          </DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4 text-sm">
-          <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-            <DigestStat label="Live re-rank" value={`${agoLabel} · auto 60s`} />
-            <DigestStat label="Streak" value={`${moved} moved`} tone="success" />
-            <DigestStat
-              label="SLA breach"
-              value={`${breach} leads`}
-              tone={breach > 0 ? "danger" : "default"}
-            />
-            <DigestStat
-              label="Month target"
-              value={`${counters.bookingsMonth}/${targets.bookingsMonth}`}
-              sub={`${progress}%`}
-            />
-          </div>
+      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto p-0 border-0 bg-background/95 backdrop-blur-xl shadow-2xl">
+        <div className="relative overflow-hidden">
+          {/* Header Background Effects */}
+          <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-accent/20 to-transparent pointer-events-none" />
+          <div className="absolute -top-24 -right-24 w-48 h-48 bg-orange-400/20 rounded-full blur-3xl opacity-50 pointer-events-none" />
+          <div className="absolute top-0 -left-12 w-32 h-32 bg-indigo-400/20 rounded-full blur-2xl opacity-50 pointer-events-none" />
+          
+          <div className="relative z-10 p-5 space-y-5">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-xl font-display font-bold">
+                <div className="p-1.5 bg-accent/10 rounded-lg">
+                  <Sunrise className="h-4 w-4 text-accent" />
+                </div>
+                Today's Digest
+              </DialogTitle>
+            </DialogHeader>
 
-          <div className="rounded-lg border border-border bg-muted/25 p-3">
-            <div className="mb-2 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-              Today
-            </div>
-            <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-              <DigestStat label="Leads" value={`${counters.leadsToday}/${targets.leadsToday}`} />
-              <DigestStat label="Tours" value={`${counters.toursToday}/${targets.toursToday}`} />
-              <DigestStat label="Quotes" value={`${counters.quotesToday}/${targets.quotesToday}`} />
+            <div className="grid grid-cols-2 gap-2.5 md:grid-cols-4">
+              <DigestStat label="Live re-rank" value={`${agoLabel}`} sub="auto 60s" />
+              <DigestStat label="Streak" value={`${moved}`} sub="moved" tone="success" />
               <DigestStat
-                label="Bookings"
+                label="SLA breach"
+                value={`${breach}`}
+                sub="leads"
+                tone={breach > 0 ? "danger" : "default"}
+              />
+              <DigestStat
+                label="Month target"
                 value={`${counters.bookingsMonth}/${targets.bookingsMonth}`}
+                sub={`${progress}%`}
               />
             </div>
-          </div>
 
-          <div className="grid grid-cols-3 gap-2">
-            <div className="rounded-md border border-border p-2 text-center">
-              <div className="text-[9px] uppercase tracking-wider text-muted-foreground">Moved</div>
-              <div className="text-xl font-display font-semibold">{moved}</div>
-            </div>
-            <div className="rounded-md border border-border p-2 text-center">
-              <div className="text-[9px] uppercase tracking-wider text-muted-foreground">
-                Stalled
+            <div className="rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm p-3 shadow-sm">
+              <div className="mb-2.5 text-[9px] uppercase tracking-widest text-muted-foreground font-bold flex items-center gap-2">
+                <div className="h-px bg-border/50 flex-1" />
+                Today's Progress
+                <div className="h-px bg-border/50 flex-1" />
               </div>
-              <div className="text-xl font-display font-semibold text-danger">{stalled.length}</div>
-            </div>
-            <div className="rounded-md border border-border p-2 text-center">
-              <div className="text-[9px] uppercase tracking-wider text-muted-foreground">
-                Booked
-              </div>
-              <div className="text-xl font-display font-semibold text-success">
-                {counters.bookingsMonth}
+              <div className="grid grid-cols-2 gap-2.5 md:grid-cols-4">
+                <DigestStat label="Leads" value={`${counters.leadsToday}/${targets.leadsToday}`} />
+                <DigestStat label="Tours" value={`${counters.toursToday}/${targets.toursToday}`} />
+                <DigestStat label="Quotes" value={`${counters.quotesToday}/${targets.quotesToday}`} />
+                <DigestStat
+                  label="Bookings"
+                  value={`${counters.bookingsMonth}/${targets.bookingsMonth}`}
+                />
               </div>
             </div>
-          </div>
 
-          <div>
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">
-              Tomorrow's top 5
+            <div className="grid grid-cols-3 gap-2.5">
+              <div className="rounded-xl border border-border/50 bg-gradient-to-br from-card/80 to-muted/20 p-3 flex flex-col items-center justify-center relative overflow-hidden group">
+                <div className="absolute inset-0 bg-accent/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="text-[9px] uppercase tracking-widest text-muted-foreground font-semibold mb-1 z-10">Moved</div>
+                <div className="text-xl font-display font-bold text-foreground z-10">{moved}</div>
+              </div>
+              <div className="rounded-xl border border-danger/20 bg-gradient-to-br from-danger/10 to-danger/5 p-3 flex flex-col items-center justify-center relative overflow-hidden group">
+                <div className="absolute inset-0 bg-danger/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="text-[9px] uppercase tracking-widest text-danger/80 font-semibold mb-1 z-10">Stalled</div>
+                <div className="text-xl font-display font-bold text-danger z-10">{stalled.length}</div>
+              </div>
+              <div className="rounded-xl border border-success/20 bg-gradient-to-br from-success/10 to-success/5 p-3 flex flex-col items-center justify-center relative overflow-hidden group">
+                <div className="absolute inset-0 bg-success/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="text-[9px] uppercase tracking-widest text-success/80 font-semibold mb-1 z-10">Booked</div>
+                <div className="text-xl font-display font-bold text-success z-10">{counters.bookingsMonth}</div>
+              </div>
             </div>
-            <ol className="space-y-1">
-              {top5.length === 0 && (
-                <li className="text-xs text-muted-foreground italic">Queue clear.</li>
+
+            <div className="space-y-3">
+              <div>
+                <div className="text-[10px] uppercase tracking-widest text-foreground font-semibold mb-2.5 flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent/80 shadow-[0_0_8px_rgba(var(--accent),0.8)]" />
+                  Tomorrow's Top 5
+                </div>
+                <ol className="space-y-1.5">
+                  {top5.length === 0 && (
+                    <li className="text-xs text-muted-foreground italic bg-muted/20 rounded-lg p-3 text-center border border-border/30">
+                      Queue clear. You're all caught up!
+                    </li>
+                  )}
+                  {top5.map((e, i) => (
+                    <li key={e.lead.id}>
+                      <button
+                        type="button"
+                        onClick={() => onFocusLead?.(e.lead.id)}
+                        className="w-full flex items-center gap-2.5 text-xs rounded-lg border border-border/40 bg-card/60 backdrop-blur-sm p-2 text-left hover:border-accent/40 hover:bg-accent/5 hover:shadow-sm transition-all duration-300 group"
+                      >
+                        <span className="h-5 w-5 rounded-full bg-accent/15 text-accent text-[10px] font-bold flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform">
+                          {i + 1}
+                        </span>
+                        <span className="font-medium truncate flex-1">{e.lead.name}</span>
+                        <Badge variant="outline" className="text-[9px] uppercase tracking-wider bg-background/50 border-border">
+                          {e.nba.label}
+                        </Badge>
+                      </button>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+
+              {stalled.length > 0 && (
+                <div className="pt-1.5">
+                  <div className="text-[10px] uppercase tracking-widest text-danger font-semibold mb-2.5 flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-danger shadow-[0_0_8px_rgba(239,68,68,0.8)] animate-pulse" />
+                    Stalled — Escalate
+                  </div>
+                  <ul className="space-y-1.5">
+                    {stalled.map((e) => (
+                      <li key={e.lead.id}>
+                        <button
+                          type="button"
+                          onClick={() => onFocusLead?.(e.lead.id)}
+                          className="w-full flex items-center gap-2.5 text-xs rounded-lg border border-danger/30 bg-danger/5 p-2 text-left hover:border-danger/50 hover:bg-danger/10 hover:shadow-sm transition-all duration-300"
+                        >
+                          <Zap className="h-3.5 w-3.5 text-danger shrink-0" />
+                          <span className="font-medium truncate flex-1">{e.lead.name}</span>
+                          <Badge variant="outline" className="text-[9px] uppercase tracking-wider border-danger/40 text-danger bg-danger/10">
+                            {e.nba.label}
+                          </Badge>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               )}
-              {top5.map((e, i) => (
-                <li key={e.lead.id}>
-                  <button
-                    type="button"
-                    onClick={() => onFocusLead?.(e.lead.id)}
-                    className="w-full flex items-center gap-2 text-xs rounded-md border border-border bg-card p-2 text-left hover:border-accent/50 hover:bg-accent/5 transition"
-                  >
-                    <span className="h-5 w-5 rounded-full bg-accent/15 text-accent text-[10px] font-semibold flex items-center justify-center">
-                      {i + 1}
-                    </span>
-                    <span className="font-medium truncate flex-1">{e.lead.name}</span>
-                    <Badge variant="outline" className="text-[9px]">
-                      {e.nba.label}
-                    </Badge>
-                  </button>
-                </li>
-              ))}
-            </ol>
-          </div>
-
-          {stalled.length > 0 && (
-            <div>
-              <div className="text-[10px] uppercase tracking-wider text-danger font-semibold mb-1">
-                Stalled — escalate
-              </div>
-              <ul className="space-y-1">
-                {stalled.map((e) => (
-                  <li key={e.lead.id}>
-                    <button
-                      type="button"
-                      onClick={() => onFocusLead?.(e.lead.id)}
-                      className="w-full flex items-center gap-2 text-xs rounded-md border border-danger/30 bg-danger/5 p-2 text-left hover:border-danger/50 transition"
-                    >
-                      <Zap className="h-3 w-3 text-danger" />
-                      <span className="font-medium truncate flex-1">{e.lead.name}</span>
-                      <Badge variant="outline" className="text-[9px] border-danger/40 text-danger">
-                        {e.nba.label}
-                      </Badge>
-                    </button>
-                  </li>
-                ))}
-              </ul>
             </div>
-          )}
 
-          <Button
-            size="sm"
-            className="w-full gap-1.5"
-            onClick={() => {
-              const txt = `*Daily digest*\nMoved: ${moved}  ·  Stalled: ${stalled.length}  ·  Booked: ${counters.bookingsMonth}\n\nTomorrow's top 5:\n${top5.map((e, i) => `${i + 1}. ${e.lead.name} — ${e.nba.label}`).join("\n")}`;
-              navigator.clipboard?.writeText(txt);
-              markDigestSentToday();
-              toast.success("Digest copied — paste into WhatsApp");
-            }}
-          >
-            <ClipboardCopy className="h-3.5 w-3.5" /> Copy digest for WhatsApp
-          </Button>
+            <div className="pt-3 border-t border-border/50">
+              <Button
+                className="w-full h-9 gap-1.5 text-xs font-semibold shadow-sm hover:shadow-md transition-all duration-300 bg-foreground text-background hover:bg-foreground/90 rounded-lg"
+                onClick={() => {
+                  const txt = `*Daily digest*\nMoved: ${moved}  ·  Stalled: ${stalled.length}  ·  Booked: ${counters.bookingsMonth}\n\nTomorrow's top 5:\n${top5.map((e, i) => `${i + 1}. ${e.lead.name} — ${e.nba.label}`).join("\n")}`;
+                  navigator.clipboard?.writeText(txt);
+                  markDigestSentToday();
+                  toast.success("Digest copied — paste into WhatsApp");
+                }}
+              >
+                <ClipboardCopy className="h-3.5 w-3.5" /> Copy Digest for WhatsApp
+              </Button>
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
@@ -4380,23 +4398,27 @@ function DigestStat({
   tone?: "default" | "success" | "danger";
 }) {
   return (
-    <div className="rounded-md border border-border bg-card px-2.5 py-2">
-      <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">
+    <div className="rounded-lg border border-border/50 bg-card/40 backdrop-blur-sm px-2.5 py-2 flex flex-col justify-start hover:border-border transition-colors h-full">
+      <div className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold flex justify-between items-start">
         {label}
+        {tone === "success" && <div className="h-1.5 w-1.5 rounded-full bg-success mt-0.5 shadow-[0_0_5px_rgba(34,197,94,0.5)] shrink-0 ml-1.5" />}
+        {tone === "danger" && <div className="h-1.5 w-1.5 rounded-full bg-danger mt-0.5 shadow-[0_0_5px_rgba(239,68,68,0.5)] shrink-0 ml-1.5" />}
       </div>
-      <div
-        className={cn(
-          "mt-1 text-lg font-display font-semibold leading-none",
-          tone === "success"
-            ? "text-success"
-            : tone === "danger"
-              ? "text-danger"
-              : "text-foreground",
-        )}
-      >
-        {value}
+      <div className="mt-1.5 flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+        <span
+          className={cn(
+            "text-lg font-display font-bold leading-none tracking-tight whitespace-nowrap",
+            tone === "success"
+              ? "text-success"
+              : tone === "danger"
+                ? "text-danger"
+                : "text-foreground",
+          )}
+        >
+          {value}
+        </span>
+        {sub ? <span className="text-[10px] font-medium text-muted-foreground whitespace-nowrap">{sub}</span> : null}
       </div>
-      {sub ? <div className="mt-1 text-[10px] text-muted-foreground">{sub}</div> : null}
     </div>
   );
 }
